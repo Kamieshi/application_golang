@@ -1,0 +1,24 @@
+FROM golang:1.16-alpine
+
+WORKDIR ./application
+
+COPY go.mod ./
+COPY go.sum ./
+RUN go mod download
+
+COPY *.go ./
+COPY config ./
+COPY handlers ./
+COPY service ./
+COPY repository ./
+
+
+
+RUN export GO111MODULE=on
+
+RUN ls 
+RUN GO111MODULE=on go build -o /application
+
+EXPOSE 8005
+
+CMD [ "application" ]

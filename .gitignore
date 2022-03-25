@@ -5,6 +5,14 @@
 *.so
 *.dylib
 
+go-outline
+gomodifytags
+goplay
+gopls
+gotetest
+impl
+staticcheck
+
 # Test binary, built with `go test -c`
 *.test
 
