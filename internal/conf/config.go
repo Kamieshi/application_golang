@@ -1,7 +1,7 @@
-package config
+package conf
 
 import (
-	"log"
+	"fmt"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -14,9 +14,13 @@ type Configuration struct {
 func Load() error {
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.Fatal("Unsuccessful attempt to initialize configuration")
+		return err
 	}
 	return nil
+}
+
+func (c Configuration) UrlPosgres() string {
+	return fmt.Sprintf("postgres://%v:%v@%v:%v/%v", c.POSTGRES_USER, c.POSTGRES_PASSWORD, c.POSTGRESS_HOST, c.POSTGRES_PORT, c.POSTGRES_DB)
 }
 
 func (c *Configuration) BaseInit() error {
@@ -28,11 +32,20 @@ func (c *Configuration) BaseInit() error {
 	return nil
 }
 
-func GetConfig() *Configuration {
+func GetConfig() (*Configuration, error) {
 	conf := Configuration{}
+	_, exists := os.LookupEnv("POSTGRES_PORT")
+
+	if !exists {
+		err := Load()
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	err := conf.BaseInit()
 	if err != nil {
-		log.Fatalln(err)
+		return nil, err
 	}
-	return &conf
+	return &conf, nil
 }

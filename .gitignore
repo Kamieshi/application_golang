@@ -5,6 +5,8 @@
 *.so
 *.dylib
 
+.vscode
+
 go-outline
 gomodifytags
 goplay
