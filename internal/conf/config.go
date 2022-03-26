@@ -8,7 +8,7 @@ import (
 )
 
 type Configuration struct {
-	POSTGRES_PASSWORD, POSTGRES_USER, POSTGRES_DB, POSTGRESS_HOST, POSTGRES_PORT string
+	POSTGRES_PASSWORD, POSTGRES_USER, POSTGRES_DB, POSTGRES_HOST, POSTGRES_PORT string
 }
 
 func Load() error {
@@ -20,14 +20,14 @@ func Load() error {
 }
 
 func (c Configuration) UrlPosgres() string {
-	return fmt.Sprintf("postgres://%v:%v@%v:%v/%v", c.POSTGRES_USER, c.POSTGRES_PASSWORD, c.POSTGRESS_HOST, c.POSTGRES_PORT, c.POSTGRES_DB)
+	return fmt.Sprintf("postgres://%v:%v@%v:%v/%v", c.POSTGRES_USER, c.POSTGRES_PASSWORD, c.POSTGRES_HOST, c.POSTGRES_PORT, c.POSTGRES_DB)
 }
 
 func (c *Configuration) BaseInit() error {
 	c.POSTGRES_DB = os.Getenv("POSTGRES_DB")
 	c.POSTGRES_PASSWORD = os.Getenv("POSTGRES_PASSWORD")
 	c.POSTGRES_USER = os.Getenv("POSTGRES_USER")
-	c.POSTGRESS_HOST = os.Getenv("POSTGRESS_HOST")
+	c.POSTGRES_HOST = os.Getenv("POSTGRES_HOST")
 	c.POSTGRES_PORT = os.Getenv("POSTGRES_PORT")
 	return nil
 }
