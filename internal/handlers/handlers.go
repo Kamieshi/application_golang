@@ -1,8 +1,9 @@
 package handlers
 
 import (
-	"app/internal/repository"
-	"encoding/json"
+	"app/internal/service"
+	"app/internal/service/models"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -10,43 +11,70 @@ import (
 )
 
 type EntityHandler struct {
-	ContrEntity repository.ControllerEntity
+	EntityService service.EntityService
 }
 
-func (eh *EntityHandler) ListEntities(c echo.Context) error {
-
-	return c.String(http.StatusOK, "GetEntities")
-}
-
-func (eh *EntityHandler) GetDetailEntitie(c echo.Context) error {
-	pId := c.Param("id")
-	id, err := strconv.Atoi(pId)
+func (eh EntityHandler) List(c echo.Context) error {
+	entitys, err := eh.EntityService.GetAll(c.Request().Context())
 	if err != nil {
 		return err
 	}
-	entity, err := eh.ContrEntity.GetItemForID(c.Request().Context(), id)
 
-	if err != nil {
-		return c.String(http.StatusNotFound, "Not Found")
-	}
+	return c.JSON(http.StatusOK, entitys)
+}
 
-	marshaldata, err := json.Marshal(entity)
+func (eh EntityHandler) GetDetail(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		return err
 	}
-	return c.String(http.StatusOK, string(marshaldata))
+	entity, err := eh.EntityService.GetForID(c.Request().Context(), id)
+
+	if err != nil {
+		return c.JSON(http.StatusNotFound, fmt.Sprintf("{message: %v}", err))
+	}
+	return c.JSON(http.StatusOK, entity)
 }
 
-func (eh *EntityHandler) UpdateEntitie(c echo.Context) error {
+func (eh EntityHandler) Update(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return err
+	}
+	entity := models.Entity{}
 
-	return c.String(http.StatusOK, "GetDetailAntitie")
+	err = c.Bind(&entity)
+	if err != nil {
+		return err
+	}
+
+	err = eh.EntityService.Update(c.Request().Context(), id, entity)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, fmt.Sprintf("{message: %v}", err))
+
+	}
+	return c.JSON(http.StatusOK, "{status : 'Update successful'}")
 }
 
-func (eh *EntityHandler) CreateEntitie(c echo.Context) error {
-	return c.String(http.StatusOK, "GetDetailAntitie")
+func (eh EntityHandler) Create(c echo.Context) error {
+	entity := models.Entity{}
+	err := c.Bind(&entity)
+	if err != nil {
+		return err
+	}
+	err = eh.EntityService.Add(c.Request().Context(), entity)
+
+	return c.JSON(http.StatusOK, "{status : 'Update successful'}")
 }
 
-func (eh *EntityHandler) DeleteEntitie(c echo.Context) error {
-
-	return c.String(http.StatusOK, "GetDetailAntitie")
+func (eh EntityHandler) Delete(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return err
+	}
+	err = eh.EntityService.Delete(c.Request().Context(), id)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, fmt.Sprintf("{message: %v}", err))
+	}
+	return c.JSON(http.StatusOK, "{message : 'Delete successful'}")
 }

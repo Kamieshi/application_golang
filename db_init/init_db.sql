@@ -6,7 +6,7 @@ CREATE TABLE entity(
 );
 
 
-insert into entity (name, Price, IsActive) values ('nssssame_1',1000,True);
+insert into entity (EntityName, Price, IsActive) values ('nssssame_1',1000,True);
 insert into entity (EntityName, Price, IsActive) values ('nssssame_2',2000,False);
 insert into entity (EntityName, Price, IsActive) values ('nssssame_3',3000,True);
 insert into entity (EntityName, Price, IsActive) values ('nssssame_4',4000,False);
