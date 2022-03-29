@@ -25,7 +25,7 @@ func (es EntityService) GetAll(ctx context.Context) ([]models.Entity, error) {
 	return entitys, nil
 }
 
-func (es *EntityService) GetForID(ctx context.Context, id interface{}) (models.Entity, error) {
+func (es *EntityService) GetForID(ctx context.Context, id string) (models.Entity, error) {
 	entity, err := es.rep.GetForID(ctx, id)
 	if err != nil {
 		return models.Entity{}, err
@@ -38,12 +38,12 @@ func (es EntityService) Add(ctx context.Context, obj models.Entity) error {
 	return err
 }
 
-func (es EntityService) Delete(ctx context.Context, id interface{}) error {
+func (es EntityService) Delete(ctx context.Context, id string) error {
 	err := es.rep.Delete(ctx, id)
 	return err
 }
 
-func (es EntityService) Update(ctx context.Context, id interface{}, obj models.Entity) error {
+func (es EntityService) Update(ctx context.Context, id string, obj models.Entity) error {
 	err := es.rep.Update(ctx, id, obj)
 	return err
 }

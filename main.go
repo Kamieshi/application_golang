@@ -45,16 +45,17 @@ func main() {
 	handlerEntity := handlers.EntityHandler{EntityService: entService}
 
 	e := echo.New()
-
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: "${method}   ${uri}  ${status}    ${latency_human}\n",
 	}))
 
-	e.GET("/entity", handlerEntity.List)
-	e.GET("/entity/:id", handlerEntity.GetDetail)
-	e.PUT("/entity/:id", handlerEntity.Update)
-	e.DELETE("/entity/:id", handlerEntity.Delete)
-	e.POST("/entity", handlerEntity.Create)
+	entityGr := e.Group("/entity")
+
+	entityGr.GET("", handlerEntity.List)
+	entityGr.GET("/:id", handlerEntity.GetDetail)
+	entityGr.PUT("/:id", handlerEntity.Update)
+	entityGr.DELETE("/:id", handlerEntity.Delete)
+	entityGr.POST("", handlerEntity.Create)
 
 	e.Logger.Debug(e.Start(":8000"))
 }

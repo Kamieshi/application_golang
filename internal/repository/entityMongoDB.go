@@ -3,6 +3,7 @@ package repository
 import (
 	"app/internal/service/models"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 
@@ -41,8 +42,8 @@ func (rm *RepoEntityMongoDB) GetAll(ctx context.Context) ([]models.Entity, error
 	return resEntitys, nil
 }
 
-func (rm *RepoEntityMongoDB) GetForID(ctx context.Context, id interface{}) (models.Entity, error) {
-	Id, err := primitive.ObjectIDFromHex(fmt.Sprint(id))
+func (rm *RepoEntityMongoDB) GetForID(ctx context.Context, id string) (models.Entity, error) {
+	Id, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return models.Entity{}, err
 	}
@@ -62,18 +63,21 @@ func (rm *RepoEntityMongoDB) Add(ctx context.Context, obj models.Entity) error {
 	return err
 }
 
-func (rm *RepoEntityMongoDB) Update(ctx context.Context, id interface{}, obj models.Entity) error {
-	Id, err := primitive.ObjectIDFromHex(fmt.Sprint(id))
+func (rm *RepoEntityMongoDB) Update(ctx context.Context, id string, obj models.Entity) error {
+	Id, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return err
+	}
+	if obj.Id != Id {
+		return errors.New("Different ObjectId in query and Body")
 	}
 	res := rm.collectionEntity.FindOneAndUpdate(ctx, bson.D{{"_id", Id}}, obj)
 	err = res.Err()
 	return err
 }
 
-func (rm *RepoEntityMongoDB) Delete(ctx context.Context, id interface{}) error {
-	Id, err := primitive.ObjectIDFromHex(fmt.Sprint(id))
+func (rm *RepoEntityMongoDB) Delete(ctx context.Context, id string) error {
+	Id, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return err
 	}

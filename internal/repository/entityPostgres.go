@@ -49,7 +49,7 @@ func (sp *RepoEntityPostgres) GetAll(ctx context.Context) ([]models.Entity, erro
 	return entitys, nil
 }
 
-func (sp *RepoEntityPostgres) GetForID(ctx context.Context, id interface{}) (models.Entity, error) {
+func (sp *RepoEntityPostgres) GetForID(ctx context.Context, id string) (models.Entity, error) {
 
 	var row pgx.Row = sp.pool.QueryRow(ctx, "select * from entity where id=$1", id)
 	ent, err := rowToEntity(row)
@@ -66,7 +66,7 @@ func (sp *RepoEntityPostgres) Add(ctx context.Context, obj models.Entity) error 
 	return nil
 }
 
-func (sp *RepoEntityPostgres) Delete(ctx context.Context, id interface{}) error {
+func (sp *RepoEntityPostgres) Delete(ctx context.Context, id string) error {
 	Id, err := strconv.Atoi(fmt.Sprint(id))
 	if err != nil {
 		return err
@@ -83,7 +83,7 @@ func (sp *RepoEntityPostgres) Delete(ctx context.Context, id interface{}) error 
 	return nil
 }
 
-func (sp *RepoEntityPostgres) Update(ctx context.Context, id interface{}, obj models.Entity) error {
+func (sp *RepoEntityPostgres) Update(ctx context.Context, id string, obj models.Entity) error {
 	Id, err := strconv.Atoi(fmt.Sprint(id))
 	if err != nil {
 		return err

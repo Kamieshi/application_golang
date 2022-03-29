@@ -5,7 +5,6 @@ import (
 	"app/internal/service/models"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/labstack/echo/v4"
 )
@@ -25,7 +24,7 @@ func (eh EntityHandler) List(c echo.Context) error {
 
 func (eh EntityHandler) GetDetail(c echo.Context) error {
 	id := c.Param("id")
-	
+
 	entity, err := eh.EntityService.GetForID(c.Request().Context(), id)
 
 	if err != nil {
@@ -35,13 +34,11 @@ func (eh EntityHandler) GetDetail(c echo.Context) error {
 }
 
 func (eh EntityHandler) Update(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		return err
-	}
+	id := c.Param("id")
+
 	entity := models.Entity{}
 
-	err = c.Bind(&entity)
+	err := c.Bind(&entity)
 	if err != nil {
 		return err
 	}
@@ -68,7 +65,6 @@ func (eh EntityHandler) Create(c echo.Context) error {
 func (eh EntityHandler) Delete(c echo.Context) error {
 	id := c.Param("id")
 
-	
 	err := eh.EntityService.Delete(c.Request().Context(), id)
 	if err != nil {
 		return c.JSON(http.StatusNotFound, fmt.Sprintf("{message: %v}", err))
