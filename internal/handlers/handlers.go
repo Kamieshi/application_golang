@@ -24,10 +24,8 @@ func (eh EntityHandler) List(c echo.Context) error {
 }
 
 func (eh EntityHandler) GetDetail(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		return err
-	}
+	id := c.Param("id")
+	
 	entity, err := eh.EntityService.GetForID(c.Request().Context(), id)
 
 	if err != nil {
@@ -68,11 +66,10 @@ func (eh EntityHandler) Create(c echo.Context) error {
 }
 
 func (eh EntityHandler) Delete(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		return err
-	}
-	err = eh.EntityService.Delete(c.Request().Context(), id)
+	id := c.Param("id")
+
+	
+	err := eh.EntityService.Delete(c.Request().Context(), id)
 	if err != nil {
 		return c.JSON(http.StatusNotFound, fmt.Sprintf("{message: %v}", err))
 	}
