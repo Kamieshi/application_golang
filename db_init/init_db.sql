@@ -1,15 +1,23 @@
 CREATE TABLE entity(
-  Id SERIAL not null unique,
-  EntityName varchar(255) not null,
-  Price integer not null,
-  IsActive bool not null 
+  id SERIAL not null unique,
+  entity_name varchar(255) not null,
+  price integer not null,
+  is_active bool not null 
+);
+
+CREATE TABLE user(
+  id SERIAL not null unique,
+  entity_name varchar(255) not null,
+  price integer not null,
+  is_active bool not null 
 );
 
 
-insert into entity (EntityName, Price, IsActive) values ('nssssame_1',1000,True);
-insert into entity (EntityName, Price, IsActive) values ('nssssame_2',2000,False);
-insert into entity (EntityName, Price, IsActive) values ('nssssame_3',3000,True);
-insert into entity (EntityName, Price, IsActive) values ('nssssame_4',4000,False);
-insert into entity (EntityName, Price, IsActive) values ('nssssame_5',5000,True);
+
+insert into entity (entity_name, price, is_active) values ('nssssame_1',1000,True);
+insert into entity (entity_name, price, is_active) values ('nssssame_2',2000,False);
+insert into entity (entity_name, price, is_active) values ('nssssame_3',3000,True);
+insert into entity (entity_name, price, is_active) values ('nssssame_4',4000,False);
+insert into entity (entity_name, price, is_active) values ('nssssame_5',5000,True);
 
 select * from entity;

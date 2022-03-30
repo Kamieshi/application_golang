@@ -18,7 +18,7 @@ type RepoEntityMongoDB struct {
 }
 
 func NewRepoEntityMongoDB(client mongo.Client) RepoEntityMongoDB {
-	collection := client.Database(os.Getenv("APP_MONGO_DB")).Collection(os.Getenv("ENTITY_COOLLECTION"))
+	collection := client.Database(os.Getenv("APP_MONGO_DB")).Collection(os.Getenv("ENTITY_COLLECTION"))
 	return RepoEntityMongoDB{
 		mongoClient:      &client,
 		collectionEntity: *collection,
@@ -30,16 +30,14 @@ func (rm *RepoEntityMongoDB) GetAll(ctx context.Context) ([]models.Entity, error
 	if err != nil {
 		return nil, err
 	}
-	var buferEntity models.Entity
-	var resEntitys []models.Entity
-	for cursor.Next(ctx) {
-		err = cursor.Decode(&buferEntity)
-		if err != nil {
-			return nil, err
-		}
-		resEntitys = append(resEntitys, buferEntity)
+	var resEntities []models.Entity
+
+	err = cursor.All(ctx, &resEntities)
+	if err != nil {
+		return nil, err
 	}
-	return resEntitys, nil
+
+	return resEntities, nil
 }
 
 func (rm *RepoEntityMongoDB) GetForID(ctx context.Context, id string) (models.Entity, error) {

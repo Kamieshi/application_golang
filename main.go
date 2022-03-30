@@ -3,7 +3,7 @@ package main
 import (
 	"app/internal/config"
 	"app/internal/handlers"
-	"app/internal/repository"
+	"app/internal/repository/mongodb"
 	"app/internal/service"
 	"context"
 	"log"
@@ -20,9 +20,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// connPool, err := pgxpool.Connect(context.Background(), configuration.UrlPosgres())
+	// connPool, err := pgxpool.Connect(context.Background(), configuration.UrlPostgres())
 	// if err != nil {
-	// 	log.Println("Connecting url", configuration.UrlPosgres())
+	// 	log.Println("Connecting url", configuration.UrlPostgres())
 	// 	log.Fatal(err)
 	// }
 
@@ -33,7 +33,7 @@ func main() {
 
 	// entService := service.NewEntityService(&repoPg)
 
-	clientMongo, err := mongo.Connect(context.Background(), options.Client().ApplyURI(configuration.CoonnectUrlMongo()))
+	clientMongo, err := mongo.Connect(context.Background(), options.Client().ApplyURI(configuration.ConnectUrlMongo()))
 	if err != nil {
 		log.Fatalln(err)
 	}

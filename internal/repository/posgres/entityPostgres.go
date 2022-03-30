@@ -22,12 +22,12 @@ func NewRepoEntityPostgres(pool pgxpool.Pool) RepoEntityPostgres {
 }
 
 func rowToEntity(row pgx.Row) (*models.Entity, error) {
-	var entety models.Entity
-	err := row.Scan(&entety.Id, &entety.Name, &entety.Price, &entety.IsActive)
+	var entity models.Entity
+	err := row.Scan(&entity.Id, &entity.Name, &entity.Price, &entity.IsActive)
 	if err != nil {
 		return &models.Entity{}, err
 	}
-	return &entety, nil
+	return &entity, nil
 }
 
 func (sp *RepoEntityPostgres) GetAll(ctx context.Context) ([]models.Entity, error) {
@@ -36,7 +36,7 @@ func (sp *RepoEntityPostgres) GetAll(ctx context.Context) ([]models.Entity, erro
 		return nil, err
 	}
 	defer rows.Close()
-	var entitys = make([]models.Entity, 0, len(rows.FieldDescriptions()))
+	var entities = make([]models.Entity, 0, len(rows.FieldDescriptions()))
 
 	for rows.Next() {
 		entity, err := rowToEntity(rows)
@@ -44,9 +44,9 @@ func (sp *RepoEntityPostgres) GetAll(ctx context.Context) ([]models.Entity, erro
 			return nil, err
 		}
 
-		entitys = append(entitys, *entity)
+		entities = append(entities, *entity)
 	}
-	return entitys, nil
+	return entities, nil
 }
 
 func (sp *RepoEntityPostgres) GetForID(ctx context.Context, id string) (models.Entity, error) {
@@ -59,7 +59,7 @@ func (sp *RepoEntityPostgres) GetForID(ctx context.Context, id string) (models.E
 
 func (sp *RepoEntityPostgres) Add(ctx context.Context, obj models.Entity) error {
 
-	_, err := sp.pool.Exec(ctx, "insert into entity(entityname,price,isactive) values ($1,$2,$3)", obj.Name, obj.Price, obj.IsActive)
+	_, err := sp.pool.Exec(ctx, "insert into entity(entity_name,price,is_active) values ($1,$2,$3)", obj.Name, obj.Price, obj.IsActive)
 	if err != nil {
 		return err
 	}
@@ -88,7 +88,7 @@ func (sp *RepoEntityPostgres) Update(ctx context.Context, id string, obj models.
 	if err != nil {
 		return err
 	}
-	com, err := sp.pool.Exec(ctx, "UPDATE entity SET entityname=$2,price=$3,isactive=$4 WHERE id=$1;", Id, obj.Name, obj.Price, obj.IsActive)
+	com, err := sp.pool.Exec(ctx, "UPDATE entity SET entity_name=$2,price=$3,is_active=$4 WHERE id=$1;", Id, obj.Name, obj.Price, obj.IsActive)
 	if err != nil {
 		return err
 	}

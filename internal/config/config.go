@@ -19,11 +19,11 @@ func Load() error {
 	return nil
 }
 
-func (c Configuration) UrlPosgres() string {
+func (c Configuration) UrlPostgres() string {
 	return fmt.Sprintf("postgres://%v:%v@%v:%v/%v", c.POSTGRES_USER, c.POSTGRES_PASSWORD, c.POSTGRES_HOST, c.POSTGRES_PORT, c.POSTGRES_DB)
 }
 
-func (c Configuration) CoonnectUrlMongo() string {
+func (c Configuration) ConnectUrlMongo() string {
 	return fmt.Sprintf("mongodb://%v:%v", c.MONGO_HOST, c.MONGO_PORT)
 }
 

@@ -18,11 +18,11 @@ func NewEntityService(rep repository.RepoEntity) EntityService {
 
 func (es EntityService) GetAll(ctx context.Context) ([]models.Entity, error) {
 
-	entitys, err := es.rep.GetAll(ctx)
+	entities, err := es.rep.GetAll(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return entitys, nil
+	return entities, nil
 }
 
 func (es *EntityService) GetForID(ctx context.Context, id string) (models.Entity, error) {

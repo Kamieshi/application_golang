@@ -14,12 +14,12 @@ type EntityHandler struct {
 }
 
 func (eh EntityHandler) List(c echo.Context) error {
-	entitys, err := eh.EntityService.GetAll(c.Request().Context())
+	entities, err := eh.EntityService.GetAll(c.Request().Context())
 	if err != nil {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, entitys)
+	return c.JSON(http.StatusOK, entities)
 }
 
 func (eh EntityHandler) GetDetail(c echo.Context) error {
@@ -53,11 +53,16 @@ func (eh EntityHandler) Update(c echo.Context) error {
 
 func (eh EntityHandler) Create(c echo.Context) error {
 	entity := models.Entity{}
+
 	err := c.Bind(&entity)
 	if err != nil {
-		return err
+		return c.JSON(http.StatusInternalServerError, fmt.Sprintf("{message: %v}", err))
 	}
+
 	err = eh.EntityService.Add(c.Request().Context(), entity)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, fmt.Sprintf("{message: %v}", err))
+	}
 
 	return c.JSON(http.StatusOK, "{status : 'Update successful'}")
 }
@@ -69,5 +74,6 @@ func (eh EntityHandler) Delete(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusNotFound, fmt.Sprintf("{message: %v}", err))
 	}
+
 	return c.JSON(http.StatusOK, "{message : 'Delete successful'}")
 }

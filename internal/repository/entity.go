@@ -20,3 +20,5 @@ type RepoEntity interface {
 	Update(ctx context.Context, id string, obj models.Entity) error
 	Delete(ctx context.Context, id string) error
 }
+
+
