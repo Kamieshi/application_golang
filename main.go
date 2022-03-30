@@ -38,14 +38,15 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	repoEntityMongo := repository.NewRepoEntityMongoDB(*clientMongo)
-	entService := service.NewEntityService(&repoEntityMongo)
-	handlerEntity := handlers.EntityHandler{EntityService: entService}
-
 	e := echo.New()
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: "${method}   ${uri}  ${status}    ${latency_human}\n",
 	}))
+
+	// Entity struct
+	repoEntityMongo := repository.NewRepoEntityMongoDB(*clientMongo)
+	entService := service.NewEntityService(&repoEntityMongo)
+	handlerEntity := handlers.EntityHandler{EntityService: entService}
 
 	entityGr := e.Group("/entity")
 	entityGr.GET("", handlerEntity.List)
@@ -54,6 +55,7 @@ func main() {
 	entityGr.DELETE("/:id", handlerEntity.Delete)
 	entityGr.POST("", handlerEntity.Create)
 
+	// User struct
 	userRepoMongo := repository.NewUserRepoMongoDB(*clientMongo)
 	userService := service.NewUserService(userRepoMongo)
 	userHandler := handlers.UserHandler{
@@ -65,5 +67,17 @@ func main() {
 	userGr.POST("", userHandler.Create)
 	userGr.DELETE("", userHandler.Delete)
 	userGr.GET("", userHandler.GetAll)
+
+	// Auth struct
+	authService := service.Auth{UserRep: userRepoMongo}
+	authHandler := handlers.AuthHandler{
+		AuthService: authService,
+	}
+
+	authGr := e.Group("/auth")
+	authGr.POST("", authHandler.IsAuthentication)
+
+	// Run Server
 	e.Logger.Debug(e.Start(":8000"))
+
 }
