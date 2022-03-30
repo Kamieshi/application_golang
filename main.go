@@ -3,7 +3,7 @@ package main
 import (
 	"app/internal/config"
 	"app/internal/handlers"
-	"app/internal/repository/mongodb"
+	repository "app/internal/repository/mongodb"
 	"app/internal/service"
 	"context"
 	"log"
@@ -38,10 +38,8 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	repoMongo := repository.NewRepoEntityMongoDB(*clientMongo)
-
-	entService := service.NewEntityService(&repoMongo)
-
+	repoEntityMongo := repository.NewRepoEntityMongoDB(*clientMongo)
+	entService := service.NewEntityService(&repoEntityMongo)
 	handlerEntity := handlers.EntityHandler{EntityService: entService}
 
 	e := echo.New()
@@ -50,12 +48,22 @@ func main() {
 	}))
 
 	entityGr := e.Group("/entity")
-
 	entityGr.GET("", handlerEntity.List)
 	entityGr.GET("/:id", handlerEntity.GetDetail)
 	entityGr.PUT("/:id", handlerEntity.Update)
 	entityGr.DELETE("/:id", handlerEntity.Delete)
 	entityGr.POST("", handlerEntity.Create)
 
+	userRepoMongo := repository.NewUserRepoMongoDB(*clientMongo)
+	userService := service.NewUserService(userRepoMongo)
+	userHandler := handlers.UserHandler{
+		Ser: *userService,
+	}
+
+	userGr := e.Group("/user")
+	userGr.GET("/:username", userHandler.Get)
+	userGr.POST("", userHandler.Create)
+	userGr.DELETE("", userHandler.Delete)
+	userGr.GET("", userHandler.GetAll)
 	e.Logger.Debug(e.Start(":8000"))
 }
