@@ -5,6 +5,7 @@ import (
 	"app/internal/handlers"
 	repository "app/internal/repository/mongodb"
 	"app/internal/service"
+
 	"context"
 	"log"
 
@@ -74,10 +75,14 @@ func main() {
 		AuthService: authService,
 	}
 
-	authGr := e.Group("/auth")
-	authGr.POST("", authHandler.IsAuthentication)
+	jwtConf := authService.JWTConfig()
 
+	authGr := e.Group("/auth")
+
+	authGr.POST("", authHandler.IsAuthentication)
+	authGr.POST("/login", authHandler.Login)
+	authGr.GET("/info", authHandler.Info, middleware.JWTWithConfig(jwtConf))
+	authGr.GET("/logout", authHandler.Logout, middleware.JWTWithConfig(jwtConf))
 	// Run Server
 	e.Logger.Debug(e.Start(":8000"))
-
 }
