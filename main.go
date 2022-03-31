@@ -70,7 +70,13 @@ func main() {
 	userGr.GET("", userHandler.GetAll)
 
 	// Auth struct
-	authService := service.Auth{UserRep: userRepoMongo}
+	authRep := repository.NewAuthRepoMongoDB(*clientMongo)
+
+	authService := service.Auth{
+		UserRep: userRepoMongo,
+		AuthRep: authRep,
+	}
+
 	authHandler := handlers.AuthHandler{
 		AuthService: authService,
 	}
@@ -79,10 +85,11 @@ func main() {
 
 	authGr := e.Group("/auth")
 
-	authGr.POST("", authHandler.IsAuthentication)
 	authGr.POST("/login", authHandler.Login)
 	authGr.GET("/info", authHandler.Info, middleware.JWTWithConfig(jwtConf))
 	authGr.GET("/logout", authHandler.Logout, middleware.JWTWithConfig(jwtConf))
+	authGr.POST("/refresh", authHandler.Refrash, middleware.JWTWithConfig(jwtConf))
+
 	// Run Server
 	e.Logger.Debug(e.Start(":8000"))
 }

@@ -37,9 +37,13 @@ func (ah AuthHandler) Login(c echo.Context) error {
 	if !isAuth {
 		return echo.ErrUnauthorized
 	}
-	token, err := ah.AuthService.CreateToken(user)
+	session, err := ah.AuthService.CreateAndWriteSession(c, user)
 	if err != nil {
 		return echo.ErrUnauthorized
+	}
+	token, err := ah.AuthService.CreateToken(user.UserName, user.Admin, session.IdSession)
+	if err != nil {
+		return err
 	}
 
 	cookie := new(http.Cookie)
@@ -47,7 +51,8 @@ func (ah AuthHandler) Login(c echo.Context) error {
 	cookie.Value = token
 	c.SetCookie(cookie)
 	return c.JSON(http.StatusOK, echo.Map{
-		"token": token,
+		"access":  token,
+		"refrash": session.RfToken,
 	})
 }
 
@@ -68,6 +73,28 @@ func (ah AuthHandler) Logout(c echo.Context) error {
 	return c.String(http.StatusAccepted, "Logout")
 }
 
-func (ah AuthHandler) refrash(c echo.Context) error {
-	return nil
+type rft struct {
+	Refrash string `json:"refrash" `
+}
+
+func (ah AuthHandler) Refrash(c echo.Context) error {
+	var rt rft
+	err := c.Bind(&rt)
+	if err != nil {
+		return err
+	}
+	acToken, refToken, err := ah.AuthService.RefrashAndWriteSession(c, rt.Refrash)
+	if err != nil {
+		return err
+	}
+
+	cookie := new(http.Cookie)
+	cookie.Name = "token"
+	cookie.Value = acToken
+	c.SetCookie(cookie)
+
+	return c.JSON(http.StatusAccepted, echo.Map{
+		"access":  acToken,
+		"refrash": refToken,
+	})
 }

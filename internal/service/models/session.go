@@ -9,4 +9,5 @@ type Session struct {
 	RfToken         string      `json:refrash_token" db:"refrash_token" bson:"refrash_token"`
 	UniqueSignature string      `json:"signature" db:"signature" bson:"signature"`
 	CreatedAt       time.Time   `json:"created_at" db:"created_at" bson:"created_at"`
+	Disabled        bool        `json:"disabled" db:"disabled" bson:"disabled"`
 }
