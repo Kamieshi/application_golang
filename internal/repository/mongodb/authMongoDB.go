@@ -30,9 +30,11 @@ func (ar AuthRepoMongoDB) Create(ctx context.Context, session models.Session) er
 }
 
 func (ar AuthRepoMongoDB) Update(ctx context.Context, session models.Session) error {
-	res := ar.collection.FindOneAndUpdate(ctx, bson.D{{"_id", session.Id}}, session)
-	err := res.Err()
-	return err
+	_, err := ar.collection.ReplaceOne(ctx, bson.D{{"_id", session.Id}}, session)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (ar AuthRepoMongoDB) Get(ctx context.Context, SessionId string) (models.Session, error) {

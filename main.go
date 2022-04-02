@@ -72,23 +72,20 @@ func main() {
 	// Auth struct
 	authRep := repository.NewAuthRepoMongoDB(*clientMongo)
 
-	authService := service.Auth{
-		UserRep: userRepoMongo,
-		AuthRep: authRep,
-	}
+	authService := service.NewAuth(userRepoMongo, authRep)
 
 	authHandler := handlers.AuthHandler{
 		AuthService: authService,
 	}
 
-	jwtConf := authService.JWTConfig()
+	e.Use(middleware.JWTWithConfig(authService.JWTConfig))
 
 	authGr := e.Group("/auth")
 
 	authGr.POST("/login", authHandler.Login)
-	authGr.GET("/info", authHandler.Info, middleware.JWTWithConfig(jwtConf))
-	authGr.GET("/logout", authHandler.Logout, middleware.JWTWithConfig(jwtConf))
-	authGr.POST("/refresh", authHandler.Refresh, middleware.JWTWithConfig(jwtConf))
+	authGr.GET("/info", authHandler.Info)
+	authGr.GET("/logout", authHandler.Logout)
+	authGr.POST("/refresh", authHandler.Refresh)
 
 	// Run Server
 	e.Logger.Debug(e.Start(":8000"))

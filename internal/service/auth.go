@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"reflect"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -17,23 +18,64 @@ import (
 )
 
 type Auth struct {
-	UserRep repository.UserRepo
-	AuthRep repository.Session
+	UserRep   repository.UserRepo
+	AuthRep   repository.Session
+	JWTConfig middleware.JWTConfig
 }
 
-type JwtPayLoadClaims struct {
+func NewAuth(userRep repository.UserRepo, sessionRep repository.Session) Auth {
+	headerAuthorization := echo.HeaderAuthorization
+	config := middleware.JWTConfig{
+		Claims:        &CustomClaims{},
+		SigningKey:    []byte(os.Getenv("SECRET_KEY")),
+		AuthScheme:    "Bearer",
+		SigningMethod: middleware.AlgorithmHS256,
+		ContextKey:    "user",
+		TokenLookup:   "header:" + headerAuthorization,
+		ParseTokenFunc: func(auth string, c echo.Context) (interface{}, error) {
+			keyFunc := func(t *jwt.Token) (interface{}, error) {
+				if t.Method.Alg() != "HS256" {
+					return nil, fmt.Errorf("unexpected jwt signing method=%v", t.Header["alg"])
+				}
+				return []byte(os.Getenv("SECRET_KEY")), nil
+			}
+
+			t := reflect.ValueOf(&CustomClaims{}).Type().Elem()
+			claims := reflect.New(t).Interface().(jwt.Claims)
+			token, err := jwt.ParseWithClaims(auth, claims, keyFunc)
+
+			if err != nil {
+				if fmt.Sprint(err)[:16] == "token is expired" && c.Path() == "/auth/refresh" {
+					return token, nil
+				}
+				return nil, err
+			}
+			if !token.Valid {
+				return nil, errors.New("invalid token")
+			}
+			return token, nil
+		},
+		Skipper: func(c echo.Context) bool {
+			switch c.Path() {
+			case "/auth/login":
+				return true
+			}
+			return false
+		},
+	}
+
+	return Auth{
+		UserRep:   userRep,
+		AuthRep:   sessionRep,
+		JWTConfig: config,
+	}
+}
+
+type CustomClaims struct {
 	Username  string `json:"name"`
 	Admin     bool   `json:"admin"`
 	IdSession string `json:"id_session"`
 	jwt.StandardClaims
-}
-
-func (au Auth) JWTConfig() middleware.JWTConfig {
-	return middleware.JWTConfig{
-		Claims:      &JwtPayLoadClaims{},
-		TokenLookup: "cookie:token",
-		SigningKey:  []byte(os.Getenv("SECRET_KEY")),
-	}
 }
 
 func (au Auth) IsAuthentication(ctx context.Context, username string, password string) (models.User, bool, error) {
@@ -49,12 +91,12 @@ func (au Auth) IsAuthentication(ctx context.Context, username string, password s
 }
 
 func (au Auth) CreateToken(username string, admin bool, idSession string) (string, error) {
-	payLoad := &JwtPayLoadClaims{
+	payLoad := &CustomClaims{
 		username,
 		admin,
 		idSession,
 		jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Hour * 72).Unix(),
+			ExpiresAt: time.Now().Add(time.Minute * 2).Unix(),
 		},
 	}
 
@@ -87,7 +129,8 @@ func (au Auth) CreateAndWriteSession(ctx echo.Context, user models.User) (models
 
 func (au Auth) RefreshAndWriteSession(ctx echo.Context, rfToken string) (string, string, error) {
 	user := ctx.Get("user").(*jwt.Token)
-	payLoad := user.Claims.(*JwtPayLoadClaims)
+	payLoad := user.Claims.(*CustomClaims)
+
 	currentSession, err := au.AuthRep.Get(ctx.Request().Context(), payLoad.IdSession)
 	if err != nil {
 		return "", "", err
@@ -113,7 +156,7 @@ func (au Auth) createRandomOutput(sal ...string) string {
 
 func (au Auth) GetUser(ctx echo.Context) (models.User, error) {
 	user := ctx.Get("user").(*jwt.Token)
-	claims := user.Claims.(*JwtPayLoadClaims)
+	claims := user.Claims.(*CustomClaims)
 	User, err := au.UserRep.Get(ctx.Request().Context(), claims.Username)
 	return User, err
 }

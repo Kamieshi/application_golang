@@ -46,10 +46,6 @@ func (ah AuthHandler) Login(c echo.Context) error {
 		return err
 	}
 
-	cookie := new(http.Cookie)
-	cookie.Name = "token"
-	cookie.Value = token
-	c.SetCookie(cookie)
 	return c.JSON(http.StatusOK, echo.Map{
 		"access":  token,
 		"refresh": session.RfToken,
@@ -87,11 +83,6 @@ func (ah AuthHandler) Refresh(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-
-	cookie := new(http.Cookie)
-	cookie.Name = "token"
-	cookie.Value = acToken
-	c.SetCookie(cookie)
 
 	return c.JSON(http.StatusAccepted, echo.Map{
 		"access":  acToken,
