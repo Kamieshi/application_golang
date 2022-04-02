@@ -36,13 +36,13 @@ func (au Auth) JWTConfig() middleware.JWTConfig {
 	}
 }
 
-func (au Auth) IsAuthentication(ctx context.Context, usename string, password string) (models.User, bool, error) {
-	user, err := au.UserRep.Get(ctx, usename)
+func (au Auth) IsAuthentication(ctx context.Context, username string, password string) (models.User, bool, error) {
+	user, err := au.UserRep.Get(ctx, username)
 	if err != nil {
 		return user, false, err
 	}
-	inPasswordhash := createHash256Password(user, password)
-	if user.PasswordHash == inPasswordhash {
+	inPasswordHash := createHash256Password(user, password)
+	if user.PasswordHash == inPasswordHash {
 		return user, true, err
 	}
 	return models.User{}, false, err
@@ -68,14 +68,14 @@ func (au Auth) CreateToken(username string, admin bool, idSession string) (strin
 }
 
 func (au Auth) CreateAndWriteSession(ctx echo.Context, user models.User) (models.Session, error) {
-	resrash := au.createRandomOutput(user.UserName)
+	refresh := au.createRandomOutput(user.UserName)
 
 	session := models.Session{
 		IdSession:       au.createRandomOutput("id"),
 		UserId:          user.Id,
 		CreatedAt:       time.Now(),
 		Disabled:        false,
-		RfToken:         resrash,
+		RfToken:         refresh,
 		UniqueSignature: ctx.Request().UserAgent(),
 	}
 	err := au.AuthRep.Create(ctx.Request().Context(), session)
@@ -85,7 +85,7 @@ func (au Auth) CreateAndWriteSession(ctx echo.Context, user models.User) (models
 	return session, err
 }
 
-func (au Auth) RefrashAndWriteSession(ctx echo.Context, rfToken string) (string, string, error) {
+func (au Auth) RefreshAndWriteSession(ctx echo.Context, rfToken string) (string, string, error) {
 	user := ctx.Get("user").(*jwt.Token)
 	payLoad := user.Claims.(*JwtPayLoadClaims)
 	currentSession, err := au.AuthRep.Get(ctx.Request().Context(), payLoad.IdSession)

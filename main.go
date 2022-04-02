@@ -88,7 +88,7 @@ func main() {
 	authGr.POST("/login", authHandler.Login)
 	authGr.GET("/info", authHandler.Info, middleware.JWTWithConfig(jwtConf))
 	authGr.GET("/logout", authHandler.Logout, middleware.JWTWithConfig(jwtConf))
-	authGr.POST("/refresh", authHandler.Refrash, middleware.JWTWithConfig(jwtConf))
+	authGr.POST("/refresh", authHandler.Refresh, middleware.JWTWithConfig(jwtConf))
 
 	// Run Server
 	e.Logger.Debug(e.Start(":8000"))

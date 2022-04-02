@@ -4,7 +4,7 @@
 *.dll
 *.so
 *.dylib
-
+.idea
 .vscode
 
 go-outline

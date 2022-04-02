@@ -14,10 +14,10 @@ CREATE TABLE user(
 
 
 
-insert into entity (entity_name, price, is_active) values ('nssssame_1',1000,True);
-insert into entity (entity_name, price, is_active) values ('nssssame_2',2000,False);
-insert into entity (entity_name, price, is_active) values ('nssssame_3',3000,True);
-insert into entity (entity_name, price, is_active) values ('nssssame_4',4000,False);
-insert into entity (entity_name, price, is_active) values ('nssssame_5',5000,True);
+insert into entity (entity_name, price, is_active) values ('name_1',1000,True);
+insert into entity (entity_name, price, is_active) values ('name_2',2000,False);
+insert into entity (entity_name, price, is_active) values ('name_3',3000,True);
+insert into entity (entity_name, price, is_active) values ('name_4',4000,False);
+insert into entity (entity_name, price, is_active) values ('name_5',5000,True);
 
 select * from entity;

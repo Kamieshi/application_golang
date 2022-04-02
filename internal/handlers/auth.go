@@ -52,7 +52,7 @@ func (ah AuthHandler) Login(c echo.Context) error {
 	c.SetCookie(cookie)
 	return c.JSON(http.StatusOK, echo.Map{
 		"access":  token,
-		"refrash": session.RfToken,
+		"refresh": session.RfToken,
 	})
 }
 
@@ -74,16 +74,16 @@ func (ah AuthHandler) Logout(c echo.Context) error {
 }
 
 type rft struct {
-	Refrash string `json:"refrash" `
+	Refresh string `json:"refresh" `
 }
 
-func (ah AuthHandler) Refrash(c echo.Context) error {
+func (ah AuthHandler) Refresh(c echo.Context) error {
 	var rt rft
 	err := c.Bind(&rt)
 	if err != nil {
 		return err
 	}
-	acToken, refToken, err := ah.AuthService.RefrashAndWriteSession(c, rt.Refrash)
+	acToken, refToken, err := ah.AuthService.RefreshAndWriteSession(c, rt.Refresh)
 	if err != nil {
 		return err
 	}
@@ -95,6 +95,6 @@ func (ah AuthHandler) Refrash(c echo.Context) error {
 
 	return c.JSON(http.StatusAccepted, echo.Map{
 		"access":  acToken,
-		"refrash": refToken,
+		"refresh": refToken,
 	})
 }
