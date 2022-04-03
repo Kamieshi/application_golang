@@ -1,8 +1,8 @@
 package service
 
 import (
+	models2 "app/internal/models"
 	"app/internal/repository"
-	"app/internal/service/models"
 	"context"
 	"crypto/sha256"
 	"errors"
@@ -78,7 +78,7 @@ type CustomClaims struct {
 	jwt.StandardClaims
 }
 
-func (au Auth) IsAuthentication(ctx context.Context, username string, password string) (models.User, bool, error) {
+func (au Auth) IsAuthentication(ctx context.Context, username string, password string) (models2.User, bool, error) {
 	user, err := au.UserRep.Get(ctx, username)
 	if err != nil {
 		return user, false, err
@@ -87,7 +87,7 @@ func (au Auth) IsAuthentication(ctx context.Context, username string, password s
 	if user.PasswordHash == inPasswordHash {
 		return user, true, err
 	}
-	return models.User{}, false, err
+	return models2.User{}, false, err
 }
 
 func (au Auth) CreateToken(username string, admin bool, idSession string) (string, error) {
@@ -109,10 +109,10 @@ func (au Auth) CreateToken(username string, admin bool, idSession string) (strin
 	return tt, nil
 }
 
-func (au Auth) CreateAndWriteSession(ctx echo.Context, user models.User) (models.Session, error) {
+func (au Auth) CreateAndWriteSession(ctx echo.Context, user models2.User) (models2.Session, error) {
 	refresh := au.createRandomOutput(user.UserName)
 
-	session := models.Session{
+	session := models2.Session{
 		IdSession:       au.createRandomOutput("id"),
 		UserId:          user.Id,
 		CreatedAt:       time.Now(),
@@ -122,7 +122,7 @@ func (au Auth) CreateAndWriteSession(ctx echo.Context, user models.User) (models
 	}
 	err := au.AuthRep.Create(ctx.Request().Context(), session)
 	if err != nil {
-		return models.Session{}, err
+		return models2.Session{}, err
 	}
 	return session, err
 }
@@ -154,7 +154,7 @@ func (au Auth) createRandomOutput(sal ...string) string {
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
-func (au Auth) GetUser(ctx echo.Context) (models.User, error) {
+func (au Auth) GetUser(ctx echo.Context) (models2.User, error) {
 	user := ctx.Get("user").(*jwt.Token)
 	claims := user.Claims.(*CustomClaims)
 	User, err := au.UserRep.Get(ctx.Request().Context(), claims.Username)

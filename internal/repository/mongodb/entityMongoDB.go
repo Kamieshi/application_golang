@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"app/internal/service/models"
+	"app/internal/models"
 	"context"
 	"errors"
 	"fmt"
@@ -25,7 +25,7 @@ func NewRepoEntityMongoDB(client mongo.Client) RepoEntityMongoDB {
 	}
 }
 
-func (rm *RepoEntityMongoDB) GetAll(ctx context.Context) ([]models.Entity, error) {
+func (rm *RepoEntityMongoDB) GetAll(ctx context.Context) (*[]models.Entity, error) {
 	cursor, err := rm.collectionEntity.Find(ctx, bson.D{{}})
 	if err != nil {
 		return nil, err
@@ -37,7 +37,7 @@ func (rm *RepoEntityMongoDB) GetAll(ctx context.Context) ([]models.Entity, error
 		return nil, err
 	}
 
-	return resEntities, nil
+	return &resEntities, nil
 }
 
 func (rm *RepoEntityMongoDB) GetForID(ctx context.Context, id string) (models.Entity, error) {

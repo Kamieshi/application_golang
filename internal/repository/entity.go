@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"app/internal/service/models"
+	"app/internal/models"
 	"context"
 )
 
@@ -14,11 +14,9 @@ import (
 // }
 
 type RepoEntity interface {
-	GetAll(ctx context.Context) ([]models.Entity, error)
+	GetAll(ctx context.Context) (*[]models.Entity, error)
 	GetForID(ctx context.Context, id string) (models.Entity, error)
 	Add(ctx context.Context, obj models.Entity) error
 	Update(ctx context.Context, id string, obj models.Entity) error
 	Delete(ctx context.Context, id string) error
 }
-
-

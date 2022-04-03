@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"app/internal/service/models"
+	"app/internal/models"
 	"context"
 	"errors"
 	"fmt"

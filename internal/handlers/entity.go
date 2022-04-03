@@ -1,8 +1,8 @@
 package handlers
 
 import (
+	"app/internal/models"
 	"app/internal/service"
-	"app/internal/service/models"
 	"fmt"
 	"net/http"
 

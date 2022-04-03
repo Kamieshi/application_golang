@@ -1,8 +1,8 @@
 package service
 
 import (
+	"app/internal/models"
 	"app/internal/repository"
-	"app/internal/service/models"
 	"context"
 )
 
@@ -16,7 +16,7 @@ func NewEntityService(rep repository.RepoEntity) EntityService {
 	}
 }
 
-func (es EntityService) GetAll(ctx context.Context) ([]models.Entity, error) {
+func (es EntityService) GetAll(ctx context.Context) (*[]models.Entity, error) {
 
 	entities, err := es.rep.GetAll(ctx)
 	if err != nil {

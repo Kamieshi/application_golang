@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"app/internal/service/models"
+	"app/internal/models"
 	"context"
 )
 
@@ -9,6 +9,6 @@ type UserRepo interface {
 	Get(ctx context.Context, username string) (models.User, error)
 	Add(ctx context.Context, user models.User) error
 	Delete(ctx context.Context, username string) error
-	GetAll(ctx context.Context) ([]models.User, error)
+	GetAll(ctx context.Context) (*[]models.User, error)
 	Update(ctx context.Context) error
 }

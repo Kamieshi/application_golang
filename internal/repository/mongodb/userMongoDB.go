@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"app/internal/service/models"
+	"app/internal/models"
 	"context"
 	"os"
 
@@ -40,7 +40,7 @@ func (ur UserRepoMongoDB) Delete(ctx context.Context, username string) error {
 	return res.Err()
 }
 
-func (ur UserRepoMongoDB) GetAll(ctx context.Context) ([]models.User, error) {
+func (ur UserRepoMongoDB) GetAll(ctx context.Context) (*[]models.User, error) {
 	cursor, err := ur.collection.Find(ctx, bson.D{{}})
 	if err != nil {
 		return nil, err
@@ -51,7 +51,7 @@ func (ur UserRepoMongoDB) GetAll(ctx context.Context) ([]models.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	return resUser, nil
+	return &resUser, nil
 }
 
 func (ur UserRepoMongoDB) Update(ctx context.Context) error {
