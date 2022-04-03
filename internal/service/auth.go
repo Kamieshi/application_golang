@@ -1,7 +1,7 @@
 package service
 
 import (
-	models2 "app/internal/models"
+	"app/internal/models"
 	"app/internal/repository"
 	"context"
 	"crypto/sha256"
@@ -78,7 +78,7 @@ type CustomClaims struct {
 	jwt.StandardClaims
 }
 
-func (au Auth) IsAuthentication(ctx context.Context, username string, password string) (models2.User, bool, error) {
+func (au Auth) IsAuthentication(ctx context.Context, username string, password string) (models.User, bool, error) {
 	user, err := au.UserRep.Get(ctx, username)
 	if err != nil {
 		return user, false, err
@@ -87,7 +87,7 @@ func (au Auth) IsAuthentication(ctx context.Context, username string, password s
 	if user.PasswordHash == inPasswordHash {
 		return user, true, err
 	}
-	return models2.User{}, false, err
+	return models.User{}, false, err
 }
 
 func (au Auth) CreateToken(username string, admin bool, idSession string) (string, error) {
@@ -109,21 +109,22 @@ func (au Auth) CreateToken(username string, admin bool, idSession string) (strin
 	return tt, nil
 }
 
-func (au Auth) CreateAndWriteSession(ctx echo.Context, user models2.User) (models2.Session, error) {
+func (au Auth) CreateAndWriteSession(ctx echo.Context, user models.User) (models.Session, error) {
 	refresh := au.createRandomOutput(user.UserName)
 
-	session := models2.Session{
+	session := models.Session{
 		IdSession:       au.createRandomOutput("id"),
 		UserId:          user.Id,
 		CreatedAt:       time.Now(),
 		Disabled:        false,
-		RfToken:         refresh,
+		RfToken:         createHashSHA256WithSalt(refresh),
 		UniqueSignature: ctx.Request().UserAgent(),
 	}
 	err := au.AuthRep.Create(ctx.Request().Context(), session)
 	if err != nil {
-		return models2.Session{}, err
+		return models.Session{}, err
 	}
+	session.RfToken = refresh
 	return session, err
 }
 
@@ -138,11 +139,12 @@ func (au Auth) RefreshAndWriteSession(ctx echo.Context, rfToken string) (string,
 	if currentSession.Disabled {
 		return "", "", errors.New("Disable session")
 	}
-	if rfToken == currentSession.RfToken {
+	if createHashSHA256WithSalt(rfToken) == currentSession.RfToken {
 		accessToken, _ := au.CreateToken(payLoad.Username, payLoad.Admin, payLoad.IdSession)
-		currentSession.RfToken = au.createRandomOutput()
+		newRfToken := au.createRandomOutput()
+		currentSession.RfToken = createHashSHA256WithSalt(newRfToken)
 		au.AuthRep.Update(ctx.Request().Context(), currentSession)
-		return accessToken, currentSession.RfToken, nil
+		return accessToken, newRfToken, nil
 	}
 	return "", "", errors.New("Disable session")
 }
@@ -154,7 +156,14 @@ func (au Auth) createRandomOutput(sal ...string) string {
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
-func (au Auth) GetUser(ctx echo.Context) (models2.User, error) {
+func createHashSHA256WithSalt(s string) string {
+	data := fmt.Sprint(s, os.Getenv("SECRET_KEY"))
+	h := sha256.New()
+	h.Write([]byte(data))
+	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
+func (au Auth) GetUser(ctx echo.Context) (models.User, error) {
 	user := ctx.Get("user").(*jwt.Token)
 	claims := user.Claims.(*CustomClaims)
 	User, err := au.UserRep.Get(ctx.Request().Context(), claims.Username)
