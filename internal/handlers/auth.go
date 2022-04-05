@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/labstack/echo/v4"
+	echo "github.com/labstack/echo/v4"
 )
 
 type AuthHandler struct {
@@ -34,6 +34,9 @@ func (ah AuthHandler) Login(c echo.Context) error {
 		return err
 	}
 	user, isAuth, err := ah.AuthService.IsAuthentication(c.Request().Context(), data.Username, data.Password)
+	if err != nil {
+		return err
+	}
 	if !isAuth {
 		return echo.ErrUnauthorized
 	}

@@ -3,14 +3,17 @@ package main
 import (
 	"app/internal/config"
 	"app/internal/handlers"
-	repository "app/internal/repository/mongodb"
+	mongoRepository "app/internal/repository/mongodb"
+
 	"app/internal/service"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
+	"time"
 
 	"context"
-	"log"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4" //nolint:typecheck
 	"github.com/labstack/echo/v4/middleware"
+	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -20,6 +23,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	config.InitLogger()
 
 	// connPool, err := pgxpool.Connect(context.Background(), configuration.UrlPostgres())
 	// if err != nil {
@@ -34,18 +38,27 @@ func main() {
 
 	// entService := service.NewEntityService(&repoPg)
 
-	clientMongo, err := mongo.Connect(context.Background(), options.Client().ApplyURI(configuration.ConnectUrlMongo()))
+	timeOutConnect, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+
+	clientMongo, err := mongo.Connect(timeOutConnect, options.Client().ApplyURI(configuration.ConnectUrlMongo()))
+	defer cancel()
 	if err != nil {
-		log.Fatalln(err)
+		log.WithError(err).Panic("Error with mongo connection")
 	}
 
-	e := echo.New()
+	var rf *readpref.ReadPref
+	err = clientMongo.Ping(timeOutConnect, rf)
+	if err != nil {
+		log.WithError(err).Panic("Error with mongo connection")
+	}
+
+	e := echo.New() //nolint:typecheck
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: "${method}   ${uri}  ${status}    ${latency_human}\n",
 	}))
 
 	// Entity struct
-	repoEntityMongo := repository.NewRepoEntityMongoDB(*clientMongo)
+	repoEntityMongo := mongoRepository.NewRepoEntityMongoDB(*clientMongo)
 	entService := service.NewEntityService(&repoEntityMongo)
 	handlerEntity := handlers.EntityHandler{EntityService: entService}
 
@@ -57,7 +70,7 @@ func main() {
 	entityGr.POST("", handlerEntity.Create)
 
 	// User struct
-	userRepoMongo := repository.NewUserRepoMongoDB(*clientMongo)
+	userRepoMongo := mongoRepository.NewUserRepoMongoDB(*clientMongo)
 	userService := service.NewUserService(userRepoMongo)
 	userHandler := handlers.UserHandler{
 		Ser: *userService,
@@ -70,7 +83,7 @@ func main() {
 	userGr.GET("", userHandler.GetAll)
 
 	// Auth struct
-	authRep := repository.NewAuthRepoMongoDB(*clientMongo)
+	authRep := mongoRepository.NewAuthRepoMongoDB(*clientMongo)
 
 	authService := service.NewAuth(userRepoMongo, authRep)
 
@@ -86,6 +99,17 @@ func main() {
 	authGr.GET("/info", authHandler.Info)
 	authGr.GET("/logout", authHandler.Logout)
 	authGr.POST("/refresh", authHandler.Refresh)
+
+	// Work with static
+	e.Static("/images", "./static/images")
+
+	// Work with upload images
+	imageRepo := mongoRepository.NewImageRepoMongoDB(*clientMongo)
+	imageService := service.ImageService{
+		ImageRepository: imageRepo,
+	}
+	imageHandler := handlers.ImageHandler{ImageService: imageService}
+	e.POST("/upload", imageHandler.Load)
 
 	// Run Server
 	e.Logger.Debug(e.Start(":8000"))

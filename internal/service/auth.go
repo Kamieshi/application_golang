@@ -7,7 +7,9 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"math/rand"
+	"net/http"
 	"os"
 	"reflect"
 	"time"
@@ -59,7 +61,17 @@ func NewAuth(userRep repository.UserRepo, sessionRep repository.Session) Auth {
 			switch c.Path() {
 			case "/auth/login":
 				return true
+
+			case "/user":
+				if c.Request().Method == http.MethodPost {
+					return true
+				}
+			case "/images*":
+				return true
+			case "/upload":
+				return true
 			}
+
 			return false
 		},
 	}
@@ -81,6 +93,7 @@ type CustomClaims struct {
 func (au Auth) IsAuthentication(ctx context.Context, username string, password string) (models.User, bool, error) {
 	user, err := au.UserRep.Get(ctx, username)
 	if err != nil {
+		logrus.WithFields(logrus.Fields{"username": username}).Warn("Unsuccessful login attempt")
 		return user, false, err
 	}
 	inPasswordHash := createHash256Password(user, password)
@@ -96,7 +109,7 @@ func (au Auth) CreateToken(username string, admin bool, idSession string) (strin
 		admin,
 		idSession,
 		jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Minute * 2).Unix(),
+			ExpiresAt: time.Now().Add(time.Hour * 10).Unix(),
 		},
 	}
 
