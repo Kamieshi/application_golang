@@ -110,7 +110,7 @@ func main() {
 	}
 	imageHandler := handlers.ImageHandler{ImageService: imageService}
 	e.POST("/upload", imageHandler.Load)
-
+	e.GET("/load/:easy_link", imageHandler.Get)
 	// Run Server
 	e.Logger.Debug(e.Start(":8000"))
 }

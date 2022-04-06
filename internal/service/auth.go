@@ -58,6 +58,7 @@ func NewAuth(userRep repository.UserRepo, sessionRep repository.Session) Auth {
 			return token, nil
 		},
 		Skipper: func(c echo.Context) bool {
+			logrus.WithFields(logrus.Fields{"path": c.Path()}).Info("Skipper JWT Auth")
 			switch c.Path() {
 			case "/auth/login":
 				return true
@@ -69,6 +70,8 @@ func NewAuth(userRep repository.UserRepo, sessionRep repository.Session) Auth {
 			case "/images*":
 				return true
 			case "/upload":
+				return true
+			case "/load/:easy_link":
 				return true
 			}
 

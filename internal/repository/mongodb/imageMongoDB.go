@@ -46,8 +46,14 @@ func (repImg ImageRepoMongoDB) Save(ctx context.Context, img models.Image) (inte
 	return res.UpsertedID, err
 }
 
-func (repImg ImageRepoMongoDB) Get(ctx context.Context, easyLink string) (models.Image, error) {
-	return models.Image{}, nil
+func (repImg ImageRepoMongoDB) Get(ctx context.Context, easyLink string) (*models.Image, error) {
+	var image models.Image
+	err := repImg.collectionImage.FindOne(ctx, bson.D{{"easy_link", easyLink}}).Decode(&image)
+	if err != nil {
+		logrus.WithError(err).Error("Error get image in db")
+		return &image, err
+	}
+	return &image, err
 }
 
 func (repImg ImageRepoMongoDB) Delete(ctx context.Context, id interface{}) error {

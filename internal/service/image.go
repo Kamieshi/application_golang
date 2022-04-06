@@ -33,8 +33,17 @@ func (ims ImageService) Save(ctx context.Context, fileName string, data *[]byte)
 	return &image, err
 }
 
-func (ims ImageService) Get(ctx context.Context, easyLink string) (models.Image, error) {
+func (ims ImageService) Get(ctx context.Context, easyLink string) (*models.Image, error) {
 	image, err := ims.ImageRepository.Get(ctx, easyLink)
+	if err != nil {
+		logrus.WithError(err).Error("Error Get in repository image")
+		return nil, err
+	}
+	err = repository.ChekImageData(image)
+	if err != nil {
+		logrus.WithError(err).Error("Error Init image data")
+		return nil, err
+	}
 	return image, err
 }
 

@@ -3,6 +3,7 @@ package handlers
 import (
 	"app/internal/service"
 	"github.com/labstack/echo/v4"
+	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 )
@@ -31,5 +32,14 @@ func (ih ImageHandler) Load(c echo.Context) error {
 	}
 	img.Data = nil
 	return c.JSON(http.StatusAccepted, img)
+}
 
+func (ih ImageHandler) Get(c echo.Context) error {
+	easy_link := c.Param("easy_link")
+	img, err := ih.ImageService.Get(c.Request().Context(), easy_link)
+	if err != nil {
+		logrus.WithError(err).Error("Handler error")
+		return err
+	}
+	return c.File(img.FullPath())
 }
