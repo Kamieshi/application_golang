@@ -4,6 +4,7 @@ import (
 	"app/internal/models"
 	"app/internal/repository"
 	"context"
+	"github.com/sirupsen/logrus"
 )
 
 type ImageService struct {
@@ -12,7 +13,23 @@ type ImageService struct {
 
 func (ims ImageService) Save(ctx context.Context, fileName string, data *[]byte) (*models.Image, error) {
 	image := models.NewImage(fileName, data)
-	err := ims.ImageRepository.Save(ctx, image)
+
+	id, err := ims.ImageRepository.Save(ctx, image)
+	if err != nil {
+		logrus.Error("Error write image in db")
+		return nil, err
+	}
+	logrus.Info("Successful write image in db")
+	err = repository.WriteImageInHost(image)
+	if err != nil {
+		logrus.Error("Error write image in host")
+		err = ims.ImageRepository.Delete(ctx, id)
+		if err != nil {
+			logrus.Error("Error delete image in db")
+			return &image, err
+		}
+	}
+	logrus.Info("Successful SAVE image")
 	return &image, err
 }
 

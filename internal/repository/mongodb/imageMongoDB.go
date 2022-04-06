@@ -2,10 +2,11 @@ package repository
 
 import (
 	"app/internal/models"
-	"app/internal/repository"
 	"context"
 	"github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"os"
 )
 
@@ -22,27 +23,33 @@ func NewImageRepoMongoDB(client mongo.Client) ImageRepoMongoDB {
 	}
 }
 
-func (repImg ImageRepoMongoDB) Save(ctx context.Context, img models.Image) error {
+func (repImg ImageRepoMongoDB) Save(ctx context.Context, img models.Image) (interface{}, error) {
 
-	err := repository.WriteImageInHost(img)
-	if err != nil {
-		logrus.WithFields(logrus.Fields{"full_path": img.FullPath()}).Error("Unsuccessful write in host")
-		return err
-	}
+	bytesArr := *img.Data
 	img.Data = nil
-	res, err := repImg.collectionImage.InsertOne(ctx, img)
+	filter := bson.M{
+		"root_path": img.RootPath,
+		"filename":  img.Filename,
+	}
+	bsonObj := bson.M{
+		"$set": img,
+	}
+	opts := options.Update().SetUpsert(true)
+	res, err := repImg.collectionImage.UpdateOne(ctx, filter, bsonObj, opts)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"full_path": img.FullPath()}).Error("Unsuccessful write in mongodb")
-		return err
+		logrus.WithError(err).Error()
+		return nil, err
 	}
+	img.Data = &bytesArr
 	logrus.Info(res)
-	return err
+	return res.UpsertedID, err
 }
 
 func (repImg ImageRepoMongoDB) Get(ctx context.Context, easyLink string) (models.Image, error) {
 	return models.Image{}, nil
 }
 
-func (repImg ImageRepoMongoDB) Delete(ctx context.Context, img models.Image) error {
+func (repImg ImageRepoMongoDB) Delete(ctx context.Context, id interface{}) error {
 	return nil
 }
