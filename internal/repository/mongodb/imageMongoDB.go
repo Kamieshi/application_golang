@@ -57,5 +57,6 @@ func (repImg ImageRepoMongoDB) Get(ctx context.Context, easyLink string) (*model
 }
 
 func (repImg ImageRepoMongoDB) Delete(ctx context.Context, id interface{}) error {
-	return nil
+	res := repImg.collectionImage.FindOneAndDelete(ctx, bson.D{{"_id", id}})
+	return res.Err()
 }

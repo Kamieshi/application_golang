@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -62,16 +63,11 @@ func NewAuth(userRep repository.UserRepo, sessionRep repository.Session) Auth {
 			switch c.Path() {
 			case "/auth/login":
 				return true
-
 			case "/user":
 				if c.Request().Method == http.MethodPost {
 					return true
 				}
 			case "/images*":
-				return true
-			case "/upload":
-				return true
-			case "/load/:easy_link":
 				return true
 			}
 
@@ -107,12 +103,15 @@ func (au Auth) IsAuthentication(ctx context.Context, username string, password s
 }
 
 func (au Auth) CreateToken(username string, admin bool, idSession string) (string, error) {
+
+	timeLive, _ := strconv.Atoi(os.Getenv("TIME_LIVE_MINUTE_JWT"))
+
 	payLoad := &CustomClaims{
 		username,
 		admin,
 		idSession,
 		jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Hour * 10).Unix(),
+			ExpiresAt: time.Now().Add(time.Minute * time.Duration(timeLive)).Unix(),
 		},
 	}
 

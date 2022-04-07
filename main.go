@@ -3,8 +3,9 @@ package main
 import (
 	"app/internal/config"
 	"app/internal/handlers"
+	customMiddleware "app/internal/middleware"
 	mongoRepository "app/internal/repository/mongodb"
-
+	redisRepository "app/internal/repository/redis"
 	"app/internal/service"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"time"
@@ -62,8 +63,14 @@ func main() {
 	entService := service.NewEntityService(&repoEntityMongo)
 	handlerEntity := handlers.EntityHandler{EntityService: entService}
 
+	// Add cash middleware
+	repCache := redisRepository.NewRedisRepository("localhost:6379")
+	cachemiddleware := customMiddleware.CashMiddleware{
+		RepCash: repCache,
+	}
+
 	entityGr := e.Group("/entity")
-	entityGr.GET("", handlerEntity.List)
+	entityGr.GET("", handlerEntity.List, cachemiddleware.Process)
 	entityGr.GET("/:id", handlerEntity.GetDetail)
 	entityGr.PUT("/:id", handlerEntity.Update)
 	entityGr.DELETE("/:id", handlerEntity.Delete)
@@ -111,6 +118,7 @@ func main() {
 	imageHandler := handlers.ImageHandler{ImageService: imageService}
 	e.POST("/upload", imageHandler.Load)
 	e.GET("/load/:easy_link", imageHandler.Get)
+
 	// Run Server
 	e.Logger.Debug(e.Start(":8000"))
 }
