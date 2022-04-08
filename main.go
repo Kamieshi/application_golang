@@ -3,7 +3,6 @@ package main
 import (
 	"app/internal/config"
 	"app/internal/handlers"
-	customMiddleware "app/internal/middleware"
 	mongoRepository "app/internal/repository/mongodb"
 	redisRepository "app/internal/repository/redis"
 	"app/internal/service"
@@ -60,17 +59,13 @@ func main() {
 
 	// Entity struct
 	repoEntityMongo := mongoRepository.NewRepoEntityMongoDB(*clientMongo)
-	entService := service.NewEntityService(&repoEntityMongo)
+	repoCashEntity := redisRepository.NewCashEntityRepository(configuration.REDIS_URL)
+	entService := service.NewEntityService(&repoEntityMongo, repoCashEntity)
+	//entService := service.NewEntityService(&repoEntityMongo, nil)
 	handlerEntity := handlers.EntityHandler{EntityService: entService}
 
-	// Add cash middleware
-	repCache := redisRepository.NewRedisRepository("localhost:6379")
-	cachemiddleware := customMiddleware.CashMiddleware{
-		RepCash: repCache,
-	}
-
 	entityGr := e.Group("/entity")
-	entityGr.GET("", handlerEntity.List, cachemiddleware.Process)
+	entityGr.GET("", handlerEntity.List)
 	entityGr.GET("/:id", handlerEntity.GetDetail)
 	entityGr.PUT("/:id", handlerEntity.Update)
 	entityGr.DELETE("/:id", handlerEntity.Delete)

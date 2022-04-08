@@ -35,7 +35,7 @@ func (ah AuthHandler) Login(c echo.Context) error {
 	}
 	user, isAuth, err := ah.AuthService.IsAuthentication(c.Request().Context(), data.Username, data.Password)
 	if err != nil {
-		return err
+		return c.String(http.StatusUnauthorized, "invalid Username or password")
 	}
 	if !isAuth {
 		return echo.ErrUnauthorized

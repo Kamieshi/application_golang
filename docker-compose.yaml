@@ -30,6 +30,7 @@ services:
       SESSION_COLLECTION: "session"
       IMAGE_COLLECTION: "image"
       SECRET_KEY: ""
+      REDIS_URL: "redis:6379"
       TIME_LIVE_MINUTE_JWT: 1000
     ports:
       - "8005:8000"
@@ -43,3 +44,8 @@ services:
       - "27019:27017"
     environment:
       APP_MONGO_DB: "app"
+
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"

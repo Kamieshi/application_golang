@@ -15,8 +15,8 @@ type Image struct {
 	EasyLink string  `json:"easy_link" bson:"easy_link"`
 }
 
-func (im *Image) Byte() (*[]byte, error) {
-	dat, err := os.ReadFile(im.RootPath)
+func (img *Image) Byte() (*[]byte, error) {
+	dat, err := os.ReadFile(img.RootPath)
 	if err != nil {
 		logrus.Error(err)
 		return nil, err
@@ -33,11 +33,11 @@ func NewImage(filename string, dt *[]byte) Image {
 	fName := filepath.Clean(filename)
 	nowDate := time.Now()
 	rootPath := fmt.Sprintf("%v/images/%d-%s-%d/", pwd, nowDate.Day(), nowDate.Month().String(), nowDate.Year())
-	easylink := fmt.Sprintf("%d%s%d_%v", nowDate.Day(), nowDate.Month(), nowDate.Year(), fName)
+	easyLink := fmt.Sprintf("%d%s%d_%v", nowDate.Day(), nowDate.Month(), nowDate.Year(), fName)
 	return Image{
 		Filename: fName,
 		RootPath: rootPath,
 		Data:     dt,
-		EasyLink: easylink,
+		EasyLink: easyLink,
 	}
 }

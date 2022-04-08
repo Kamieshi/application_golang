@@ -152,7 +152,7 @@ func (au Auth) RefreshAndWriteSession(ctx echo.Context, rfToken string) (string,
 		return "", "", err
 	}
 	if currentSession.Disabled {
-		return "", "", errors.New("Disable session")
+		return "", "", errors.New("disable session")
 	}
 	if createHashSHA256WithSalt(rfToken) == currentSession.RfToken {
 		accessToken, _ := au.CreateToken(payLoad.Username, payLoad.Admin, payLoad.IdSession)
@@ -161,7 +161,7 @@ func (au Auth) RefreshAndWriteSession(ctx echo.Context, rfToken string) (string,
 		au.AuthRep.Update(ctx.Request().Context(), currentSession)
 		return accessToken, newRfToken, nil
 	}
-	return "", "", errors.New("Disable session")
+	return "", "", errors.New("disable session")
 }
 
 func (au Auth) createRandomOutput(sal ...string) string {

@@ -16,7 +16,14 @@ import (
 type RepoEntity interface {
 	GetAll(ctx context.Context) (*[]models.Entity, error)
 	GetForID(ctx context.Context, id string) (models.Entity, error)
-	Add(ctx context.Context, obj models.Entity) error
+	Add(ctx context.Context, obj *models.Entity) error
 	Update(ctx context.Context, id string, obj models.Entity) error
 	Delete(ctx context.Context, id string) error
+}
+
+//TODO use uuid
+type CacheEntityRepository interface {
+	Set(c context.Context, entity *models.Entity) error
+	Get(c context.Context, id string) (models.Entity, error)
+	Delete(c context.Context, id string) error
 }

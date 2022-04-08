@@ -18,7 +18,6 @@ func (eh EntityHandler) List(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-
 	return c.JSON(http.StatusOK, entities)
 }
 
@@ -59,12 +58,12 @@ func (eh EntityHandler) Create(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, fmt.Sprintf("{message: %v}", err))
 	}
 
-	err = eh.EntityService.Add(c.Request().Context(), entity)
+	err = eh.EntityService.Add(c.Request().Context(), &entity)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, fmt.Sprintf("{message: %v}", err))
 	}
 
-	return c.JSON(http.StatusOK, "{status : 'Update successful'}")
+	return c.JSON(http.StatusOK, entity)
 }
 
 func (eh EntityHandler) Delete(c echo.Context) error {

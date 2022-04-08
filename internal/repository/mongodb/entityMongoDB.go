@@ -3,7 +3,6 @@ package repository
 import (
 	"app/internal/models"
 	"context"
-	"errors"
 	"fmt"
 	"os"
 
@@ -55,7 +54,7 @@ func (rm *RepoEntityMongoDB) GetForID(ctx context.Context, id string) (models.En
 	return entity, nil
 }
 
-func (rm *RepoEntityMongoDB) Add(ctx context.Context, obj models.Entity) error {
+func (rm *RepoEntityMongoDB) Add(ctx context.Context, obj *models.Entity) error {
 	obj.Id = primitive.NewObjectID()
 	_, err := rm.collectionEntity.InsertOne(ctx, obj)
 	return err
@@ -66,10 +65,11 @@ func (rm *RepoEntityMongoDB) Update(ctx context.Context, id string, obj models.E
 	if err != nil {
 		return err
 	}
-	if obj.Id != Id {
-		return errors.New("Different ObjectId in query and Body")
+	obj.Id = nil
+	updateData := bson.M{
+		"$set": obj,
 	}
-	res := rm.collectionEntity.FindOneAndUpdate(ctx, bson.D{{"_id", Id}}, obj)
+	res := rm.collectionEntity.FindOneAndUpdate(ctx, bson.D{{"_id", Id}}, updateData)
 	err = res.Err()
 	return err
 }

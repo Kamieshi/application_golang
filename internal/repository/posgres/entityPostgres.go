@@ -77,7 +77,7 @@ func (sp *RepoEntityPostgres) Delete(ctx context.Context, id string) error {
 		return err
 	}
 	if com.String() == "DELETE 0" {
-		return errors.New("No find entity for ID")
+		return errors.New("no find entity for ID")
 	}
 
 	return nil
@@ -93,7 +93,7 @@ func (sp *RepoEntityPostgres) Update(ctx context.Context, id string, obj models.
 		return err
 	}
 	if com.String() == "UPDATE 0" {
-		return errors.New("No find entity for ID")
+		return errors.New("no find entity for ID")
 	}
 
 	return nil

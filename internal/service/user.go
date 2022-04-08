@@ -31,7 +31,7 @@ func createHash256Password(user models.User, password string) string {
 func (us UserService) Create(ctx context.Context, userName string, password string) (models.User, error) {
 	user, _ := us.rep.Get(ctx, userName)
 	if (user != models.User{}) {
-		return user, errors.New("Username already in use")
+		return user, errors.New("username already in use")
 	}
 
 	user = models.User{
