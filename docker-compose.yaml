@@ -32,6 +32,7 @@ services:
       SECRET_KEY: ""
       REDIS_URL: "redis:6379"
       TIME_LIVE_MINUTE_JWT: 1000
+      TIME_EXPIRED_CACHE_MINUTE: 1
     ports:
       - "8005:8000"
     depends_on:
