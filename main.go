@@ -14,10 +14,20 @@ import (
 	"github.com/labstack/echo/v4" //nolint:typecheck
 	"github.com/labstack/echo/v4/middleware"
 	log "github.com/sirupsen/logrus"
+	"github.com/swaggo/echo-swagger"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+
+	_ "app/docs/app"
 )
 
+// @title Golang Application Swagger
+// @version 0.1
+// @host localhost:8000
+
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 func main() {
 	configuration, err := config.GetConfig()
 	if err != nil {
@@ -113,6 +123,10 @@ func main() {
 	imageHandler := handlers.ImageHandler{ImageService: imageService}
 	e.POST("/upload", imageHandler.Load)
 	e.GET("/load/:easy_link", imageHandler.Get)
+
+	//Swagger
+
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	// Run Server
 	e.Logger.Debug(e.Start(":8000"))

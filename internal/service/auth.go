@@ -69,6 +69,8 @@ func NewAuth(userRep repository.UserRepo, sessionRep repository.Session) Auth {
 				}
 			case "/images*":
 				return true
+			case "/swagger/*":
+				return true
 			}
 
 			return false

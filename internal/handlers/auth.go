@@ -4,10 +4,9 @@ import (
 	"app/internal/models"
 	"app/internal/service"
 	"fmt"
+	echo "github.com/labstack/echo/v4"
 	"net/http"
 	"time"
-
-	echo "github.com/labstack/echo/v4"
 )
 
 type AuthHandler struct {
@@ -27,6 +26,10 @@ func (ah AuthHandler) IsAuthentication(c echo.Context) error {
 	return c.JSON(http.StatusOK, isAuth)
 }
 
+// Login godoc
+// @tags Auth
+// @Param formLogin body handlers.usPss true "Login form"
+// @Router /auth/login [post]
 func (ah AuthHandler) Login(c echo.Context) error {
 	var data usPss
 	err := c.Bind(&data)
@@ -63,6 +66,10 @@ func (ah AuthHandler) Info(c echo.Context) error {
 	return echo.ErrUnauthorized
 }
 
+// Logout godoc
+// @tags Auth
+// @Security ApiKeyAuth
+// @Router /auth/logout [get]
 func (ah AuthHandler) Logout(c echo.Context) error {
 	cookie := new(http.Cookie)
 	cookie.Name = "token"
@@ -76,6 +83,11 @@ type rft struct {
 	Refresh string `json:"refresh" `
 }
 
+// Refresh godoc
+// @tags Auth
+// @Security ApiKeyAuth
+// @Param refreshData body rft true "refresh"
+// @Router /auth/refresh [get]
 func (ah AuthHandler) Refresh(c echo.Context) error {
 	var rt rft
 	err := c.Bind(&rt)

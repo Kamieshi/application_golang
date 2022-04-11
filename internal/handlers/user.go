@@ -26,6 +26,10 @@ func (uh UserHandler) Get(c echo.Context) error {
 	return c.JSON(http.StatusAccepted, user)
 }
 
+// Create godoc
+// @tags User Control
+// @Param userData body usPss true "Create new User"
+// @Router /user [post]
 func (uh UserHandler) Create(c echo.Context) error {
 	var dat usPss
 	err := c.Bind(&dat)

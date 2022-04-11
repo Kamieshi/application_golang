@@ -1,0 +1,148 @@
+definitions:
+  handlers.rft:
+    properties:
+      refresh:
+        type: string
+    type: object
+  handlers.usPss:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  models.Entity:
+    properties:
+      id: {}
+      is_active:
+        type: boolean
+      name:
+        type: string
+      price:
+        type: integer
+    type: object
+host: localhost:8000
+info:
+  contact: {}
+  title: Golang Application Swagger
+  version: "0.1"
+paths:
+  /auth/login:
+    post:
+      parameters:
+      - description: Login form
+        in: body
+        name: formLogin
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.usPss'
+      responses: {}
+      tags:
+      - Auth
+  /auth/logout:
+    get:
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Auth
+  /auth/refresh:
+    get:
+      parameters:
+      - description: refresh
+        in: body
+        name: refreshData
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.rft'
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Auth
+  /entity:
+    get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Entity'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Entity
+    post:
+      parameters:
+      - description: Entity model
+        in: body
+        name: DataEntity
+        required: true
+        schema:
+          $ref: '#/definitions/models.Entity'
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Entity
+  /entity/{id}:
+    delete:
+      parameters:
+      - description: Id of the mongo
+        in: path
+        name: id
+        type: string
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Entity
+    get:
+      parameters:
+      - description: Id of the mongo
+        in: path
+        name: id
+        type: string
+      responses:
+        "200":
+          description: desc
+          schema:
+            $ref: '#/definitions/models.Entity'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Entity
+    put:
+      parameters:
+      - description: Id of the mongo
+        in: path
+        name: id
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Entity
+  /user:
+    post:
+      parameters:
+      - description: Create new User
+        in: body
+        name: userData
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.usPss'
+      responses: {}
+      tags:
+      - User Control
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
