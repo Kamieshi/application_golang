@@ -3,6 +3,7 @@ module app
 go 1.16
 
 require (
+	github.com/fatih/structs v1.1.0 // indirect
 	github.com/go-openapi/spec v0.20.5 // indirect
 	github.com/go-openapi/swag v0.21.1 // indirect
 	github.com/go-redis/redis/v8 v8.11.5
@@ -11,6 +12,8 @@ require (
 	github.com/joho/godotenv v1.4.0
 	github.com/labstack/echo/v4 v4.7.2
 	github.com/mattn/go-colorable v0.1.12 // indirect
+	github.com/mitchellh/mapstructure v1.4.3 // indirect
+	github.com/rs/xid v1.4.0 // indirect
 	github.com/sirupsen/logrus v1.4.2
 	github.com/swaggo/echo-swagger v1.3.0
 	github.com/swaggo/swag v1.8.1

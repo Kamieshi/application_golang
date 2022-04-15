@@ -34,6 +34,10 @@ type CashEntityRepositoryRedis struct {
 	client *redis.Client
 }
 
+func (cr CashEntityRepositoryRedis) Client() *redis.Client {
+	return cr.client
+}
+
 func NewCashEntityRepository(addr string) *CashEntityRepositoryRedis {
 	client := redis.NewClient(&redis.Options{
 		Addr:     addr,
@@ -64,7 +68,7 @@ func (rr CashEntityRepositoryRedis) Set(c context.Context, entity *models.Entity
 func (rr CashEntityRepositoryRedis) Get(c context.Context, id string) (models.Entity, error) {
 	var cacheObj CacheObj
 	ent := models.Entity{}
-
+	logrus.Info("Try get with cache")
 	val, err := rr.client.Get(c, id).Result()
 
 	if err != nil {
@@ -87,6 +91,7 @@ func (rr CashEntityRepositoryRedis) Get(c context.Context, id string) (models.En
 	if err != nil {
 		return ent, err
 	}
+	logrus.Info("From Cache")
 	return ent, nil
 }
 

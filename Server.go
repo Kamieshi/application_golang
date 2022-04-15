@@ -69,7 +69,7 @@ func main() {
 
 	// Entity struct
 	repoEntityMongo := mongoRepository.NewRepoEntityMongoDB(*clientMongo)
-	repoCashEntity := redisRepository.NewCashEntityRepository(configuration.REDIS_URL)
+	repoCashEntity := redisRepository.NewCashSteamEntityRep(configuration.REDIS_URL)
 	entService := service.NewEntityService(&repoEntityMongo, repoCashEntity)
 	//entService := service.NewEntityService(&repoEntityMongo, nil)
 	handlerEntity := handlers.EntityHandler{EntityService: entService}

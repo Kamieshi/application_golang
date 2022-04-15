@@ -19,6 +19,8 @@ definitions:
       name:
         type: string
       price:
+        maximum: 100
+        minimum: 1
         type: integer
     type: object
 host: localhost:8000

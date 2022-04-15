@@ -241,7 +241,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "price": {
-                    "type": "integer"
+                    "type": "integer",
+                    "maximum": 100,
+                    "minimum": 1
                 }
             }
         }
