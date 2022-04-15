@@ -23,7 +23,6 @@ import (
 
 // @title Golang Application Swagger
 // @version 0.1
-// @host localhost:8000
 
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header

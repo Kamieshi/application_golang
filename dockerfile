@@ -4,8 +4,8 @@ WORKDIR /app
 
 COPY . ./
 
-RUN go build main.go
+RUN go build Server.go
 
 EXPOSE 8005
 
-CMD [ "./main" ]
+CMD [ "./Server" ]

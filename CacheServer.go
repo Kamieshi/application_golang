@@ -21,7 +21,7 @@ func main() {
 	ctx := context.Background()
 	repoCashEntity := redisRepository.NewCashSteamEntityRep(configuration.REDIS_URL)
 	consumersGroup := "tickets-consumer-group"
-	err = repoCashEntity.Client().XGroupCreate(ctx, repoCashEntity.StreamName, consumersGroup, "0").Err()
+	err = repoCashEntity.Client().XGroupCreateMkStream(ctx, repoCashEntity.StreamName, consumersGroup, "0").Err()
 	if err != nil {
 		log.Println(err)
 	}

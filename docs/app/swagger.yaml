@@ -23,7 +23,6 @@ definitions:
         minimum: 1
         type: integer
     type: object
-host: localhost:8000
 info:
   contact: {}
   title: Golang Application Swagger
