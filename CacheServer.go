@@ -5,6 +5,7 @@ import (
 	redisRepository "app/internal/repository/redis"
 	"context"
 	"fmt"
+	"github.com/fatih/structs"
 	"github.com/go-redis/redis/v8"
 	"github.com/rs/xid"
 	log "github.com/sirupsen/logrus"
@@ -17,11 +18,13 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	config.InitLogger()
 	ctx := context.Background()
 	repoCashEntity := redisRepository.NewCashSteamEntityRep(configuration.REDIS_URL)
-	consumersGroup := "tickets-consumer-group"
-	err = repoCashEntity.Client().XGroupCreateMkStream(ctx, repoCashEntity.StreamName, consumersGroup, "0").Err()
+	consumersGroup := "CacheService"
+	repoCashEntity.Client().XGroupCreate(ctx, repoCashEntity.StreamGet, consumersGroup, "0")
+	repoCashEntity.Client().XGroupCreate(ctx, repoCashEntity.StreamSet, consumersGroup, "0")
 	if err != nil {
 		log.Println(err)
 	}
@@ -31,8 +34,8 @@ func main() {
 		entries, err := repoCashEntity.Client().XReadGroup(ctx, &redis.XReadGroupArgs{
 			Group:    consumersGroup,
 			Consumer: uniqueID,
-			Streams:  []string{repoCashEntity.StreamName, ">"},
-			Count:    2,
+			Streams:  []string{repoCashEntity.StreamSet, repoCashEntity.StreamGet, ">", ">"},
+			Count:    0,
 			Block:    0,
 			NoAck:    false,
 		}).Result()
@@ -40,27 +43,64 @@ func main() {
 			log.Fatal(err)
 		}
 
-		for i := 0; i < len(entries[0].Messages); i++ {
-			values := entries[0].Messages[i].Values
-			key := fmt.Sprintf("%v", values["key"])
-			deathTime, _ := strconv.Atoi(values["DeathTime"].(string))
+		for _, query := range entries {
+			switch query.Stream {
+			case repoCashEntity.StreamGet:
+				for i := 0; i < len(entries[0].Messages); i++ {
+					values := entries[0].Messages[i].Values
+					idEntity := fmt.Sprintf("%v", values["idEntities"])
+					idStream := fmt.Sprintf("%v", values["idOutput"])
 
-			if int64(deathTime) < time.Now().Unix() {
-				log.WithError(err).Error("Time end")
-				break
-			}
+					entity, err := repoCashEntity.CashEntityRepositoryRedis.Get(ctx, idEntity)
+					if err != nil {
+						log.WithError(err).Error("sGet in redis")
+						err = repoCashEntity.Client().XAdd(ctx, &redis.XAddArgs{
+							Stream: idStream,
+							Values: map[string]interface{}{"status": 404},
+						}).Err()
+					}
 
-			cacheObj := redisRepository.CacheObj{
-				DeathTime: int64(deathTime),
-				Data:      []byte(values["Data"].(string)),
-			}
+					mapData := structs.Map(entity)
 
-			err = repoCashEntity.Client().Set(ctx, key, cacheObj, 0).Err()
-			if err != nil {
-				log.WithError(err).Error("Error Set")
+					err = repoCashEntity.Client().XAdd(ctx, &redis.XAddArgs{
+						Stream: idStream,
+						Values: mapData,
+					}).Err()
+					if err != nil {
+						fmt.Println(idStream)
+						log.WithError(err).Error("sGet in redis")
+						break
+					}
+
+					repoCashEntity.Client().XAck(ctx, repoCashEntity.StreamGet, consumersGroup, entries[0].Messages[i].ID)
+					repoCashEntity.Client().XDel(ctx, repoCashEntity.StreamGet, entries[0].Messages[i].ID)
+
+					fmt.Println(entity)
+				}
+
+			case repoCashEntity.StreamSet:
+				for i := 0; i < len(entries[0].Messages); i++ {
+					values := entries[0].Messages[i].Values
+					key := fmt.Sprintf("%v", values["key"])
+					deathTime, _ := strconv.Atoi(values["DeathTime"].(string))
+
+					if int64(deathTime) < time.Now().Unix() {
+						log.WithError(err).Error("Time end")
+						break
+					}
+
+					cacheObj := redisRepository.CacheObj{
+						DeathTime: int64(deathTime),
+						Data:      []byte(values["Data"].(string)),
+					}
+
+					err = repoCashEntity.Client().Set(ctx, key, cacheObj, 0).Err()
+					if err != nil {
+						log.WithError(err).Error("Error Set")
+					}
+					log.Info("Successful Set in cache")
+				}
 			}
-			log.Info("Successful Set in cache")
 		}
 	}
-
 }
