@@ -38,8 +38,7 @@ func (es EntityService) GetAll(ctx context.Context) (*[]models.Entity, error) {
 }
 
 func (es *EntityService) GetForID(ctx context.Context, id string) (models.Entity, error) {
-	switch es.UseCache {
-	case true:
+	if es.UseCache {
 		entity, err := es.cashRep.Get(ctx, id)
 		if err != nil {
 
@@ -62,14 +61,14 @@ func (es *EntityService) GetForID(ctx context.Context, id string) (models.Entity
 		}
 		logrus.Info("use cache")
 		return entity, err
-	default:
-		entity, err := es.rep.GetForID(ctx, id)
-		if err != nil {
-			return models.Entity{}, err
-		}
-		logrus.Info("use db")
-		return entity, nil
 	}
+	entity, err := es.rep.GetForID(ctx, id)
+	if err != nil {
+		return models.Entity{}, err
+	}
+	logrus.Info("use db")
+	return entity, nil
+
 }
 
 func (es EntityService) Add(ctx context.Context, obj *models.Entity) error {
@@ -78,8 +77,8 @@ func (es EntityService) Add(ctx context.Context, obj *models.Entity) error {
 		return err
 	}
 
-	switch es.UseCache {
-	case true:
+	if es.UseCache {
+
 		errSet := es.cashRep.Set(ctx, obj)
 		if errSet != nil {
 			logrus.WithError(errSet)
@@ -96,8 +95,8 @@ func (es EntityService) Delete(ctx context.Context, id string) error {
 		return err
 	}
 
-	switch es.UseCache {
-	case true:
+	if es.UseCache {
+
 		errDel := es.cashRep.Delete(ctx, id)
 		if errDel != nil {
 			logrus.WithError(errDel).Error("Delete from cache")
@@ -111,8 +110,7 @@ func (es EntityService) Update(ctx context.Context, id string, obj models.Entity
 	if err != nil {
 		return err
 	}
-	switch es.UseCache {
-	case true:
+	if es.UseCache {
 		objId, _ := primitive.ObjectIDFromHex(id)
 		obj.Id = objId
 		errUpdate := es.cashRep.Set(ctx, &obj)
@@ -120,6 +118,5 @@ func (es EntityService) Update(ctx context.Context, id string, obj models.Entity
 			logrus.WithError(errUpdate).Error("Update entity")
 		}
 	}
-
 	return err
 }
