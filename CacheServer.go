@@ -35,9 +35,6 @@ func main() {
 			Group:    consumersGroup,
 			Consumer: uniqueID,
 			Streams:  []string{repoCashEntity.StreamSet, repoCashEntity.StreamGet, ">", ">"},
-			Count:    0,
-			Block:    0,
-			NoAck:    false,
 		}).Result()
 		if err != nil {
 			log.Fatal(err)
@@ -45,6 +42,7 @@ func main() {
 
 		for _, query := range entries {
 			switch query.Stream {
+
 			case repoCashEntity.StreamGet:
 				for i := 0; i < len(entries[0].Messages); i++ {
 					values := entries[0].Messages[i].Values
@@ -53,7 +51,7 @@ func main() {
 
 					entity, err := repoCashEntity.CashEntityRepositoryRedis.Get(ctx, idEntity)
 					if err != nil {
-						log.WithError(err).Error("sGet in redis")
+						log.WithError(err).Error("[GET]sGet in redis")
 						err = repoCashEntity.Client().XAdd(ctx, &redis.XAddArgs{
 							Stream: idStream,
 							Values: map[string]interface{}{"status": 404},
@@ -61,21 +59,20 @@ func main() {
 					}
 
 					mapData := structs.Map(entity)
+					mapData["status"] = 0
 
 					err = repoCashEntity.Client().XAdd(ctx, &redis.XAddArgs{
 						Stream: idStream,
 						Values: mapData,
 					}).Err()
 					if err != nil {
-						fmt.Println(idStream)
-						log.WithError(err).Error("sGet in redis")
-						break
+						log.WithError(err).Error("[GET]Error send entity to the stream out")
+						continue
 					}
 
 					repoCashEntity.Client().XAck(ctx, repoCashEntity.StreamGet, consumersGroup, entries[0].Messages[i].ID)
 					repoCashEntity.Client().XDel(ctx, repoCashEntity.StreamGet, entries[0].Messages[i].ID)
 
-					fmt.Println(entity)
 				}
 
 			case repoCashEntity.StreamSet:
@@ -85,8 +82,8 @@ func main() {
 					deathTime, _ := strconv.Atoi(values["DeathTime"].(string))
 
 					if int64(deathTime) < time.Now().Unix() {
-						log.WithError(err).Error("Time end")
-						break
+						log.WithError(err).Error("[SET]Time end")
+						continue
 					}
 
 					cacheObj := redisRepository.CacheObj{
@@ -96,10 +93,16 @@ func main() {
 
 					err = repoCashEntity.Client().Set(ctx, key, cacheObj, 0).Err()
 					if err != nil {
-						log.WithError(err).Error("Error Set")
+						log.WithError(err).Error("[SET]Error Set")
+						continue
 					}
-					log.Info("Successful Set in cache")
+
+					repoCashEntity.Client().XAck(ctx, repoCashEntity.StreamSet, consumersGroup, entries[0].Messages[i].ID)
+					repoCashEntity.Client().XDel(ctx, repoCashEntity.StreamSet, entries[0].Messages[i].ID)
+
+					log.Info("[SET]Successful Set in cache")
 				}
+
 			}
 		}
 	}

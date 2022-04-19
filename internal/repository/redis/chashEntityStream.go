@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/fatih/structs"
 	"github.com/go-redis/redis/v8"
 	"github.com/rs/xid"
@@ -57,7 +56,6 @@ func (rr CashSteamEntityRep) Set(c context.Context, entity *models.Entity) error
 }
 
 func (rr CashSteamEntityRep) Get(c context.Context, id string) (models.Entity, error) {
-	var cacheObj CacheObj
 	ent := models.Entity{}
 	logrus.Info("Try get with cache")
 
@@ -67,44 +65,33 @@ func (rr CashSteamEntityRep) Get(c context.Context, id string) (models.Entity, e
 		Stream: rr.StreamGet,
 		Values: map[string]interface{}{"idEntities": id, "idOutput": idOutStream},
 	}).Err()
-
 	if err != nil {
 		logrus.Error(err)
 		return ent, err
 	}
 
-	fmt.Println(rr.client.XGroupCreateMkStream(c, idOutStream, rr.GroupName, "0"))
-
-	newContext, cancelFunc := context.WithTimeout(c, time.Millisecond*3)
-	defer cancelFunc()
-
-	value, err := rr.client.XReadGroup(newContext, &redis.XReadGroupArgs{
-		Group:   rr.GroupName,
-		Streams: []string{idOutStream, ">"},
-		Count:   1,
+	value, err := rr.client.XRead(c, &redis.XReadArgs{
+		Block:   1 * time.Millisecond,
+		Streams: []string{idOutStream, "0"},
 	}).Result()
 	if err != nil {
 		logrus.Error(err)
 		return ent, err
 	}
 
-	fmt.Println(value)
-	//TODO Unpars from map[string]interface to model.Entity
-	err = json.Unmarshal([]byte("das"), &cacheObj)
-	if err != nil {
+	rr.Client().Del(c, idOutStream)
+
+	if value[0].Messages[0].Values["status"] != "0" {
+		logrus.WithFields(logrus.Fields{
+			"status":       value[0].Messages[0].Values["status"],
+			"id_entity":    id,
+			"id_OutStream": idOutStream,
+			"result":       value,
+		}).Error()
+		err = errors.New("Not fount in cashe")
+
 		return ent, err
 	}
-
-	if cacheObj.DeathTime < time.Now().Unix() {
-		_ = rr.Delete(c, id)
-		logrus.WithError(err).Info("Get in redis")
-		return ent, errors.New("time expired")
-	}
-
-	err = json.Unmarshal(cacheObj.Data, &ent)
-	if err != nil {
-		return ent, err
-	}
-	logrus.Info("From Cache")
-	return ent, nil
+	err = ent.InitForMap(value[0].Messages[0].Values)
+	return ent, err
 }
