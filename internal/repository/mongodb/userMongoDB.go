@@ -54,6 +54,7 @@ func (ur UserRepoMongoDB) GetAll(ctx context.Context) (*[]models.User, error) {
 	return &resUser, nil
 }
 
-func (ur UserRepoMongoDB) Update(ctx context.Context) error {
+func (ur UserRepoMongoDB) Update(ctx context.Context, user *models.User) error {
+	//TODO
 	return nil
 }
