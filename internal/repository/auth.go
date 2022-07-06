@@ -5,7 +5,7 @@ import (
 	"context"
 )
 
-type Session interface {
+type RepoSession interface {
 	Create(ctx context.Context, session models.Session) error
 	Update(ctx context.Context, session models.Session) error
 	Get(ctx context.Context, SessionId string) (models.Session, error)

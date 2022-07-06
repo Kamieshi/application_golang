@@ -15,9 +15,9 @@ type RepoEntityPostgres struct {
 	pool *pgxpool.Pool
 }
 
-func NewRepoEntityPostgres(pool pgxpool.Pool) RepoEntityPostgres {
+func NewRepoEntityPostgres(pool *pgxpool.Pool) RepoEntityPostgres {
 	return RepoEntityPostgres{
-		pool: &pool,
+		pool: pool,
 	}
 }
 
@@ -30,7 +30,7 @@ func rowToEntity(row pgx.Row) (*models.Entity, error) {
 	return &entity, nil
 }
 
-func (sp *RepoEntityPostgres) GetAll(ctx context.Context) ([]models.Entity, error) {
+func (sp RepoEntityPostgres) GetAll(ctx context.Context) (*[]models.Entity, error) {
 	rows, err := sp.pool.Query(ctx, "select * from entity")
 	if err != nil {
 		return nil, err
@@ -46,10 +46,10 @@ func (sp *RepoEntityPostgres) GetAll(ctx context.Context) ([]models.Entity, erro
 
 		entities = append(entities, *entity)
 	}
-	return entities, nil
+	return &entities, nil
 }
 
-func (sp *RepoEntityPostgres) GetForID(ctx context.Context, id string) (models.Entity, error) {
+func (sp RepoEntityPostgres) GetForID(ctx context.Context, id string) (models.Entity, error) {
 
 	var row pgx.Row = sp.pool.QueryRow(ctx, "select * from entity where id=$1", id)
 	ent, err := rowToEntity(row)
@@ -57,7 +57,7 @@ func (sp *RepoEntityPostgres) GetForID(ctx context.Context, id string) (models.E
 
 }
 
-func (sp *RepoEntityPostgres) Add(ctx context.Context, obj models.Entity) error {
+func (sp RepoEntityPostgres) Add(ctx context.Context, obj *models.Entity) error {
 
 	_, err := sp.pool.Exec(ctx, "insert into entity(entity_name,price,is_active) values ($1,$2,$3)", obj.Name, obj.Price, obj.IsActive)
 	if err != nil {
@@ -66,7 +66,7 @@ func (sp *RepoEntityPostgres) Add(ctx context.Context, obj models.Entity) error 
 	return nil
 }
 
-func (sp *RepoEntityPostgres) Delete(ctx context.Context, id string) error {
+func (sp RepoEntityPostgres) Delete(ctx context.Context, id string) error {
 	Id, err := strconv.Atoi(fmt.Sprint(id))
 	if err != nil {
 		return err
@@ -83,7 +83,7 @@ func (sp *RepoEntityPostgres) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-func (sp *RepoEntityPostgres) Update(ctx context.Context, id string, obj models.Entity) error {
+func (sp RepoEntityPostgres) Update(ctx context.Context, id string, obj models.Entity) error {
 	Id, err := strconv.Atoi(fmt.Sprint(id))
 	if err != nil {
 		return err

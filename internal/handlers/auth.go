@@ -10,7 +10,7 @@ import (
 )
 
 type AuthHandler struct {
-	AuthService service.Auth
+	AuthService service.AuthService
 }
 
 func (ah AuthHandler) IsAuthentication(c echo.Context) error {

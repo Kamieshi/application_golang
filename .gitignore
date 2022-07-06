@@ -4,7 +4,7 @@
 *.dll
 *.so
 *.dylib
-.idea
+../.idea
 .vscode
 
 go-outline
@@ -23,3 +23,4 @@ staticcheck
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+/pkg/

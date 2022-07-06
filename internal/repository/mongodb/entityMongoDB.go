@@ -24,7 +24,7 @@ func NewRepoEntityMongoDB(client mongo.Client) RepoEntityMongoDB {
 	}
 }
 
-func (rm *RepoEntityMongoDB) GetAll(ctx context.Context) (*[]models.Entity, error) {
+func (rm RepoEntityMongoDB) GetAll(ctx context.Context) (*[]models.Entity, error) {
 	cursor, err := rm.collectionEntity.Find(ctx, bson.D{{}})
 	if err != nil {
 		return nil, err
@@ -39,7 +39,7 @@ func (rm *RepoEntityMongoDB) GetAll(ctx context.Context) (*[]models.Entity, erro
 	return &resEntities, nil
 }
 
-func (rm *RepoEntityMongoDB) GetForID(ctx context.Context, id string) (models.Entity, error) {
+func (rm RepoEntityMongoDB) GetForID(ctx context.Context, id string) (models.Entity, error) {
 	Id, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return models.Entity{}, err
@@ -54,13 +54,13 @@ func (rm *RepoEntityMongoDB) GetForID(ctx context.Context, id string) (models.En
 	return entity, nil
 }
 
-func (rm *RepoEntityMongoDB) Add(ctx context.Context, obj *models.Entity) error {
+func (rm RepoEntityMongoDB) Add(ctx context.Context, obj *models.Entity) error {
 	obj.Id = primitive.NewObjectID()
 	_, err := rm.collectionEntity.InsertOne(ctx, obj)
 	return err
 }
 
-func (rm *RepoEntityMongoDB) Update(ctx context.Context, id string, obj models.Entity) error {
+func (rm RepoEntityMongoDB) Update(ctx context.Context, id string, obj models.Entity) error {
 	Id, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return err
@@ -74,7 +74,7 @@ func (rm *RepoEntityMongoDB) Update(ctx context.Context, id string, obj models.E
 	return err
 }
 
-func (rm *RepoEntityMongoDB) Delete(ctx context.Context, id string) error {
+func (rm RepoEntityMongoDB) Delete(ctx context.Context, id string) error {
 	Id, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return err

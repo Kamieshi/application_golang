@@ -14,8 +14,8 @@ services:
 
   application:
     build:
-      context: .
-      dockerfile: ./dockerfile
+      context: ./
+      dockerfile: dockerfile
     environment:
       POSTGRES_DB: "${POSTGRES_DB}"
       POSTGRES_USER: "${POSTGRES_USER}"
@@ -40,7 +40,7 @@ services:
 
   cacheapp:
     build:
-      context: .
+      context: ./
       dockerfile: ./cachedocker
     environment:
       REDIS_URL: "redis:6379"
@@ -59,3 +59,12 @@ services:
     image: redis
     ports:
       - "6380:6379"
+
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: root
+    ports:
+      - "5050:80"

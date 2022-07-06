@@ -8,7 +8,14 @@ import (
 )
 
 type ImageService struct {
-	ImageRepository repository.ImageRepository
+	ImageRepository repository.RepoImage
+}
+
+func NewImageService(imagerRepository repository.RepoImage) ImageService {
+	return ImageService{
+		ImageRepository: imagerRepository,
+	}
+
 }
 
 func (ims ImageService) Save(ctx context.Context, fileName string, data *[]byte) (*models.Image, error) {

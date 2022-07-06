@@ -1,24 +1,16 @@
 package main
 
 import (
+	_ "app/docs/app"
 	"app/internal/config"
 	"app/internal/handlers"
-	mongoRepository "app/internal/repository/mongodb"
+	repository "app/internal/repository"
 	redisRepository "app/internal/repository/redis"
 	"app/internal/service"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
-	"time"
-
-	"context"
-
 	"github.com/labstack/echo/v4" //nolint:typecheck
 	"github.com/labstack/echo/v4/middleware"
 	log "github.com/sirupsen/logrus"
 	"github.com/swaggo/echo-swagger"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-
-	_ "app/docs/app"
 )
 
 // @title Golang Application Swagger
@@ -34,45 +26,50 @@ func main() {
 	}
 	config.InitLogger()
 
-	// connPool, err := pgxpool.Connect(context.Background(), configuration.UrlPostgres())
-	// if err != nil {
-	// 	log.Println("Connecting url", configuration.UrlPostgres())
-	// 	log.Fatal(err)
-	// }
+	//Cash repo
+	repoCashEntity := redisRepository.NewCashSteamEntityRep(configuration.REDIS_URL)
 
-	// repoPg := repository.NewRepoEntityPostgres(*connPool)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	repoFactory := repository.GetFactory("pg", configuration)
 
-	// entService := service.NewEntityService(&repoPg)
-
-	timeOutConnect, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-
-	clientMongo, err := mongo.Connect(timeOutConnect, options.Client().ApplyURI(configuration.ConnectUrlMongo()))
-	defer cancel()
+	//Creating repositories Postgres
+	repoEntity := repoFactory.GetEntityRepo()
 	if err != nil {
-		log.WithError(err).Panic("Error with mongo connection")
+		log.Fatal(err)
 	}
 
-	var rf *readpref.ReadPref
-	err = clientMongo.Ping(timeOutConnect, rf)
+	repoUsersPg := repoFactory.GetUserRepo()
 	if err != nil {
-		log.WithError(err).Panic("Error with mongo connection")
+		log.Fatal(err)
 	}
+
+	repoImagesPg := repoFactory.GetImageRepo()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	repoAuthPg := repoFactory.GetAuthRepo()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	//Creating services Postgres
+	entService := service.NewEntityService(repoEntity, repoCashEntity)
+	userService := service.NewUserService(repoUsersPg)
+	imageService := service.NewImageService(repoImagesPg)
+	authService := service.NewAuthService(repoUsersPg, repoAuthPg)
+
+	// Creating handlers
+	handlerEntity := handlers.EntityHandler{EntityService: entService}
+	userHandler := handlers.UserHandler{Ser: userService}
+	authHandler := handlers.AuthHandler{AuthService: authService}
+	imageHandler := handlers.ImageHandler{ImageService: imageService}
 
 	e := echo.New() //nolint:typecheck
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: "${method}   ${uri}  ${status}    ${latency_human}\n",
 	}))
 
-	// Entity struct
-	repoEntityMongo := mongoRepository.NewRepoEntityMongoDB(*clientMongo)
-	repoCashEntity := redisRepository.NewCashSteamEntityRep(configuration.REDIS_URL)
-	entService := service.NewEntityService(&repoEntityMongo, repoCashEntity)
-	//entService := service.NewEntityService(&repoEntityMongo, nil)
-	handlerEntity := handlers.EntityHandler{EntityService: entService}
-
+	// Entity Routing
 	entityGr := e.Group("/entity")
 	entityGr.GET("", handlerEntity.List)
 	entityGr.GET("/:id", handlerEntity.GetDetail)
@@ -80,51 +77,29 @@ func main() {
 	entityGr.DELETE("/:id", handlerEntity.Delete)
 	entityGr.POST("", handlerEntity.Create)
 
-	// User struct
-	userRepoMongo := mongoRepository.NewUserRepoMongoDB(*clientMongo)
-	userService := service.NewUserService(userRepoMongo)
-	userHandler := handlers.UserHandler{
-		Ser: *userService,
-	}
-
+	// User Routing
 	userGr := e.Group("/user")
 	userGr.GET("/:username", userHandler.Get)
 	userGr.POST("", userHandler.Create)
 	userGr.DELETE("", userHandler.Delete)
 	userGr.GET("", userHandler.GetAll)
 
-	// Auth struct
-	authRep := mongoRepository.NewAuthRepoMongoDB(*clientMongo)
-
-	authService := service.NewAuth(userRepoMongo, authRep)
-
-	authHandler := handlers.AuthHandler{
-		AuthService: authService,
-	}
-
+	// Auth Routing
 	e.Use(middleware.JWTWithConfig(authService.JWTConfig))
-
 	authGr := e.Group("/auth")
-
 	authGr.POST("/login", authHandler.Login)
 	authGr.GET("/info", authHandler.Info)
 	authGr.GET("/logout", authHandler.Logout)
 	authGr.POST("/refresh", authHandler.Refresh)
 
-	// Work with static
+	// static
 	e.Static("/images", "./static/images")
 
-	// Work with upload images
-	imageRepo := mongoRepository.NewImageRepoMongoDB(*clientMongo)
-	imageService := service.ImageService{
-		ImageRepository: imageRepo,
-	}
-	imageHandler := handlers.ImageHandler{ImageService: imageService}
+	// Image Routing
 	e.POST("/upload", imageHandler.Load)
 	e.GET("/load/:easy_link", imageHandler.Get)
 
 	//Swagger
-
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	// Run Server

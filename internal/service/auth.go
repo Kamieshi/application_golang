@@ -20,13 +20,13 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-type Auth struct {
-	UserRep   repository.UserRepo
-	AuthRep   repository.Session
+type AuthService struct {
+	UserRep   repository.RepoUser
+	AuthRep   repository.RepoSession
 	JWTConfig middleware.JWTConfig
 }
 
-func NewAuth(userRep repository.UserRepo, sessionRep repository.Session) Auth {
+func NewAuthService(userRep repository.RepoUser, sessionRep repository.RepoSession) AuthService {
 	headerAuthorization := echo.HeaderAuthorization
 	config := middleware.JWTConfig{
 		Claims:        &CustomClaims{},
@@ -77,7 +77,7 @@ func NewAuth(userRep repository.UserRepo, sessionRep repository.Session) Auth {
 		},
 	}
 
-	return Auth{
+	return AuthService{
 		UserRep:   userRep,
 		AuthRep:   sessionRep,
 		JWTConfig: config,
@@ -91,7 +91,7 @@ type CustomClaims struct {
 	jwt.StandardClaims
 }
 
-func (au Auth) IsAuthentication(ctx context.Context, username string, password string) (models.User, bool, error) {
+func (au AuthService) IsAuthentication(ctx context.Context, username string, password string) (models.User, bool, error) {
 	user, err := au.UserRep.Get(ctx, username)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"username": username}).Warn("Unsuccessful login attempt")
@@ -104,7 +104,7 @@ func (au Auth) IsAuthentication(ctx context.Context, username string, password s
 	return models.User{}, false, err
 }
 
-func (au Auth) CreateToken(username string, admin bool, idSession string) (string, error) {
+func (au AuthService) CreateToken(username string, admin bool, idSession string) (string, error) {
 
 	timeLive, _ := strconv.Atoi(os.Getenv("TIME_LIVE_MINUTE_JWT"))
 
@@ -126,7 +126,7 @@ func (au Auth) CreateToken(username string, admin bool, idSession string) (strin
 	return tt, nil
 }
 
-func (au Auth) CreateAndWriteSession(ctx echo.Context, user models.User) (models.Session, error) {
+func (au AuthService) CreateAndWriteSession(ctx echo.Context, user models.User) (models.Session, error) {
 	refresh := au.createRandomOutput(user.UserName)
 
 	session := models.Session{
@@ -145,7 +145,7 @@ func (au Auth) CreateAndWriteSession(ctx echo.Context, user models.User) (models
 	return session, err
 }
 
-func (au Auth) RefreshAndWriteSession(ctx echo.Context, rfToken string) (string, string, error) {
+func (au AuthService) RefreshAndWriteSession(ctx echo.Context, rfToken string) (string, string, error) {
 	user := ctx.Get("user").(*jwt.Token)
 	payLoad := user.Claims.(*CustomClaims)
 
@@ -166,7 +166,7 @@ func (au Auth) RefreshAndWriteSession(ctx echo.Context, rfToken string) (string,
 	return "", "", errors.New("disable session")
 }
 
-func (au Auth) createRandomOutput(sal ...string) string {
+func (au AuthService) createRandomOutput(sal ...string) string {
 	data := fmt.Sprint(time.Now().Unix(), os.Getenv("SECRET_KEY"), rand.Int31n(1000), sal)
 	h := sha256.New()
 	h.Write([]byte(data))
@@ -180,7 +180,7 @@ func createHashSHA256WithSalt(s string) string {
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
-func (au Auth) GetUser(ctx echo.Context) (models.User, error) {
+func (au AuthService) GetUser(ctx echo.Context) (models.User, error) {
 	user := ctx.Get("user").(*jwt.Token)
 	claims := user.Claims.(*CustomClaims)
 	User, err := au.UserRep.Get(ctx.Request().Context(), claims.Username)
