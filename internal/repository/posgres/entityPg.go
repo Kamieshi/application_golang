@@ -32,7 +32,7 @@ func rowToEntity(row pgx.Row) (*models.Entity, error) {
 	return &entity, nil
 }
 
-func (sp RepoEntityPostgres) GetAll(ctx context.Context) (*[]models.Entity, error) {
+func (sp RepoEntityPostgres) GetAll(ctx context.Context) ([]models.Entity, error) {
 	query := fmt.Sprintf("SELECT %s FROM entity", orderColumnsEntity)
 	rows, err := sp.pool.Query(ctx, query)
 	if err != nil {
@@ -49,14 +49,14 @@ func (sp RepoEntityPostgres) GetAll(ctx context.Context) (*[]models.Entity, erro
 
 		entities = append(entities, *entity)
 	}
-	return &entities, nil
+	return entities, nil
 }
 
-func (sp RepoEntityPostgres) GetForID(ctx context.Context, id string) (models.Entity, error) {
+func (sp RepoEntityPostgres) GetForID(ctx context.Context, id string) (*models.Entity, error) {
 	query := fmt.Sprintf("SELECT %s FROM entity WHERE id=$1", orderColumnsEntity)
 	var row pgx.Row = sp.pool.QueryRow(ctx, query, id)
 	ent, err := rowToEntity(row)
-	return *ent, err
+	return ent, err
 
 }
 
@@ -75,15 +75,8 @@ func (sp RepoEntityPostgres) Delete(ctx context.Context, id string) error {
 		return err
 	}
 	query := "DELETE FROM entity WHERE id=$1"
-	com, err := sp.pool.Exec(ctx, query, Id)
-	if err != nil {
-		return err
-	}
-	if com.String() == "DELETE 0" {
-		return errors.New("no find entity for ID")
-	}
-
-	return nil
+	_, err = sp.pool.Exec(ctx, query, Id)
+	return err
 }
 
 func (sp RepoEntityPostgres) Update(ctx context.Context, id string, obj models.Entity) error {

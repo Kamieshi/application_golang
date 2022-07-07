@@ -2,96 +2,105 @@ package repository
 
 import (
 	"app/internal/models"
+	"app/internal/repository"
 	"context"
-	"encoding/json"
-	"errors"
-	"github.com/fatih/structs"
 	"github.com/go-redis/redis/v8"
-	"github.com/rs/xid"
-	"github.com/sirupsen/logrus"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"time"
+	"sync"
 )
 
+type LocalStorage struct {
+	storage map[string]models.Entity
+	sync.Mutex
+}
+
 type CashSteamEntityRep struct {
-	StreamSet string
-	StreamGet string
-	GroupName string
+	StreamCommand string
+	GroupName     string
 	CashEntityRepositoryRedis
+	LocalStorage *LocalStorage
 }
 
-func NewCashSteamEntityRep(addr string) *CashSteamEntityRep {
+func NewCashSteamEntityRep(addr string, repEnt *repository.RepoEntity) *CashSteamEntityRep {
+	localStorage := LocalStorage{storage: make(map[string]models.Entity)}
 	return &CashSteamEntityRep{
-		StreamGet:                 "entityGet",
-		StreamSet:                 "entitySet",
+		StreamCommand:             "StreamCommand",
 		GroupName:                 "Reader",
-		CashEntityRepositoryRedis: *NewCashEntityRepository(addr),
+		LocalStorage:              &localStorage,
+		CashEntityRepositoryRedis: *NewCashEntityRepository(addr, repEnt),
 	}
 }
 
-func (rr CashSteamEntityRep) Set(c context.Context, entity *models.Entity) error {
-	key := entity.Id.(primitive.ObjectID).Hex()
-	value, err := json.Marshal(entity)
-	if err != nil {
-		return err
+type Command struct {
+	Type     string
+	EntityId string
+}
+
+func (c *Command) Marshal() map[string]string {
+	return map[string]string{
+		"Type":     c.Type,
+		"EntityId": c.EntityId,
 	}
+}
 
-	cacheObj := NewCache(value)
-	data := structs.Map(cacheObj)
-	data["key"] = key
+func unMarshalCommand(data map[string]interface{}) *Command {
+	var com = Command{
+		Type:     data["Type"].(string),
+		EntityId: data["EntityId"].(string),
+	}
+	return &com
+}
 
+func (r *CashSteamEntityRep) sendCommand(ctx context.Context, command Command) error {
 	arg := redis.XAddArgs{
-		Stream: rr.StreamSet,
+		Stream: r.StreamCommand,
 		MaxLen: 0,
 		ID:     "",
-		Values: data,
+		Values: command,
 	}
-
-	err = rr.client.XAdd(c, &arg).Err()
-	if err != nil {
-		logrus.WithError(err).Error("Set in redis")
-		return err
-	}
-	return nil
+	res := r.client.XAdd(ctx, &arg)
+	return res.Err()
 }
 
-func (rr CashSteamEntityRep) Get(c context.Context, id string) (models.Entity, error) {
-	ent := models.Entity{}
-	logrus.Info("Try get with cache")
+func (r *CashSteamEntityRep) Set(ctx context.Context, entity *models.Entity) error {
+	r.LocalStorage.storage[entity.Id] = *entity
+	writeCommand := Command{Type: "write", EntityId: entity.Id}
+	err := r.sendCommand(ctx, writeCommand)
+	return err
+}
 
-	idOutStream := xid.New().String()
+func (r *CashSteamEntityRep) Get(ctx context.Context, idEntity string) (*models.Entity, bool) {
+	entity, exist := r.LocalStorage.storage[idEntity]
+	return &entity, exist
+}
 
-	err := rr.client.XAdd(c, &redis.XAddArgs{
-		Stream: rr.StreamGet,
-		Values: map[string]interface{}{"idEntities": id, "idOutput": idOutStream},
-	}).Err()
-	if err != nil {
-		logrus.Error(err)
-		return ent, err
+func (r *CashSteamEntityRep) Delete(ctx context.Context, idEntity string) {
+	delete(r.LocalStorage.storage, idEntity)
+	deleteCommand := Command{Type: "delete", EntityId: idEntity}
+	r.sendCommand(ctx, deleteCommand)
+}
+
+func (r *CashSteamEntityRep) Listener(ctx context.Context) {
+	r.client.XGroupDestroy(ctx, r.StreamCommand, r.GroupName)
+	r.client.XGroupCreate(ctx, r.StreamCommand, r.GroupName, "$")
+	args := redis.XReadGroupArgs{
+		Group:    r.GroupName,
+		Consumer: "Reader",
+		Streams:  []string{r.StreamCommand, ">"},
 	}
-
-	value, err := rr.client.XRead(c, &redis.XReadArgs{
-		Block:   1 * time.Millisecond,
-		Streams: []string{idOutStream, "0"},
-	}).Result()
-	if err != nil {
-		logrus.Error(err)
-		return ent, err
+	for {
+		messages := r.client.XReadGroup(ctx, &args).Val()
+		for _, message := range messages {
+			for _, comm := range message.Messages {
+				command := unMarshalCommand(comm.Values)
+				if command.Type == "write" {
+					entity, err := r.entityRep.GetForID(ctx, command.EntityId)
+					if err == nil {
+						r.LocalStorage.storage[entity.Id] = *entity
+						continue
+					}
+					delete(r.LocalStorage.storage, entity.Id)
+				}
+			}
+		}
 	}
-
-	rr.Client().Del(c, idOutStream)
-
-	if value[0].Messages[0].Values["status"] != "0" {
-		logrus.WithFields(logrus.Fields{
-			"status":       value[0].Messages[0].Values["status"],
-			"id_entity":    id,
-			"id_OutStream": idOutStream,
-			"result":       value,
-		}).Error()
-		err = errors.New("Not fount in cashe")
-
-		return ent, err
-	}
-	err = ent.InitForMap(value[0].Messages[0].Values)
-	return ent, err
 }

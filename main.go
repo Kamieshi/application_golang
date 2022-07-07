@@ -4,13 +4,21 @@ import (
 	_ "app/docs/app"
 	"app/internal/config"
 	"app/internal/handlers"
-	repository "app/internal/repository"
+	"app/internal/repository"
+	repositoryMongoDB "app/internal/repository/mongodb"
+	repositoryPg "app/internal/repository/posgres"
 	redisRepository "app/internal/repository/redis"
 	"app/internal/service"
+	"context"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/labstack/echo/v4" //nolint:typecheck
 	"github.com/labstack/echo/v4/middleware"
 	log "github.com/sirupsen/logrus"
 	"github.com/swaggo/echo-swagger"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
+	"time"
 )
 
 // @title Golang Application Swagger
@@ -24,39 +32,60 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	config.InitLogger()
+	log.SetLevel(log.TraceLevel)
+	log.SetFormatter(&log.TextFormatter{})
+
+	//Create repository
+	var repoEntity repository.RepoEntity
+	var repoUsers repository.RepoUser
+	var repoImages repository.RepoImage
+	var repoAuth repository.RepoSession
+
+	//Init repository
+	typeDB := "pg"
+	if typeDB == "pg" {
+		connPool, err := pgxpool.Connect(context.Background(), configuration.UrlPostgres())
+		if err != nil {
+			log.Println("Connecting url", configuration.UrlPostgres())
+			log.Fatal(err)
+		}
+		repoEntity = repositoryPg.NewRepoEntityPostgres(connPool)
+		repoAuth = repositoryPg.NewRepoAuthPostgres(connPool)
+		repoUsers = repositoryPg.NewRepoUsersPostgres(connPool)
+		repoImages = repositoryPg.NewRepoImagePostgres(connPool)
+	} else {
+		timeOutConnect, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+
+		clientMongo, err := mongo.Connect(timeOutConnect, options.Client().ApplyURI(configuration.ConnectUrlMongo()))
+		defer cancel()
+		if err != nil {
+			log.WithError(err).Panic("Error with mongo connection")
+		}
+
+		var rf *readpref.ReadPref
+		err = clientMongo.Ping(timeOutConnect, rf)
+		if err != nil {
+			log.WithError(err).Panic("Error with mongo connection")
+		}
+		repoEntity = repositoryMongoDB.NewRepoEntityMongoDB(*clientMongo)
+		repoAuth = repositoryMongoDB.NewAuthRepoMongoDB(*clientMongo)
+		repoUsers = repositoryMongoDB.NewUserRepoMongoDB(*clientMongo)
+		repoImages = repositoryMongoDB.NewImageRepoMongoDB(*clientMongo)
+	}
 
 	//Cash repo
-	repoCashEntity := redisRepository.NewCashSteamEntityRep(configuration.REDIS_URL)
-
-	repoFactory := repository.GetFactory("pg", configuration)
-
-	//Creating repositories Postgres
-	repoEntity := repoFactory.GetEntityRepo()
+	repoCashEntity := redisRepository.NewCashSteamEntityRep(configuration.REDIS_URL, &repoEntity)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	repoUsersPg := repoFactory.GetUserRepo()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	repoImagesPg := repoFactory.GetImageRepo()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	repoAuthPg := repoFactory.GetAuthRepo()
-	if err != nil {
-		log.Fatal(err)
-	}
+	go repoCashEntity.Listener(context.Background())
 
 	//Creating services Postgres
 	entService := service.NewEntityService(repoEntity, repoCashEntity)
-	userService := service.NewUserService(repoUsersPg)
-	imageService := service.NewImageService(repoImagesPg)
-	authService := service.NewAuthService(repoUsersPg, repoAuthPg)
+	userService := service.NewUserService(repoUsers)
+	imageService := service.NewImageService(repoImages)
+	authService := service.NewAuthService(repoUsers, repoAuth)
 
 	// Creating handlers
 	handlerEntity := handlers.EntityHandler{EntityService: entService}

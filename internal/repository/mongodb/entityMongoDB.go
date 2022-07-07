@@ -24,7 +24,7 @@ func NewRepoEntityMongoDB(client mongo.Client) RepoEntityMongoDB {
 	}
 }
 
-func (rm RepoEntityMongoDB) GetAll(ctx context.Context) (*[]models.Entity, error) {
+func (rm RepoEntityMongoDB) GetAll(ctx context.Context) ([]models.Entity, error) {
 	cursor, err := rm.collectionEntity.Find(ctx, bson.D{{}})
 	if err != nil {
 		return nil, err
@@ -36,26 +36,26 @@ func (rm RepoEntityMongoDB) GetAll(ctx context.Context) (*[]models.Entity, error
 		return nil, err
 	}
 
-	return &resEntities, nil
+	return resEntities, nil
 }
 
-func (rm RepoEntityMongoDB) GetForID(ctx context.Context, id string) (models.Entity, error) {
+func (rm RepoEntityMongoDB) GetForID(ctx context.Context, id string) (*models.Entity, error) {
 	Id, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return models.Entity{}, err
+		return nil, err
 	}
 	var entity models.Entity
 
 	err = rm.collectionEntity.FindOne(ctx, bson.D{{"_id", Id}}).Decode(&entity)
 	if err != nil {
-		return entity, err
+		return nil, err
 	}
 	fmt.Println(Id)
-	return entity, nil
+	return &entity, nil
 }
 
 func (rm RepoEntityMongoDB) Add(ctx context.Context, obj *models.Entity) error {
-	obj.Id = primitive.NewObjectID()
+	obj.Id = primitive.NewObjectID().String()
 	_, err := rm.collectionEntity.InsertOne(ctx, obj)
 	return err
 }
@@ -65,7 +65,7 @@ func (rm RepoEntityMongoDB) Update(ctx context.Context, id string, obj models.En
 	if err != nil {
 		return err
 	}
-	obj.Id = nil
+	obj.Id = Id
 	updateData := bson.M{
 		"$set": obj,
 	}
