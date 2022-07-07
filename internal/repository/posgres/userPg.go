@@ -56,7 +56,7 @@ func (r RepoUsersPostgres) Delete(ctx context.Context, username string) error {
 	return nil
 }
 
-func (r RepoUsersPostgres) GetAll(ctx context.Context) (*[]models.User, error) {
+func (r RepoUsersPostgres) GetAll(ctx context.Context) ([]models.User, error) {
 	query := fmt.Sprintf("SELECT %s FROM user", orderColumnsEntity)
 	rows, err := r.pool.Query(ctx, query)
 	if err != nil {
@@ -72,7 +72,7 @@ func (r RepoUsersPostgres) GetAll(ctx context.Context) (*[]models.User, error) {
 		}
 		users = append(users, *user)
 	}
-	return &users, nil
+	return users, nil
 }
 
 func (r RepoUsersPostgres) Update(ctx context.Context, user *models.User) error {

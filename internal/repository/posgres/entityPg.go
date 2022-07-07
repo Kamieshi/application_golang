@@ -76,7 +76,6 @@ func (sp RepoEntityPostgres) Delete(ctx context.Context, id string) error {
 	}
 	query := "DELETE FROM entity WHERE id=$1"
 	com, err := sp.pool.Exec(ctx, query, Id)
-
 	if err != nil {
 		return err
 	}
