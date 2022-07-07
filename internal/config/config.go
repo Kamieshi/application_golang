@@ -13,10 +13,7 @@ type Configuration struct {
 
 func Load() error {
 	err := godotenv.Load(".env")
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func (c Configuration) UrlPostgres() string {

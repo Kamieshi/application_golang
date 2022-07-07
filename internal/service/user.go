@@ -29,17 +29,18 @@ func createHash256Password(user models.User, password string) string {
 }
 
 func (us UserService) Create(ctx context.Context, userName string, password string) (models.User, error) {
-	user, _ := us.rep.Get(ctx, userName)
+	user, err := us.rep.Get(ctx, userName)
 	if (user != models.User{}) {
 		return user, errors.New("username already in use")
 	}
-
-	user = models.User{
-		UserName: userName,
+	if err.Error() != "no rows in result set" {
+		return user, err
 	}
+	err = nil
+	user.UserName = userName
 	passwordHash := createHash256Password(user, password)
 	user.PasswordHash = passwordHash
-	err := us.rep.Add(ctx, user)
+	err = us.rep.Add(ctx, user)
 	if err != nil {
 		return models.User{}, err
 	}

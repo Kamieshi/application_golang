@@ -18,12 +18,15 @@ type CacheObj struct {
 	DeathTime int64  `json:"deathTime"`
 }
 
-func NewCache(value []byte) CacheObj {
-	timeLive, _ := strconv.Atoi(os.Getenv("TIME_EXPIRED_CACHE_MINUTE"))
-	return CacheObj{
-		Data:      value,
-		DeathTime: time.Now().Add(time.Duration(timeLive) * time.Minute).Unix(),
+func NewCache(value []byte) (CacheObj, error) {
+	var cacheObj CacheObj
+	timeLive, err := strconv.Atoi(os.Getenv("TIME_EXPIRED_CACHE_MINUTE"))
+	if err != nil {
+		return cacheObj, err
 	}
+	cacheObj.Data = value
+	cacheObj.DeathTime = time.Now().Add(time.Duration(timeLive) * time.Minute).Unix()
+	return cacheObj, err
 }
 
 func (co CacheObj) MarshalBinary() ([]byte, error) {
@@ -34,8 +37,8 @@ type CashEntityRepositoryRedis struct {
 	client *redis.Client
 }
 
-func (cr CashEntityRepositoryRedis) Client() *redis.Client {
-	return cr.client
+func (c CashEntityRepositoryRedis) Client() *redis.Client {
+	return c.client
 }
 
 func NewCashEntityRepository(addr string) *CashEntityRepositoryRedis {
@@ -49,15 +52,18 @@ func NewCashEntityRepository(addr string) *CashEntityRepositoryRedis {
 	}
 }
 
-func (rr CashEntityRepositoryRedis) Set(c context.Context, entity *models.Entity) error {
+func (c CashEntityRepositoryRedis) Set(ctx context.Context, entity *models.Entity) error {
 	key := entity.Id.(primitive.ObjectID).Hex()
 	value, err := json.Marshal(entity)
 	if err != nil {
 		return err
 	}
 
-	cacheObj := NewCache(value)
-	err = rr.client.Set(c, key, cacheObj, 0).Err()
+	cacheObj, err := NewCache(value)
+	if err != nil {
+		return err
+	}
+	err = c.client.Set(ctx, key, cacheObj, 0).Err()
 	if err != nil {
 		logrus.WithError(err).Error("Set in redis")
 		return err
@@ -65,11 +71,11 @@ func (rr CashEntityRepositoryRedis) Set(c context.Context, entity *models.Entity
 	return nil
 }
 
-func (rr CashEntityRepositoryRedis) Get(c context.Context, id string) (models.Entity, error) {
+func (c CashEntityRepositoryRedis) Get(ctx context.Context, id string) (models.Entity, error) {
 	var cacheObj CacheObj
 	ent := models.Entity{}
 	logrus.Info("Try get with cache")
-	val, err := rr.client.Get(c, id).Result()
+	val, err := c.client.Get(ctx, id).Result()
 
 	if err != nil {
 		logrus.WithError(err).Error("Get in redis")
@@ -82,7 +88,7 @@ func (rr CashEntityRepositoryRedis) Get(c context.Context, id string) (models.En
 	}
 
 	if cacheObj.DeathTime < time.Now().Unix() {
-		_ = rr.Delete(c, id)
+		_ = c.Delete(ctx, id)
 		logrus.WithError(err).Info("Get in redis")
 		return ent, errors.New("time expired")
 	}
@@ -95,8 +101,8 @@ func (rr CashEntityRepositoryRedis) Get(c context.Context, id string) (models.En
 	return ent, nil
 }
 
-func (rr CashEntityRepositoryRedis) Delete(c context.Context, id string) error {
-	res := rr.client.Del(c, id)
+func (c CashEntityRepositoryRedis) Delete(ctx context.Context, id string) error {
+	res := c.client.Del(ctx, id)
 	if res.Err() != nil {
 		return res.Err()
 	}

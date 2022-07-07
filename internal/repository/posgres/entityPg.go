@@ -21,6 +21,8 @@ func NewRepoEntityPostgres(pool *pgxpool.Pool) RepoEntityPostgres {
 	}
 }
 
+const orderColumnsEntity string = "id,entity_name,price,is_active"
+
 func rowToEntity(row pgx.Row) (*models.Entity, error) {
 	var entity models.Entity
 	err := row.Scan(&entity.Id, &entity.Name, &entity.Price, &entity.IsActive)
@@ -31,7 +33,8 @@ func rowToEntity(row pgx.Row) (*models.Entity, error) {
 }
 
 func (sp RepoEntityPostgres) GetAll(ctx context.Context) (*[]models.Entity, error) {
-	rows, err := sp.pool.Query(ctx, "select * from entity")
+	query := fmt.Sprintf("SELECT %s FROM entity", orderColumnsEntity)
+	rows, err := sp.pool.Query(ctx, query)
 	if err != nil {
 		return nil, err
 	}
@@ -50,16 +53,16 @@ func (sp RepoEntityPostgres) GetAll(ctx context.Context) (*[]models.Entity, erro
 }
 
 func (sp RepoEntityPostgres) GetForID(ctx context.Context, id string) (models.Entity, error) {
-
-	var row pgx.Row = sp.pool.QueryRow(ctx, "select * from entity where id=$1", id)
+	query := fmt.Sprintf("SELECT %s FROM entity WHERE id=$1", orderColumnsEntity)
+	var row pgx.Row = sp.pool.QueryRow(ctx, query, id)
 	ent, err := rowToEntity(row)
 	return *ent, err
 
 }
 
 func (sp RepoEntityPostgres) Add(ctx context.Context, obj *models.Entity) error {
-
-	_, err := sp.pool.Exec(ctx, "insert into entity(entity_name,price,is_active) values ($1,$2,$3)", obj.Name, obj.Price, obj.IsActive)
+	query := "INSERT INTO entity(entity_name,price,is_active) values ($1,$2,$3)"
+	_, err := sp.pool.Exec(ctx, query, obj.Name, obj.Price, obj.IsActive)
 	if err != nil {
 		return err
 	}
@@ -71,8 +74,8 @@ func (sp RepoEntityPostgres) Delete(ctx context.Context, id string) error {
 	if err != nil {
 		return err
 	}
-	com, err := sp.pool.Exec(ctx, "delete from entity where id=$1", Id)
-
+	query := "DELETE FROM entity WHERE id=$1"
+	com, err := sp.pool.Exec(ctx, query, Id)
 	if err != nil {
 		return err
 	}
@@ -88,7 +91,8 @@ func (sp RepoEntityPostgres) Update(ctx context.Context, id string, obj models.E
 	if err != nil {
 		return err
 	}
-	com, err := sp.pool.Exec(ctx, "UPDATE entity SET entity_name=$2,price=$3,is_active=$4 WHERE id=$1;", Id, obj.Name, obj.Price, obj.IsActive)
+	query := "UPDATE entity SET entity_name=$2,price=$3,is_active=$4 WHERE id=$1"
+	com, err := sp.pool.Exec(ctx, query, Id, obj.Name, obj.Price, obj.IsActive)
 	if err != nil {
 		return err
 	}

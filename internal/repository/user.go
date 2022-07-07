@@ -10,5 +10,5 @@ type RepoUser interface {
 	Add(ctx context.Context, user models.User) error
 	Delete(ctx context.Context, username string) error
 	GetAll(ctx context.Context) (*[]models.User, error)
-	Update(ctx context.Context) error
+	Update(ctx context.Context, user *models.User) error
 }
