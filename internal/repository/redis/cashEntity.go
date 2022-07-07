@@ -2,12 +2,12 @@ package repository
 
 import (
 	"app/internal/models"
+	"app/internal/repository"
 	"context"
 	"encoding/json"
 	"errors"
 	"github.com/go-redis/redis/v8"
 	"github.com/sirupsen/logrus"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"os"
 	"strconv"
 	"time"
@@ -34,26 +34,29 @@ func (co CacheObj) MarshalBinary() ([]byte, error) {
 }
 
 type CashEntityRepositoryRedis struct {
-	client *redis.Client
+	entityRep repository.RepoEntity
+	client    *redis.Client
 }
 
 func (c CashEntityRepositoryRedis) Client() *redis.Client {
 	return c.client
 }
 
-func NewCashEntityRepository(addr string) *CashEntityRepositoryRedis {
+func NewCashEntityRepository(addr string, entityRep *repository.RepoEntity) *CashEntityRepositoryRedis {
 	client := redis.NewClient(&redis.Options{
 		Addr:     addr,
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
+
 	return &CashEntityRepositoryRedis{
-		client: client,
+		client:    client,
+		entityRep: *entityRep,
 	}
 }
 
 func (c CashEntityRepositoryRedis) Set(ctx context.Context, entity *models.Entity) error {
-	key := entity.Id.(primitive.ObjectID).Hex()
+	key := entity.Id
 	value, err := json.Marshal(entity)
 	if err != nil {
 		return err
@@ -71,40 +74,36 @@ func (c CashEntityRepositoryRedis) Set(ctx context.Context, entity *models.Entit
 	return nil
 }
 
-func (c CashEntityRepositoryRedis) Get(ctx context.Context, id string) (models.Entity, error) {
+func (c CashEntityRepositoryRedis) Get(ctx context.Context, id string) (*models.Entity, error) {
 	var cacheObj CacheObj
 	ent := models.Entity{}
 	logrus.Info("Try get with cache")
 	val, err := c.client.Get(ctx, id).Result()
 
-	if err != nil {
+	if err != redis.Nil {
 		logrus.WithError(err).Error("Get in redis")
-		return ent, err
+		return &ent, err
 	}
 
 	err = json.Unmarshal([]byte(val), &cacheObj)
 	if err != nil {
-		return ent, err
+		return &ent, err
 	}
 
 	if cacheObj.DeathTime < time.Now().Unix() {
-		_ = c.Delete(ctx, id)
+		c.Delete(ctx, id)
 		logrus.WithError(err).Info("Get in redis")
-		return ent, errors.New("time expired")
+		return &ent, errors.New("time expired")
 	}
 
 	err = json.Unmarshal(cacheObj.Data, &ent)
 	if err != nil {
-		return ent, err
+		return &ent, err
 	}
 	logrus.Info("From Cache")
-	return ent, nil
+	return &ent, nil
 }
 
-func (c CashEntityRepositoryRedis) Delete(ctx context.Context, id string) error {
-	res := c.client.Del(ctx, id)
-	if res.Err() != nil {
-		return res.Err()
-	}
-	return nil
+func (c CashEntityRepositoryRedis) Delete(ctx context.Context, id string) {
+	c.client.Del(ctx, id)
 }

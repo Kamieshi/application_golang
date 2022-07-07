@@ -58,7 +58,7 @@ func (us UserService) Get(ctx context.Context, username string) (models.User, er
 	return us.rep.Get(ctx, username)
 }
 
-func (us UserService) GetAll(ctx context.Context) (*[]models.User, error) {
+func (us UserService) GetAll(ctx context.Context) ([]models.User, error) {
 
 	users, err := us.rep.GetAll(ctx)
 	if err != nil {
