@@ -9,8 +9,7 @@ services:
       POSTGRES_HOST: "postgres"
     ports:
       - "5433:5432"
-    volumes:
-      - ./db_init/init_db:/docker-entrypoint-initdb.d
+
 
   application:
     build:
@@ -68,3 +67,10 @@ services:
       PGADMIN_DEFAULT_PASSWORD: root
     ports:
       - "5050:80"
+  flyway:
+    image: flyway/flyway
+    command: "-url=jdbc:postgresql://postgres:5432/postgres -schemas=public -user=$POSTGRES_USER -password=$POSTGRES_PASSWORD -connectRetries=10 migrate"
+    volumes:
+      - ./migrations:/flyway/sql
+    depends_on:
+      - postgres
