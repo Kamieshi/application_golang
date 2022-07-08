@@ -62,8 +62,8 @@ func (r *CashSteamEntityRep) sendCommand(ctx context.Context, command Command) e
 }
 
 func (r *CashSteamEntityRep) Set(ctx context.Context, entity *models.Entity) error {
-	r.LocalStorage.storage[entity.ID] = *entity
-	writeCommand := Command{Type: "write", EntityId: entity.ID}
+	r.LocalStorage.storage[entity.ID.String()] = *entity
+	writeCommand := Command{Type: "write", EntityId: entity.ID.String()}
 	err := r.sendCommand(ctx, writeCommand)
 	return err
 }
@@ -95,10 +95,10 @@ func (r *CashSteamEntityRep) Listener(ctx context.Context) {
 				if command.Type == "write" {
 					entity, err := r.entityRep.GetForID(ctx, command.EntityId)
 					if err == nil {
-						r.LocalStorage.storage[entity.ID] = *entity
+						r.LocalStorage.storage[entity.ID.String()] = *entity
 						continue
 					}
-					delete(r.LocalStorage.storage, entity.ID)
+					delete(r.LocalStorage.storage, entity.ID.String())
 				}
 			}
 		}
