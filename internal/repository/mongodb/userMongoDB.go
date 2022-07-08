@@ -3,10 +3,10 @@ package repository
 import (
 	"app/internal/models"
 	"context"
+	"github.com/google/uuid"
 	"os"
 
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -23,14 +23,14 @@ func NewUserRepoMongoDB(client mongo.Client) UserRepoMongoDB {
 	}
 }
 
-func (ur UserRepoMongoDB) Get(ctx context.Context, username string) (models.User, error) {
+func (ur UserRepoMongoDB) Get(ctx context.Context, username string) (*models.User, error) {
 	var user models.User
 	err := ur.collection.FindOne(ctx, bson.D{{"username", username}}).Decode(&user)
-	return user, err
+	return &user, err
 }
 
-func (ur UserRepoMongoDB) Add(ctx context.Context, user models.User) error {
-	user.Id = primitive.NewObjectID()
+func (ur UserRepoMongoDB) Add(ctx context.Context, user *models.User) error {
+	user.ID = uuid.New()
 	_, err := ur.collection.InsertOne(ctx, user)
 	return err
 }

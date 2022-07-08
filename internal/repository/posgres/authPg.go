@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
@@ -21,27 +22,28 @@ func NewRepoAuthPostgres(pool *pgxpool.Pool) RepoAuthPostgres {
 
 func rowToSession(row pgx.Row) (*models.Session, error) {
 	var session models.Session
-	err := row.Scan(&session.Id, &session.UserId, &session.IdSession, &session.RfToken, &session.UniqueSignature, &session.CreatedAt, &session.Disabled)
+	err := row.Scan(&session.ID, &session.UserId, &session.RfToken, &session.UniqueSignature, &session.CreatedAt, &session.Disabled)
 	if err != nil {
 		return nil, err
 	}
 	return &session, nil
 }
 
-const orderColumnsSessions string = "id, user_id, session_id, refresh_token, signature ,created_at ,disabled"
+const orderColumnsSessions string = "id, user_id,  refresh_token, signature ,created_at ,disabled"
 
-func (r RepoAuthPostgres) Create(ctx context.Context, session models.Session) error {
-	query := "INSERT INTO sessions(user_id, session_id, refresh_token, signature ,created_at ,disabled) VALUES ($1,$2,$3,$4,$5,$6)"
-	_, err := r.pool.Exec(ctx, query, session.UserId, session.IdSession, session.RfToken, session.UniqueSignature, session.CreatedAt, session.Disabled)
+func (r RepoAuthPostgres) Create(ctx context.Context, session *models.Session) error {
+	session.ID = uuid.New()
+	query := "INSERT INTO sessions(id,user_id, refresh_token, signature ,created_at ,disabled) VALUES ($1,$2,$3,$4,$5,$6)"
+	_, err := r.pool.Exec(ctx, query, session.ID, session.UserId, session.RfToken, session.UniqueSignature, session.CreatedAt, session.Disabled)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r RepoAuthPostgres) Update(ctx context.Context, session models.Session) error {
-	query := "UPDATE sessions SET user_id=$1, session_id=$2, refresh_token=$3, signature=$4 ,created_at=$5 ,disabled=$6 WHERE id=$7"
-	res, err := r.pool.Exec(ctx, query, session.UserId, session.IdSession, session.RfToken, session.UniqueSignature, session.CreatedAt, session.Disabled, session.Id)
+func (r RepoAuthPostgres) Update(ctx context.Context, session *models.Session) error {
+	query := "UPDATE sessions SET user_id=$1, refresh_token=$2, signature=$3 ,created_at=$4 ,disabled=$5 WHERE id=$6"
+	res, err := r.pool.Exec(ctx, query, session.UserId, session.RfToken, session.UniqueSignature, session.CreatedAt, session.Disabled, session.ID)
 	if err != nil {
 		return err
 	}
@@ -51,16 +53,16 @@ func (r RepoAuthPostgres) Update(ctx context.Context, session models.Session) er
 	return nil
 }
 
-func (r RepoAuthPostgres) Get(ctx context.Context, SessionId string) (models.Session, error) {
-	query := fmt.Sprintf("SELECT %s FROM sessions WHERE session_id=$1", orderColumnsSessions)
+func (r RepoAuthPostgres) Get(ctx context.Context, SessionId string) (*models.Session, error) {
+	query := fmt.Sprintf("SELECT %s FROM sessions WHERE id=$1", orderColumnsSessions)
 	var row pgx.Row = r.pool.QueryRow(ctx, query, SessionId)
 	ent, err := rowToSession(row)
-	return *ent, err
+	return ent, err
 }
 
 func (r RepoAuthPostgres) Delete(ctx context.Context, sessionId string) error {
 
-	query := "DELETE FROM sessions WHERE session_id=$1"
+	query := "DELETE FROM sessions WHERE id=$1"
 	com, err := r.pool.Exec(ctx, query, sessionId)
 
 	if err != nil {

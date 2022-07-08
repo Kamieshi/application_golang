@@ -30,7 +30,7 @@ func (eh EntityHandler) List(c echo.Context) error {
 // @Security ApiKeyAuth
 // @success 200 {object} models.Entity "desc"
 // @Router /entity/{id} [get]
-// @Param id path string false "Id of the mongo"
+// @Param id path string false "ID of the mongo"
 func (eh EntityHandler) GetDetail(c echo.Context) error {
 	id := c.Param("id")
 
@@ -46,7 +46,7 @@ func (eh EntityHandler) GetDetail(c echo.Context) error {
 // @tags Entity
 // @Security ApiKeyAuth
 // @Success      200  {string} {status : 'Update successful'}
-// @Param id path string false "Id of the mongo"
+// @Param id path string false "ID of the mongo"
 // @Router /entity/{id} [put]
 func (eh EntityHandler) Update(c echo.Context) error {
 	id := c.Param("id")
@@ -86,7 +86,7 @@ func (eh EntityHandler) Create(c echo.Context) error {
 // Delete godoc
 // @tags Entity
 // @Security ApiKeyAuth
-// @Param id path string false "Id of the mongo"
+// @Param id path string false "ID of the mongo"
 // @Router /entity/{id} [delete]
 func (eh EntityHandler) Delete(c echo.Context) error {
 	id := c.Param("id")

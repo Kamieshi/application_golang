@@ -3,12 +3,9 @@ package tests
 import (
 	"app/internal/models"
 	repository "app/internal/repository/posgres"
-	"context"
 	"reflect"
 	"testing"
 )
-
-var ctx = context.Background()
 
 func TestRepositoryEntityAdd(t *testing.T) {
 	repEntity := repository.NewRepoEntityPostgres(pgPool)
