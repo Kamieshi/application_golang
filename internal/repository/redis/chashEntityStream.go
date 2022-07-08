@@ -5,12 +5,20 @@ import (
 	"app/internal/repository"
 	"context"
 	"github.com/go-redis/redis/v8"
+	"os"
+	"strconv"
 	"sync"
+	"time"
 )
 
 type LocalStorage struct {
-	storage map[string]models.Entity
-	sync.Mutex
+	M       sync.Mutex
+	storage map[string]*CacheEntityObject
+}
+
+type CacheEntityObject struct {
+	EntityObj *models.Entity
+	DeathTime time.Time
 }
 
 type CashSteamEntityRep struct {
@@ -21,7 +29,7 @@ type CashSteamEntityRep struct {
 }
 
 func NewCashSteamEntityRep(addr string, repEnt *repository.RepoEntity) *CashSteamEntityRep {
-	localStorage := LocalStorage{storage: make(map[string]models.Entity)}
+	localStorage := LocalStorage{storage: make(map[string]*CacheEntityObject)}
 	return &CashSteamEntityRep{
 		StreamCommand:             "StreamCommand",
 		GroupName:                 "Reader",
@@ -39,6 +47,14 @@ func (c *Command) Marshal() map[string]string {
 	return map[string]string{
 		"Type":     c.Type,
 		"EntityId": c.EntityId,
+	}
+}
+
+func creatCacheEntity(ent *models.Entity) *CacheEntityObject {
+	TLC, _ := strconv.Atoi(os.Getenv("TLC"))
+	return &CacheEntityObject{
+		EntityObj: ent,
+		DeathTime: time.Now().Add(time.Duration(TLC) * time.Minute),
 	}
 }
 
@@ -62,19 +78,33 @@ func (r *CashSteamEntityRep) sendCommand(ctx context.Context, command Command) e
 }
 
 func (r *CashSteamEntityRep) Set(ctx context.Context, entity *models.Entity) error {
-	r.LocalStorage.storage[entity.Id] = *entity
+	cacheObj := creatCacheEntity(entity)
+	r.LocalStorage.M.Lock()
+	r.LocalStorage.storage[entity.Id] = cacheObj
+	r.LocalStorage.M.Unlock()
 	writeCommand := Command{Type: "write", EntityId: entity.Id}
 	err := r.sendCommand(ctx, writeCommand)
 	return err
 }
 
 func (r *CashSteamEntityRep) Get(ctx context.Context, idEntity string) (*models.Entity, bool) {
-	entity, exist := r.LocalStorage.storage[idEntity]
-	return &entity, exist
+	r.LocalStorage.M.Lock()
+	cacheObj := r.LocalStorage.storage[idEntity]
+	r.LocalStorage.M.Unlock()
+	if cacheObj != nil {
+		if cacheObj.DeathTime.After(time.Now()) {
+			r.Delete(ctx, idEntity)
+			return nil, false
+		}
+		return cacheObj.EntityObj, true
+	}
+	return nil, false
 }
 
 func (r *CashSteamEntityRep) Delete(ctx context.Context, idEntity string) {
+	r.LocalStorage.M.Lock()
 	delete(r.LocalStorage.storage, idEntity)
+	r.LocalStorage.M.Unlock()
 	deleteCommand := Command{Type: "delete", EntityId: idEntity}
 	r.sendCommand(ctx, deleteCommand)
 }
@@ -95,10 +125,15 @@ func (r *CashSteamEntityRep) Listener(ctx context.Context) {
 				if command.Type == "write" {
 					entity, err := r.entityRep.GetForID(ctx, command.EntityId)
 					if err == nil {
-						r.LocalStorage.storage[entity.Id] = *entity
+						cacheObj := creatCacheEntity(entity)
+						r.LocalStorage.M.Lock()
+						r.LocalStorage.storage[entity.Id] = cacheObj
+						r.LocalStorage.M.Unlock()
 						continue
 					}
+					r.LocalStorage.M.Lock()
 					delete(r.LocalStorage.storage, entity.Id)
+					r.LocalStorage.M.Unlock()
 				}
 			}
 		}
