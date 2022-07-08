@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"math/rand"
 	"net/http"
@@ -130,14 +131,14 @@ func (au AuthService) CreateAndWriteSession(ctx echo.Context, user models.User) 
 	refresh := au.createRandomOutput(user.UserName)
 
 	session := models.Session{
-		IdSession:       au.createRandomOutput("id"),
+		ID:              uuid.New(),
 		UserId:          user.ID,
 		CreatedAt:       time.Now(),
 		Disabled:        false,
 		RfToken:         createHashSHA256WithSalt(refresh),
 		UniqueSignature: ctx.Request().UserAgent(),
 	}
-	err := au.AuthRep.Create(ctx.Request().Context(), session)
+	err := au.AuthRep.Create(ctx.Request().Context(), &session)
 	if err != nil {
 		return models.Session{}, err
 	}
