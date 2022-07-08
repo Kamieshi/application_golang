@@ -7,7 +7,7 @@ CREATE TABLE entity(
 );
 
 CREATE TABLE users(
-                      id SERIAL not null unique,
+                      id uuid not null unique,
                       username varchar(255) not null unique,
                       password_hash varchar(255)  not null,
                       is_admin bool not null,
@@ -16,7 +16,7 @@ CREATE TABLE users(
 
 CREATE TABLE sessions(
                          id SERIAL not null unique,
-                         user_id integer not null ,
+                         user_id uuid not null unique,
                          session_id varchar(255) not null ,
                          refresh_token varchar(255) not null ,
                          signature varchar(255) not null ,

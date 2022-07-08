@@ -91,7 +91,7 @@ type CustomClaims struct {
 	jwt.StandardClaims
 }
 
-func (au AuthService) IsAuthentication(ctx context.Context, username string, password string) (models.User, bool, error) {
+func (au AuthService) IsAuthentication(ctx context.Context, username string, password string) (*models.User, bool, error) {
 	user, err := au.UserRep.Get(ctx, username)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"username": username}).Warn("Unsuccessful login attempt")
@@ -101,7 +101,7 @@ func (au AuthService) IsAuthentication(ctx context.Context, username string, pas
 	if user.PasswordHash == inPasswordHash {
 		return user, true, err
 	}
-	return models.User{}, false, err
+	return nil, false, err
 }
 
 func (au AuthService) CreateToken(username string, admin bool, idSession string) (string, error) {
@@ -131,7 +131,7 @@ func (au AuthService) CreateAndWriteSession(ctx echo.Context, user models.User) 
 
 	session := models.Session{
 		IdSession:       au.createRandomOutput("id"),
-		UserId:          user.Id,
+		UserId:          user.ID,
 		CreatedAt:       time.Now(),
 		Disabled:        false,
 		RfToken:         createHashSHA256WithSalt(refresh),
@@ -180,7 +180,7 @@ func createHashSHA256WithSalt(s string) string {
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
-func (au AuthService) GetUser(ctx echo.Context) (models.User, error) {
+func (au AuthService) GetUser(ctx echo.Context) (*models.User, error) {
 	user := ctx.Get("user").(*jwt.Token)
 	claims := user.Claims.(*CustomClaims)
 	User, err := au.UserRep.Get(ctx.Request().Context(), claims.Username)

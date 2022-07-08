@@ -130,7 +130,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Id of the mongo",
+                        "description": "ID of the mongo",
                         "name": "id",
                         "in": "path"
                     }
@@ -156,7 +156,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Id of the mongo",
+                        "description": "ID of the mongo",
                         "name": "id",
                         "in": "path"
                     }
@@ -182,7 +182,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Id of the mongo",
+                        "description": "ID of the mongo",
                         "name": "id",
                         "in": "path"
                     }

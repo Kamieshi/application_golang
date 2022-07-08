@@ -30,7 +30,7 @@ func (ur UserRepoMongoDB) Get(ctx context.Context, username string) (models.User
 }
 
 func (ur UserRepoMongoDB) Add(ctx context.Context, user models.User) error {
-	user.Id = primitive.NewObjectID()
+	user.ID = primitive.NewObjectID()
 	_, err := ur.collection.InsertOne(ctx, user)
 	return err
 }

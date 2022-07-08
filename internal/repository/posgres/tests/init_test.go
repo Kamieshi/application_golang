@@ -10,9 +10,11 @@ import (
 	log "github.com/sirupsen/logrus"
 	"os"
 	"testing"
+	"time"
 )
 
 var pgPool *pgxpool.Pool
+var ctx = context.Background()
 
 func TestMain(t *testing.M) {
 	err := godotenv.Load("/home/dmitryrusack/Work/application_golang/.env")
@@ -25,10 +27,10 @@ func TestMain(t *testing.M) {
 	if err != nil {
 		log.Fatalf("Could not connect to docker: %s", err)
 	}
-	pwdDir, _ := os.Getwd()
+	//pwdDir, _ := os.Getwd()
 	resource, err := pool.BuildAndRun(
 		"pg_for_test",
-		pwdDir+"/dockerfile",
+		"/home/dmitryrusack/Work/application_golang/internal/repository/posgres/tests/dockerfile",
 		[]string{fmt.Sprintf("POSTGRES_PASSWORD=%s", configuration.POSTGRES_PASSWORD)},
 	)
 	if err != nil {
@@ -42,7 +44,8 @@ func TestMain(t *testing.M) {
 		if err != nil {
 			return err
 		}
-		return pgPool.Ping(context.Background())
+		tContext, _ := context.WithTimeout(ctx, time.Duration(1*time.Second))
+		return pgPool.Ping(tContext)
 	}); err != nil {
 		log.Fatalf("Could not connect to database: %s", err)
 	}

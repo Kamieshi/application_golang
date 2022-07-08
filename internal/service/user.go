@@ -20,7 +20,7 @@ func NewUserService(rep repository.RepoUser) UserService {
 	}
 }
 
-func createHash256Password(user models.User, password string) string {
+func createHash256Password(user *models.User, password string) string {
 	// TODO: Don't Use username
 
 	h := sha256.New()
@@ -28,21 +28,22 @@ func createHash256Password(user models.User, password string) string {
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
-func (us UserService) Create(ctx context.Context, userName string, password string) (models.User, error) {
+func (us UserService) Create(ctx context.Context, userName string, password string) (*models.User, error) {
 	user, err := us.rep.Get(ctx, userName)
-	if (user != models.User{}) {
+	if user != nil {
 		return user, errors.New("username already in use")
 	}
 	if err.Error() != "no rows in result set" {
 		return user, err
 	}
 	err = nil
+	user = &models.User{}
 	user.UserName = userName
 	passwordHash := createHash256Password(user, password)
 	user.PasswordHash = passwordHash
 	err = us.rep.Add(ctx, user)
 	if err != nil {
-		return models.User{}, err
+		return nil, err
 	}
 	user, _ = us.rep.Get(ctx, userName)
 
@@ -54,7 +55,7 @@ func (us UserService) Delete(ctx context.Context, username string) error {
 	return us.rep.Delete(ctx, username)
 }
 
-func (us UserService) Get(ctx context.Context, username string) (models.User, error) {
+func (us UserService) Get(ctx context.Context, username string) (*models.User, error) {
 	return us.rep.Get(ctx, username)
 }
 
