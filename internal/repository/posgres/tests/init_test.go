@@ -1,4 +1,4 @@
-package testPg
+package tests
 
 import (
 	"app/internal/config"
@@ -25,11 +25,15 @@ func TestMain(t *testing.M) {
 	if err != nil {
 		log.Fatalf("Could not connect to docker: %s", err)
 	}
+	pwdDir, _ := os.Getwd()
 	resource, err := pool.BuildAndRun(
 		"pg_for_test",
-		"/home/dmitryrusack/Work/application_golang/test/repository/pg/dockerfile",
+		pwdDir+"/dockerfile",
 		[]string{fmt.Sprintf("POSTGRES_PASSWORD=%s", configuration.POSTGRES_PASSWORD)},
 	)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	if err := pool.Retry(func() error {
 		var err error

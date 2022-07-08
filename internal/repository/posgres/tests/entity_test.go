@@ -1,4 +1,4 @@
-package testPg
+package tests
 
 import (
 	"app/internal/models"
