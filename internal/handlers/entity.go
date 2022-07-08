@@ -50,18 +50,14 @@ func (eh EntityHandler) GetDetail(c echo.Context) error {
 // @Router /entity/{id} [put]
 func (eh EntityHandler) Update(c echo.Context) error {
 	id := c.Param("id")
-
 	entity := models.Entity{}
-
 	err := c.Bind(&entity)
 	if err != nil {
 		return err
 	}
-
 	err = eh.EntityService.Update(c.Request().Context(), id, entity)
 	if err != nil {
 		return c.JSON(http.StatusNotFound, fmt.Sprintf("{message: %v}", err))
-
 	}
 	return c.JSON(http.StatusOK, "{status : 'Update successful'}")
 }
@@ -95,10 +91,7 @@ func (eh EntityHandler) Create(c echo.Context) error {
 func (eh EntityHandler) Delete(c echo.Context) error {
 	id := c.Param("id")
 
-	err := eh.EntityService.Delete(c.Request().Context(), id)
-	if err != nil {
-		return c.JSON(http.StatusNotFound, fmt.Sprintf("{message: %v}", err))
-	}
+	eh.EntityService.Delete(c.Request().Context(), id)
 
 	return c.JSON(http.StatusOK, "{message : 'Delete successful'}")
 }

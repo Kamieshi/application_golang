@@ -56,7 +56,7 @@ func NewCashEntityRepository(addr string, entityRep *repository.RepoEntity) *Cas
 }
 
 func (c CashEntityRepositoryRedis) Set(ctx context.Context, entity *models.Entity) error {
-	key := entity.Id
+	key := entity.ID
 	value, err := json.Marshal(entity)
 	if err != nil {
 		return err

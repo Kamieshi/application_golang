@@ -7,12 +7,14 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// EntityService it's structure for work with cache and entity repository
 type EntityService struct {
 	rep      repository.RepoEntity
 	cashRep  repository.CacheEntityRepository
 	UseCache bool
 }
 
+// NewEntityService return
 func NewEntityService(rep repository.RepoEntity, cahRep repository.CacheEntityRepository) EntityService {
 	if cahRep != nil {
 		return EntityService{
