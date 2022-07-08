@@ -80,9 +80,9 @@ func (r *CashSteamEntityRep) sendCommand(ctx context.Context, command Command) e
 func (r *CashSteamEntityRep) Set(ctx context.Context, entity *models.Entity) error {
 	cacheObj := creatCacheEntity(entity)
 	r.LocalStorage.M.Lock()
-	r.LocalStorage.storage[entity.Id] = cacheObj
+	r.LocalStorage.storage[entity.ID.String()] = cacheObj
 	r.LocalStorage.M.Unlock()
-	writeCommand := Command{Type: "write", EntityId: entity.Id}
+	writeCommand := Command{Type: "write", EntityId: entity.ID.String()}
 	err := r.sendCommand(ctx, writeCommand)
 	return err
 }
@@ -127,12 +127,12 @@ func (r *CashSteamEntityRep) Listener(ctx context.Context) {
 					if err == nil {
 						cacheObj := creatCacheEntity(entity)
 						r.LocalStorage.M.Lock()
-						r.LocalStorage.storage[entity.Id] = cacheObj
+						r.LocalStorage.storage[entity.ID.String()] = cacheObj
 						r.LocalStorage.M.Unlock()
 						continue
 					}
 					r.LocalStorage.M.Lock()
-					delete(r.LocalStorage.storage, entity.Id)
+					delete(r.LocalStorage.storage, entity.ID.String())
 					r.LocalStorage.M.Unlock()
 				}
 			}

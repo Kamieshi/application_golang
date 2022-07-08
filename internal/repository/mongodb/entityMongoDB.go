@@ -55,7 +55,7 @@ func (rm RepoEntityMongoDB) GetForID(ctx context.Context, id string) (*models.En
 }
 
 func (rm RepoEntityMongoDB) Add(ctx context.Context, obj *models.Entity) error {
-	obj.Id = primitive.NewObjectID().String()
+	obj.ID = primitive.NewObjectID().String()
 	_, err := rm.collectionEntity.InsertOne(ctx, obj)
 	return err
 }
@@ -65,7 +65,7 @@ func (rm RepoEntityMongoDB) Update(ctx context.Context, id string, obj models.En
 	if err != nil {
 		return err
 	}
-	obj.Id = Id
+	obj.ID = Id.String()
 	updateData := bson.M{
 		"$set": obj,
 	}

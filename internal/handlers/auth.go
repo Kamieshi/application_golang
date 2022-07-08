@@ -4,22 +4,23 @@ import (
 	"app/internal/models"
 	"app/internal/service"
 	"fmt"
-	echo "github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4"
 	"net/http"
 	"time"
 )
 
+// AuthHandler Handler for work with AuthService
 type AuthHandler struct {
 	AuthService service.AuthService
 }
 
-func (ah AuthHandler) IsAuthentication(c echo.Context) error {
+func (a *AuthHandler) IsAuthentication(c echo.Context) error {
 	var data usPss
 	err := c.Bind(&data)
 	if err != nil {
 		return err
 	}
-	_, isAuth, err := ah.AuthService.IsAuthentication(c.Request().Context(), data.Username, data.Password)
+	_, isAuth, err := a.AuthService.IsAuthentication(c.Request().Context(), data.Username, data.Password)
 	if err != nil {
 		return c.JSON(http.StatusNotFound, fmt.Sprintf("{message: %v}", err))
 	}
@@ -30,24 +31,24 @@ func (ah AuthHandler) IsAuthentication(c echo.Context) error {
 // @tags Auth
 // @Param formLogin body handlers.usPss true "Login form"
 // @Router /auth/login [post]
-func (ah AuthHandler) Login(c echo.Context) error {
+func (a *AuthHandler) Login(c echo.Context) error {
 	var data usPss
 	err := c.Bind(&data)
 	if err != nil {
 		return err
 	}
-	user, isAuth, err := ah.AuthService.IsAuthentication(c.Request().Context(), data.Username, data.Password)
+	user, isAuth, err := a.AuthService.IsAuthentication(c.Request().Context(), data.Username, data.Password)
 	if err != nil {
 		return c.String(http.StatusUnauthorized, "invalid Username or password")
 	}
 	if !isAuth {
 		return echo.ErrUnauthorized
 	}
-	session, err := ah.AuthService.CreateAndWriteSession(c, user)
+	session, err := a.AuthService.CreateAndWriteSession(c, user)
 	if err != nil {
 		return echo.ErrUnauthorized
 	}
-	token, err := ah.AuthService.CreateToken(user.UserName, user.Admin, session.IdSession)
+	token, err := a.AuthService.CreateToken(user.UserName, user.Admin, session.IdSession)
 	if err != nil {
 		return err
 	}
@@ -58,8 +59,9 @@ func (ah AuthHandler) Login(c echo.Context) error {
 	})
 }
 
-func (ah AuthHandler) Info(c echo.Context) error {
-	user, _ := ah.AuthService.GetUser(c)
+// Info check auth
+func (a *AuthHandler) Info(c echo.Context) error {
+	user, _ := a.AuthService.GetUser(c)
 	if (user != models.User{}) {
 		return c.JSON(http.StatusAccepted, user)
 	}
@@ -70,7 +72,7 @@ func (ah AuthHandler) Info(c echo.Context) error {
 // @tags Auth
 // @Security ApiKeyAuth
 // @Router /auth/logout [get]
-func (ah AuthHandler) Logout(c echo.Context) error {
+func (a *AuthHandler) Logout(c echo.Context) error {
 	cookie := new(http.Cookie)
 	cookie.Name = "token"
 	cookie.Value = ""
@@ -88,13 +90,13 @@ type rft struct {
 // @Security ApiKeyAuth
 // @Param refreshData body rft true "refresh"
 // @Router /auth/refresh [get]
-func (ah AuthHandler) Refresh(c echo.Context) error {
+func (a *AuthHandler) Refresh(c echo.Context) error {
 	var rt rft
 	err := c.Bind(&rt)
 	if err != nil {
 		return err
 	}
-	acToken, refToken, err := ah.AuthService.RefreshAndWriteSession(c, rt.Refresh)
+	acToken, refToken, err := a.AuthService.RefreshAndWriteSession(c, rt.Refresh)
 	if err != nil {
 		return err
 	}
