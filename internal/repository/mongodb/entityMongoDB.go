@@ -4,6 +4,7 @@ import (
 	"app/internal/models"
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	"os"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -55,7 +56,7 @@ func (rm RepoEntityMongoDB) GetForID(ctx context.Context, id string) (*models.En
 }
 
 func (rm RepoEntityMongoDB) Add(ctx context.Context, obj *models.Entity) error {
-	obj.ID = primitive.NewObjectID().String()
+	obj.ID = uuid.New()
 	_, err := rm.collectionEntity.InsertOne(ctx, obj)
 	return err
 }
@@ -65,7 +66,7 @@ func (rm RepoEntityMongoDB) Update(ctx context.Context, id string, obj models.En
 	if err != nil {
 		return err
 	}
-	obj.ID = Id.String()
+	obj.ID = uuid.New()
 	updateData := bson.M{
 		"$set": obj,
 	}

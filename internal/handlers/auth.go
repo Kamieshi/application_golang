@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"app/internal/models"
 	"app/internal/service"
 	"fmt"
 	"github.com/labstack/echo/v4"
@@ -44,11 +43,11 @@ func (a *AuthHandler) Login(c echo.Context) error {
 	if !isAuth {
 		return echo.ErrUnauthorized
 	}
-	session, err := a.AuthService.CreateAndWriteSession(c, user)
+	session, err := a.AuthService.CreateAndWriteSession(c, *user)
 	if err != nil {
 		return echo.ErrUnauthorized
 	}
-	token, err := a.AuthService.CreateToken(user.UserName, user.Admin, session.IdSession)
+	token, err := a.AuthService.CreateToken(user.UserName, user.Admin, session.ID.String())
 	if err != nil {
 		return err
 	}
@@ -62,7 +61,7 @@ func (a *AuthHandler) Login(c echo.Context) error {
 // Info check auth
 func (a *AuthHandler) Info(c echo.Context) error {
 	user, _ := a.AuthService.GetUser(c)
-	if (user != models.User{}) {
+	if user != nil {
 		return c.JSON(http.StatusAccepted, user)
 	}
 	return echo.ErrUnauthorized

@@ -17,7 +17,8 @@ var pgPool *pgxpool.Pool
 var ctx = context.Background()
 
 func TestMain(t *testing.M) {
-	err := godotenv.Load("/home/dmitryrusack/Work/application_golang/.env")
+	pwdPath, _ := os.Getwd()
+	err := godotenv.Load(pwdPath + "/.env")
 	if err != nil {
 		panic(err)
 	}
@@ -30,7 +31,7 @@ func TestMain(t *testing.M) {
 	//pwdDir, _ := os.Getwd()
 	resource, err := pool.BuildAndRun(
 		"pg_for_test",
-		"/home/dmitryrusack/Work/application_golang/internal/repository/posgres/tests/dockerfile",
+		pwdPath+"/dockerfile",
 		[]string{fmt.Sprintf("POSTGRES_PASSWORD=%s", configuration.POSTGRES_PASSWORD)},
 	)
 	if err != nil {
