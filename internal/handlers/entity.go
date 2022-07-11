@@ -9,7 +9,7 @@ import (
 )
 
 type EntityHandler struct {
-	EntityService service.EntityService
+	EntityService *service.EntityService
 }
 
 // List godoc
@@ -55,7 +55,7 @@ func (eh EntityHandler) Update(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	err = eh.EntityService.Update(c.Request().Context(), id, entity)
+	err = eh.EntityService.Update(c.Request().Context(), id, &entity)
 	if err != nil {
 		return c.JSON(http.StatusNotFound, fmt.Sprintf("{message: %v}", err))
 	}

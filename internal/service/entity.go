@@ -37,7 +37,7 @@ func (e *EntityService) GetForID(ctx context.Context, id string) (*models.Entity
 	if is_exist {
 		logrus.WithFields(logrus.Fields{
 			"id": id,
-		}).Info("entity not found")
+		}).Info("Use cache")
 
 		return entity, nil
 	}
@@ -45,9 +45,9 @@ func (e *EntityService) GetForID(ctx context.Context, id string) (*models.Entity
 	if err != nil {
 		return entity, err
 	}
-	e.cashRep.Set(ctx, entity)
-
+	defer e.cashRep.Set(ctx, entity)
 	return entity, err
+
 }
 
 func (e EntityService) Add(ctx context.Context, obj *models.Entity) error {
@@ -66,9 +66,10 @@ func (e EntityService) Add(ctx context.Context, obj *models.Entity) error {
 	return err
 }
 
-func (e EntityService) Delete(ctx context.Context, id string) {
-	e.rep.Delete(ctx, id)
+func (e EntityService) Delete(ctx context.Context, id string) error {
+	err := e.rep.Delete(ctx, id)
 	e.cashRep.Delete(ctx, id)
+	return err
 }
 
 func (e EntityService) Update(ctx context.Context, id string, obj *models.Entity) error {

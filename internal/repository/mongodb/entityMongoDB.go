@@ -25,12 +25,12 @@ func NewRepoEntityMongoDB(client mongo.Client) RepoEntityMongoDB {
 	}
 }
 
-func (rm RepoEntityMongoDB) GetAll(ctx context.Context) ([]models.Entity, error) {
+func (rm RepoEntityMongoDB) GetAll(ctx context.Context) ([]*models.Entity, error) {
 	cursor, err := rm.collectionEntity.Find(ctx, bson.D{{}})
 	if err != nil {
 		return nil, err
 	}
-	var resEntities []models.Entity
+	var resEntities []*models.Entity
 
 	err = cursor.All(ctx, &resEntities)
 	if err != nil {
@@ -61,7 +61,7 @@ func (rm RepoEntityMongoDB) Add(ctx context.Context, obj *models.Entity) error {
 	return err
 }
 
-func (rm RepoEntityMongoDB) Update(ctx context.Context, id string, obj models.Entity) error {
+func (rm RepoEntityMongoDB) Update(ctx context.Context, id string, obj *models.Entity) error {
 	Id, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return err

@@ -2,7 +2,7 @@ package tests
 
 import (
 	"app/internal/models"
-	repository "app/internal/repository/posgres"
+	"app/internal/repository/posgres"
 	"reflect"
 	"testing"
 )
@@ -97,7 +97,7 @@ func TestRepositoryEntityUpdate(t *testing.T) {
 	})
 
 	entity.Name = "New name"
-	err = repEntity.Update(ctx, entity.ID.String(), entity)
+	err = repEntity.Update(ctx, entity.ID.String(), &entity)
 	if err != nil {
 		t.Error(err)
 	}
