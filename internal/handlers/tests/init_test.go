@@ -14,6 +14,8 @@ const (
 	ContextDirForApp = "/home/dmitryrusack/Work/application_golang"
 )
 
+var addrApi string
+
 func TestMain(m *testing.M) {
 	pool, err := dockertest.NewPool("")
 	if err != nil {
@@ -75,8 +77,9 @@ func TestMain(m *testing.M) {
 			},
 		})
 	if err != nil {
-		log.Error(err)
+		panic("Can't start api")
 	}
+	addrApi = fmt.Sprintf("http://127.0.0.1:%s", appApi.GetPort("8005/tcp"))
 
 	code := m.Run()
 
@@ -94,8 +97,4 @@ func TestMain(m *testing.M) {
 	}
 
 	os.Exit(code)
-}
-
-func TestMock(t *testing.T) {
-	fmt.Println()
 }
