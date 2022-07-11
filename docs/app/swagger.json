@@ -120,7 +120,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Id of the mongo",
+                        "description": "ID of the mongo",
                         "name": "id",
                         "in": "path"
                     }
@@ -146,9 +146,18 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Id of the mongo",
+                        "description": "UU ID string",
                         "name": "id",
                         "in": "path"
+                    },
+                    {
+                        "description": "Entity model",
+                        "name": "DataEntity",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Entity"
+                        }
                     }
                 ],
                 "responses": {
@@ -172,7 +181,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Id of the mongo",
+                        "description": "ID of the mongo",
                         "name": "id",
                         "in": "path"
                     }
@@ -223,7 +232,9 @@
         "models.Entity": {
             "type": "object",
             "properties": {
-                "id": {},
+                "id": {
+                    "type": "string"
+                },
                 "is_active": {
                     "type": "boolean"
                 },

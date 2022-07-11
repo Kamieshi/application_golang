@@ -132,5 +132,5 @@ func main() {
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	// Run Server
-	e.Logger.Debug(e.Start(":8000"))
+	e.Logger.Debug(e.Start(":8005"))
 }

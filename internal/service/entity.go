@@ -45,9 +45,11 @@ func (e *EntityService) GetForID(ctx context.Context, id string) (*models.Entity
 	if err != nil {
 		return entity, err
 	}
-	defer e.cashRep.Set(ctx, entity)
+	errCache := e.cashRep.Set(ctx, entity)
+	if err != nil {
+		logrus.Error(errCache)
+	}
 	return entity, err
-
 }
 
 func (e EntityService) Add(ctx context.Context, obj *models.Entity) error {

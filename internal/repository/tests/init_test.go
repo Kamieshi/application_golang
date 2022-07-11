@@ -29,6 +29,7 @@ func TestMain(t *testing.M) {
 		log.Fatalf("Could not connect to docker: %s", err)
 	}
 	//pwdDir, _ := os.Getwd()
+
 	resource, err := pool.BuildAndRun(
 		"pg_for_test",
 		pwdPath+"/dockerfile",

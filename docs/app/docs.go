@@ -156,9 +156,18 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "ID of the mongo",
+                        "description": "UU ID string",
                         "name": "id",
                         "in": "path"
+                    },
+                    {
+                        "description": "Entity model",
+                        "name": "DataEntity",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Entity"
+                        }
                     }
                 ],
                 "responses": {
@@ -233,7 +242,9 @@ const docTemplate = `{
         "models.Entity": {
             "type": "object",
             "properties": {
-                "id": {},
+                "id": {
+                    "type": "string"
+                },
                 "is_active": {
                     "type": "boolean"
                 },

@@ -21,8 +21,6 @@ func NewUserService(rep repository.RepoUser) UserService {
 }
 
 func createHash256Password(user *models.User, password string) string {
-	// TODO: Don't Use username
-
 	h := sha256.New()
 	h.Write([]byte(user.UserName + password + os.Getenv("SECRET_KEY")))
 	return fmt.Sprintf("%x", h.Sum(nil))
