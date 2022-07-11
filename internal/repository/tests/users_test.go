@@ -1,7 +1,7 @@
 package tests
 
 import (
-	repository "app/internal/repository/posgres"
+	"app/internal/repository/posgres"
 	"app/internal/service"
 	"reflect"
 	"testing"

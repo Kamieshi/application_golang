@@ -24,6 +24,7 @@ require (
 	github.com/ory/dockertest v3.3.5+incompatible // indirect
 	github.com/rs/xid v1.4.0
 	github.com/sirupsen/logrus v1.8.1
+	github.com/stretchr/testify v1.8.0 // indirect
 	github.com/swaggo/echo-swagger v1.3.0
 	github.com/swaggo/swag v1.8.1
 	go.mongodb.org/mongo-driver v1.8.4

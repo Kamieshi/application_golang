@@ -31,14 +31,14 @@ func rowToEntity(row pgx.Row) (*models.Entity, error) {
 	return &entity, nil
 }
 
-func (sp RepoEntityPostgres) GetAll(ctx context.Context) ([]models.Entity, error) {
+func (sp RepoEntityPostgres) GetAll(ctx context.Context) ([]*models.Entity, error) {
 	query := fmt.Sprintf("SELECT %s FROM entity", orderColumnsEntity)
 	rows, err := sp.pool.Query(ctx, query)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var entities = make([]models.Entity, 0, len(rows.FieldDescriptions()))
+	var entities = make([]*models.Entity, 0, len(rows.FieldDescriptions()))
 
 	for rows.Next() {
 		entity, err := rowToEntity(rows)
@@ -46,7 +46,7 @@ func (sp RepoEntityPostgres) GetAll(ctx context.Context) ([]models.Entity, error
 			return nil, err
 		}
 
-		entities = append(entities, *entity)
+		entities = append(entities, entity)
 	}
 	return entities, nil
 }
@@ -87,7 +87,7 @@ func (sp RepoEntityPostgres) Delete(ctx context.Context, id string) error {
 	return err
 }
 
-func (sp RepoEntityPostgres) Update(ctx context.Context, id string, obj models.Entity) error {
+func (sp RepoEntityPostgres) Update(ctx context.Context, id string, obj *models.Entity) error {
 	marshalUUID, err := uuid.ParseBytes([]byte(id))
 	if err != nil {
 		return err

@@ -2,7 +2,7 @@ package tests
 
 import (
 	"app/internal/models"
-	repository "app/internal/repository/posgres"
+	"app/internal/repository/posgres"
 	"app/internal/service"
 	"reflect"
 	"testing"
@@ -13,7 +13,7 @@ func TestRepositoryAuthCreate(t *testing.T) {
 	repAuth := repository.NewRepoAuthPostgres(pgPool)
 	repUser := repository.NewRepoUsersPostgres(pgPool)
 	servUser := service.NewUserService(repUser)
-	user, err := servUser.Create(ctx, "test", "test")
+	user, err := servUser.Create(ctx, "unit_tests", "unit_tests")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -21,7 +21,7 @@ func TestRepositoryAuthCreate(t *testing.T) {
 	fakeSession := models.Session{
 		UserId:          user.ID,
 		RfToken:         "Test",
-		UniqueSignature: "test",
+		UniqueSignature: "unit_tests",
 		CreatedAt:       time.Now(),
 		Disabled:        false,
 	}
@@ -50,7 +50,7 @@ func TestRepositoryAuthUpdate(t *testing.T) {
 	repAuth := repository.NewRepoAuthPostgres(pgPool)
 	repUser := repository.NewRepoUsersPostgres(pgPool)
 	servUser := service.NewUserService(repUser)
-	user, err := servUser.Create(ctx, "test", "test")
+	user, err := servUser.Create(ctx, "unit_tests", "unit_tests")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -58,7 +58,7 @@ func TestRepositoryAuthUpdate(t *testing.T) {
 	fakeSession := models.Session{
 		UserId:          user.ID,
 		RfToken:         "Test",
-		UniqueSignature: "test",
+		UniqueSignature: "unit_tests",
 		CreatedAt:       time.Now(),
 		Disabled:        false,
 	}
@@ -94,7 +94,7 @@ func TestRepositoryAuthGet(t *testing.T) {
 	repAuth := repository.NewRepoAuthPostgres(pgPool)
 	repUser := repository.NewRepoUsersPostgres(pgPool)
 	servUser := service.NewUserService(repUser)
-	user, err := servUser.Create(ctx, "test", "test")
+	user, err := servUser.Create(ctx, "unit_tests", "unit_tests")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -102,7 +102,7 @@ func TestRepositoryAuthGet(t *testing.T) {
 	fakeSession := models.Session{
 		UserId:          user.ID,
 		RfToken:         "Test",
-		UniqueSignature: "test",
+		UniqueSignature: "unit_tests",
 		CreatedAt:       time.Now(),
 		Disabled:        false,
 	}
@@ -131,7 +131,7 @@ func TestRepositoryAuthDelete(t *testing.T) {
 	repAuth := repository.NewRepoAuthPostgres(pgPool)
 	repUser := repository.NewRepoUsersPostgres(pgPool)
 	servUser := service.NewUserService(repUser)
-	user, err := servUser.Create(ctx, "test", "test")
+	user, err := servUser.Create(ctx, "unit_tests", "unit_tests")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -139,7 +139,7 @@ func TestRepositoryAuthDelete(t *testing.T) {
 	fakeSession := models.Session{
 		UserId:          user.ID,
 		RfToken:         "Test",
-		UniqueSignature: "test",
+		UniqueSignature: "unit_tests",
 		CreatedAt:       time.Now(),
 		Disabled:        false,
 	}
