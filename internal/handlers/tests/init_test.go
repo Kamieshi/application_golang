@@ -12,6 +12,7 @@ import (
 )
 
 var urlCreateUser, urlLogin, urlCheckAuth, urlLogOut, urlRefresh string
+var urlCreateEntity, urlGetByIdEntity, urlGetAllEntity, urlUpdateEntity, urlDeleteEntity string
 
 const (
 	//TODO reformat
@@ -115,6 +116,12 @@ func TestMain(m *testing.M) {
 	urlLogOut = addrApi + "/auth/logout"
 	urlRefresh = addrApi + "/auth/refresh"
 
+	urlCreateEntity = addrApi + "/entity"
+	urlGetAllEntity = addrApi + "/entity"
+	urlGetByIdEntity = addrApi + "/entity/"
+	urlUpdateEntity = addrApi + "/entity/"
+	urlDeleteEntity = addrApi + "/entity/"
+
 	//Init connectionPull
 	if err = pool.Retry(func() error {
 		conStr := fmt.Sprintf("postgres://postgres:%s@%s:5432/postgres", "postgres", appPostgres.Container.NetworkSettings.IPAddress)
@@ -129,6 +136,7 @@ func TestMain(m *testing.M) {
 	}
 
 	os.Setenv("SECRET_KEY", secretKey)
+
 	code := m.Run()
 
 	if err := pool.Purge(appPostgres); err != nil {
@@ -156,6 +164,11 @@ func TestMain(m *testing.M) {
 //	urlCheckAuth = addrApi + "/auth/info"
 //	urlLogOut = addrApi + "/auth/logout"
 //	urlRefresh = addrApi + "/auth/refresh"
+//	urlCreateEntity = addrApi + "/entity"
+//	urlGetAllEntity = addrApi + "/entity"
+//	urlGetByIdEntity = addrApi + "/entity/"
+//	urlUpdateEntity = addrApi + "/entity/"
+//	urlDeleteEntity = addrApi + "/entity/"
 //	ctx = context.Background()
 //	connPullDb, _ = pgxpool.Connect(ctx, "postgres://postgres:postgres@localhost:5433/postgres")
 //	code := m.Run()

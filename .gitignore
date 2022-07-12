@@ -6,7 +6,7 @@
 *.dylib
 ../.idea
 .vscode
-
+db_init
 go-outline
 gomodifytags
 goplay
