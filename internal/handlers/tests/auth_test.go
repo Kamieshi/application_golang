@@ -15,7 +15,6 @@ import (
 )
 
 func TestRegisterUser(t *testing.T) {
-	_assert := assert.New(t)
 	dataJson, _ := json.Marshal(map[string]string{
 		"password": "string",
 		"username": "string",
@@ -25,8 +24,8 @@ func TestRegisterUser(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_assert.Nil(err)
-	_assert.Equal(202, resp.StatusCode)
+	assert.Nil(t, err)
+	assert.Equal(t, 202, resp.StatusCode)
 	if err != nil {
 		t.Fatalf("Send response error :%s", err)
 	}
@@ -43,11 +42,11 @@ func TestRegisterUser(t *testing.T) {
 	})
 
 	expectUser, _ := userRep.Get(ctx, actualUser.UserName)
-	_assert.Equal(expectUser.ID, actualUser.ID)
+	assert.Equal(t, expectUser.ID, actualUser.ID)
 }
 
 func TestLogin(t *testing.T) {
-	_assert := assert.New(t)
+
 	userRep := repository.NewRepoUsersPostgres(connPullDb)
 	userServ := service.NewUserService(userRep)
 	_, err := userServ.Create(ctx, "test", "test")
@@ -64,7 +63,8 @@ func TestLogin(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !_assert.Equal(http.StatusOK, resp.StatusCode) {
+
+	if !assert.Equal(t, http.StatusOK, resp.StatusCode) {
 		t.Fatalf("Response code: %d", resp.StatusCode)
 	}
 	type responseData struct {
@@ -111,6 +111,6 @@ func TestLogin(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Not found session :%s", id_session)
 	}
-	_assert.Equal(session.RfToken, AccessData.RefreshTk)
+	assert.Equal(t, session.RfToken, AccessData.RefreshTk)
 
 }
