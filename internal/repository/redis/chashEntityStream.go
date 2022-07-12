@@ -92,7 +92,7 @@ func (r *CashSteamEntityRep) Get(ctx context.Context, idEntity string) (*models.
 	cacheObj := r.LocalStorage.storage[idEntity]
 	r.LocalStorage.M.Unlock()
 	if cacheObj != nil {
-		if cacheObj.DeathTime.After(time.Now()) {
+		if !cacheObj.DeathTime.After(time.Now()) {
 			r.Delete(ctx, idEntity)
 			return nil, false
 		}

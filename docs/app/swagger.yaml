@@ -13,7 +13,8 @@ definitions:
     type: object
   models.Entity:
     properties:
-      id: {}
+      id:
+        type: string
       is_active:
         type: boolean
       name:
@@ -90,7 +91,7 @@ paths:
   /entity/{id}:
     delete:
       parameters:
-      - description: Id of the mongo
+      - description: ID of the mongo
         in: path
         name: id
         type: string
@@ -101,7 +102,7 @@ paths:
       - Entity
     get:
       parameters:
-      - description: Id of the mongo
+      - description: ID of the mongo
         in: path
         name: id
         type: string
@@ -116,10 +117,16 @@ paths:
       - Entity
     put:
       parameters:
-      - description: Id of the mongo
+      - description: UU ID string
         in: path
         name: id
         type: string
+      - description: Entity model
+        in: body
+        name: DataEntity
+        required: true
+        schema:
+          $ref: '#/definitions/models.Entity'
       responses:
         "200":
           description: OK

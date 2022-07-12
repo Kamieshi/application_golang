@@ -15,8 +15,8 @@ CREATE TABLE users(
 );
 
 CREATE TABLE sessions(
-                         id SERIAL not null unique,
-                         user_id uuid not null unique,
+                         id uuid not null unique,
+                         user_id uuid not null,
                          refresh_token varchar(255) not null ,
                          signature varchar(255) not null ,
                          created_at timestamp not null ,

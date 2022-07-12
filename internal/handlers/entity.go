@@ -46,7 +46,8 @@ func (eh EntityHandler) GetDetail(c echo.Context) error {
 // @tags Entity
 // @Security ApiKeyAuth
 // @Success      200  {string} {status : 'Update successful'}
-// @Param id path string false "ID of the mongo"
+// @Param id path string false "UU ID string"
+// @Param DataEntity body models.Entity true "Entity model"
 // @Router /entity/{id} [put]
 func (eh EntityHandler) Update(c echo.Context) error {
 	id := c.Param("id")
