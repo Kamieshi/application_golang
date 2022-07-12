@@ -156,13 +156,10 @@ func (a AuthService) RefreshAndWriteSession(ctx echo.Context, rfToken string) (s
 	if err != nil {
 		return "", "", err
 	}
-	if currentSession.Disabled {
-		return "", "", errors.New("disable session")
-	}
-	if createHashSHA256WithSalt(rfToken) == currentSession.RfToken {
+	if rfToken == currentSession.RfToken {
 		accessToken, _ := a.CreateToken(payLoad.Username, payLoad.Admin, payLoad.IdSession)
-		newRfToken := a.createRandomOutput()
-		currentSession.RfToken = createHashSHA256WithSalt(newRfToken)
+		newRfToken := createHashSHA256WithSalt(a.createRandomOutput())
+		currentSession.RfToken = newRfToken
 		a.AuthRep.Update(ctx.Request().Context(), currentSession)
 		return accessToken, newRfToken, nil
 	}

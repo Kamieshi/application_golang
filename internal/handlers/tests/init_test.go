@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-var urlCreateUser, urlLogin, urlCheckAuth, urlLogOut string
+var urlCreateUser, urlLogin, urlCheckAuth, urlLogOut, urlRefresh string
 
 const (
 	//TODO reformat
@@ -151,6 +151,7 @@ func TestMain(m *testing.M) {
 	urlLogin = addrApi + "/auth/login"
 	urlCheckAuth = addrApi + "/auth/info"
 	urlLogOut = addrApi + "/auth/logout"
+	urlRefresh = addrApi + "/auth/refresh"
 	ctx = context.Background()
 	connPullDb, _ = pgxpool.Connect(ctx, "postgres://postgres:postgres@localhost:5433/postgres")
 	code := m.Run()
