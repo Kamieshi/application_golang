@@ -142,7 +142,6 @@ func (au AuthService) CreateAndWriteSession(ctx echo.Context, user models.User) 
 	if err != nil {
 		return models.Session{}, err
 	}
-	session.RfToken = refresh
 	return session, err
 }
 

@@ -1,12 +1,17 @@
 package tests
 
 import (
+	"context"
 	"fmt"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/ory/dockertest"
 	log "github.com/sirupsen/logrus"
+	"net/http"
 	"os"
 	"testing"
 )
+
+var urlCreateUser, urlLogin, urlCheckAuth string
 
 const (
 	//TODO reformat
@@ -16,10 +21,20 @@ const (
 
 var addrApi string
 
+var connPullDb *pgxpool.Pool
+var ctx context.Context
+
+const secretKey = "123"
+
 func TestMain(m *testing.M) {
 	pool, err := dockertest.NewPool("")
 	if err != nil {
 		log.Fatalf("Could not connect to docker: %s", err)
+	}
+	closer := func(resource *dockertest.Resource) {
+		if resource != nil {
+			resource.Close()
+		}
 	}
 
 	appPostgres, err := pool.RunWithOptions(&dockertest.RunOptions{
@@ -30,9 +45,9 @@ func TestMain(m *testing.M) {
 		Env:        []string{"POSTGRES_PASSWORD=postgres"},
 	})
 	if err != nil {
-		log.Error(err)
+		log.Fatal(err)
 	}
-
+	defer closer(appPostgres)
 	appFlyWay, err := pool.RunWithOptions(&dockertest.RunOptions{
 		Hostname:   "flyWay",
 		Name:       "flyWay",
@@ -44,8 +59,9 @@ func TestMain(m *testing.M) {
 		Mounts:     []string{fmt.Sprintf("%s:/flyway/sql", pathToMigrations)},
 	})
 	if err != nil {
-		log.Error(err)
+		log.Fatal(err)
 	}
+	defer closer(appFlyWay)
 
 	appRedis, err := pool.RunWithOptions(&dockertest.RunOptions{
 		Hostname:   "redis",
@@ -54,8 +70,9 @@ func TestMain(m *testing.M) {
 		Tag:        "latest",
 	})
 	if err != nil {
-		log.Error(err)
+		log.Fatal(err)
 	}
+	defer closer(appRedis)
 
 	appApi, err := pool.BuildAndRunWithBuildOptions(
 		&dockertest.BuildOptions{
@@ -73,14 +90,43 @@ func TestMain(m *testing.M) {
 				"POSTGRES_PORT=5432",
 				"POSTGRES_PASSWORD=postgres",
 				"POSTGRES_DB=postgres",
+				fmt.Sprintf("SECRET_KEY=%s", secretKey),
 				fmt.Sprintf("REDIS_URL=%s:6379", appRedis.Container.NetworkSettings.IPAddress),
 			},
 		})
 	if err != nil {
-		panic("Can't start api")
+		log.Fatal(err)
 	}
-	addrApi = fmt.Sprintf("http://127.0.0.1:%s", appApi.GetPort("8005/tcp"))
+	defer closer(appApi)
 
+	addrApi = fmt.Sprintf("http://127.0.0.1:%s", appApi.GetPort("8005/tcp"))
+	ctx = context.Background()
+	//Wait start api
+	if err = pool.Retry(func() error {
+		_, err = http.Get(addrApi + "/ping")
+		return err
+	}); err != nil {
+		log.Fatalf("Could not connect to API: %s", err)
+	}
+
+	urlCreateUser = addrApi + "/user"
+	urlLogin = addrApi + "/auth/login"
+	urlCheckAuth = addrApi + "/auth/info"
+
+	//Init connectionPull
+	if err = pool.Retry(func() error {
+		conStr := fmt.Sprintf("postgres://postgres:%s@%s:5432/postgres", "postgres", appPostgres.Container.NetworkSettings.IPAddress)
+		connPullDb, err = pgxpool.Connect(ctx, conStr)
+		if err != nil {
+			return err
+		}
+
+		return connPullDb.Ping(ctx)
+	}); err != nil {
+		log.Fatalf("Could not connect to database: %s", err)
+	}
+
+	os.Setenv("SECRET_KEY", secretKey)
 	code := m.Run()
 
 	if err := pool.Purge(appPostgres); err != nil {

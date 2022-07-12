@@ -18,6 +18,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
+	"net/http"
 	"time"
 )
 
@@ -130,6 +131,9 @@ func main() {
 
 	//Swagger
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
+
+	//Ping
+	e.GET("/ping", func(c echo.Context) error { return c.String(http.StatusOK, "pong") })
 
 	// Run Server
 	e.Logger.Debug(e.Start(":8005"))
