@@ -104,12 +104,12 @@ func TestLogin(t *testing.T) {
 		t.Fatal(err)
 	}
 	claims := token.Claims.(jwt.MapClaims)
-	id_session := claims["id_session"].(string)
+	idSession := claims["id_session"].(string)
 	repAuth := repository.NewRepoAuthPostgres(connPullDb)
 
-	session, err := repAuth.Get(ctx, id_session)
+	session, err := repAuth.Get(ctx, idSession)
 	if err != nil {
-		t.Fatalf("Not found session :%s", id_session)
+		t.Fatalf("Not found session :%s", idSession)
 	}
 	assert.Equal(t, session.RfToken, AccessData.RefreshTk)
 
