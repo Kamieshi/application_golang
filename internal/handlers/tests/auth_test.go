@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -46,19 +47,19 @@ func TestRegisterUser(t *testing.T) {
 }
 
 func TestLogin(t *testing.T) {
-
 	userRep := repository.NewRepoUsersPostgres(connPullDb)
 	userServ := service.NewUserService(userRep)
 	_, err := userServ.Create(ctx, "test", "test")
 	if err != nil {
 		t.Fatal(err)
 	}
-	dataJson, _ := json.Marshal(map[string]string{
+
+	dataJSON, _ := json.Marshal(map[string]string{
 		"password": "test",
 		"username": "test",
 	})
 
-	buf := bytes.NewReader(dataJson)
+	buf := bytes.NewReader(dataJSON)
 	resp, err := http.Post(urlLogin, "application/json", buf)
 	if err != nil {
 		t.Fatal(err)
@@ -107,10 +108,91 @@ func TestLogin(t *testing.T) {
 	idSession := claims["id_session"].(string)
 	repAuth := repository.NewRepoAuthPostgres(connPullDb)
 
-	session, err := repAuth.Get(ctx, idSession)
+	session, err := repAuth.Get(ctx, uuid.MustParse(idSession))
 	if err != nil {
 		t.Fatalf("Not found session :%s", idSession)
 	}
+	t.Cleanup(func() {
+		repAuth.Delete(ctx, uuid.MustParse(idSession))
+		userRep.Delete(ctx, actualUser.UserName)
+	})
 	assert.Equal(t, session.RfToken, AccessData.RefreshTk)
+}
 
+func TestLogOut(t *testing.T) {
+	userRep := repository.NewRepoUsersPostgres(connPullDb)
+	userServ := service.NewUserService(userRep)
+	_, err := userServ.Create(ctx, "test", "test")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	dataJSON, _ := json.Marshal(map[string]string{
+		"password": "test",
+		"username": "test",
+	})
+
+	buf := bytes.NewReader(dataJSON)
+	resp, err := http.Post(urlLogin, "application/json", buf)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !assert.Equal(t, http.StatusOK, resp.StatusCode) {
+		t.Fatalf("Response code: %d", resp.StatusCode)
+	}
+	type responseData struct {
+		AccessTk  string `json:"access"`
+		RefreshTk string `json:"refresh"`
+	}
+	var AccessData responseData
+	err = json.NewDecoder(resp.Body).Decode(&AccessData)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req, err := http.NewRequest("GET", urlCheckAuth, nil)
+	req.Header.Add("Authorization", "Bearer "+AccessData.AccessTk)
+
+	client := http.DefaultClient
+	resp, err = client.Do(req)
+	if resp.StatusCode != http.StatusAccepted {
+		t.Fatalf("Error create token, response cod %d", resp.StatusCode)
+	}
+
+	var actualUser models.User
+	err = json.NewDecoder(resp.Body).Decode(&actualUser)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	keyFunc := func(t *jwt.Token) (interface{}, error) {
+		if t.Method.Alg() != "HS256" {
+			return nil, fmt.Errorf("unexpected jwt signing method=%v", t.Header["alg"])
+		}
+		return []byte(secretKey), nil
+	}
+
+	token, err := jwt.Parse(AccessData.AccessTk, keyFunc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	claims := token.Claims.(jwt.MapClaims)
+	idSession := claims["id_session"].(string)
+	repAuth := repository.NewRepoAuthPostgres(connPullDb)
+
+	t.Cleanup(func() {
+		repAuth.Delete(ctx, uuid.MustParse(idSession))
+		userRep.Delete(ctx, actualUser.UserName)
+	})
+
+	req, _ = http.NewRequest("GET", urlLogOut, nil)
+	req.Header.Add("Authorization", "Bearer "+AccessData.AccessTk)
+	resp, err = client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	userSession, err := repAuth.Get(ctx, uuid.MustParse(idSession))
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, userSession.Disabled, true)
 }

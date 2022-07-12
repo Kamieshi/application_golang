@@ -37,13 +37,17 @@ func (ar AuthRepoMongoDB) Update(ctx context.Context, session *models.Session) e
 	return nil
 }
 
-func (ar AuthRepoMongoDB) Get(ctx context.Context, SessionId string) (*models.Session, error) {
+func (ar AuthRepoMongoDB) Get(ctx context.Context, SessionId uuid.UUID) (*models.Session, error) {
 	var session models.Session
 	err := ar.collection.FindOne(ctx, bson.D{{"session_id", SessionId}}).Decode(&session)
 	return &session, err
 }
-func (ar AuthRepoMongoDB) Delete(ctx context.Context, sessionId string) error {
+func (ar AuthRepoMongoDB) Delete(ctx context.Context, sessionId uuid.UUID) error {
 	res := ar.collection.FindOneAndDelete(ctx, bson.D{{"session_id", sessionId}})
 	err := res.Err()
 	return err
+}
+
+func (ar AuthRepoMongoDB) Disable(ctx context.Context, sessionId uuid.UUID) error {
+	return nil
 }

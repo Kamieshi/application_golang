@@ -86,14 +86,14 @@ func NewAuthService(userRep repository.RepoUser, sessionRep repository.RepoSessi
 }
 
 type CustomClaims struct {
-	Username  string `json:"name"`
-	Admin     bool   `json:"admin"`
-	IdSession string `json:"id_session"`
+	Username  string    `json:"name"`
+	Admin     bool      `json:"admin"`
+	IdSession uuid.UUID `json:"id_session"`
 	jwt.StandardClaims
 }
 
-func (au AuthService) IsAuthentication(ctx context.Context, username string, password string) (*models.User, bool, error) {
-	user, err := au.UserRep.Get(ctx, username)
+func (a AuthService) IsAuthentication(ctx context.Context, username string, password string) (*models.User, bool, error) {
+	user, err := a.UserRep.Get(ctx, username)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"username": username}).Warn("Unsuccessful login attempt")
 		return user, false, err
@@ -105,7 +105,7 @@ func (au AuthService) IsAuthentication(ctx context.Context, username string, pas
 	return nil, false, err
 }
 
-func (au AuthService) CreateToken(username string, admin bool, idSession string) (string, error) {
+func (a AuthService) CreateToken(username string, admin bool, idSession uuid.UUID) (string, error) {
 
 	timeLive, _ := strconv.Atoi(os.Getenv("TIME_LIVE_MINUTE_JWT"))
 
@@ -127,8 +127,8 @@ func (au AuthService) CreateToken(username string, admin bool, idSession string)
 	return tt, nil
 }
 
-func (au AuthService) CreateAndWriteSession(ctx echo.Context, user models.User) (models.Session, error) {
-	refresh := au.createRandomOutput(user.UserName)
+func (a AuthService) CreateAndWriteSession(ctx echo.Context, user models.User) (models.Session, error) {
+	refresh := a.createRandomOutput(user.UserName)
 
 	session := models.Session{
 		ID:              uuid.New(),
@@ -138,18 +138,21 @@ func (au AuthService) CreateAndWriteSession(ctx echo.Context, user models.User) 
 		RfToken:         createHashSHA256WithSalt(refresh),
 		UniqueSignature: ctx.Request().UserAgent(),
 	}
-	err := au.AuthRep.Create(ctx.Request().Context(), &session)
+	err := a.AuthRep.Create(ctx.Request().Context(), &session)
 	if err != nil {
 		return models.Session{}, err
 	}
 	return session, err
 }
 
-func (au AuthService) RefreshAndWriteSession(ctx echo.Context, rfToken string) (string, string, error) {
+func (a AuthService) RefreshAndWriteSession(ctx echo.Context, rfToken string) (string, string, error) {
 	user := ctx.Get("user").(*jwt.Token)
 	payLoad := user.Claims.(*CustomClaims)
 
-	currentSession, err := au.AuthRep.Get(ctx.Request().Context(), payLoad.IdSession)
+	currentSession, err := a.AuthRep.Get(ctx.Request().Context(), payLoad.IdSession)
+	if currentSession.Disabled {
+		return "", "", errors.New("This session was disabled")
+	}
 	if err != nil {
 		return "", "", err
 	}
@@ -157,16 +160,16 @@ func (au AuthService) RefreshAndWriteSession(ctx echo.Context, rfToken string) (
 		return "", "", errors.New("disable session")
 	}
 	if createHashSHA256WithSalt(rfToken) == currentSession.RfToken {
-		accessToken, _ := au.CreateToken(payLoad.Username, payLoad.Admin, payLoad.IdSession)
-		newRfToken := au.createRandomOutput()
+		accessToken, _ := a.CreateToken(payLoad.Username, payLoad.Admin, payLoad.IdSession)
+		newRfToken := a.createRandomOutput()
 		currentSession.RfToken = createHashSHA256WithSalt(newRfToken)
-		au.AuthRep.Update(ctx.Request().Context(), currentSession)
+		a.AuthRep.Update(ctx.Request().Context(), currentSession)
 		return accessToken, newRfToken, nil
 	}
 	return "", "", errors.New("disable session")
 }
 
-func (au AuthService) createRandomOutput(sal ...string) string {
+func (a AuthService) createRandomOutput(sal ...string) string {
 	data := fmt.Sprint(time.Now().Unix(), os.Getenv("SECRET_KEY"), rand.Int31n(1000), sal)
 	h := sha256.New()
 	h.Write([]byte(data))
@@ -180,9 +183,14 @@ func createHashSHA256WithSalt(s string) string {
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
-func (au AuthService) GetUser(ctx echo.Context) (*models.User, error) {
+func (a AuthService) DisableSession(ctx echo.Context, id uuid.UUID) error {
+	err := a.AuthRep.Disable(ctx.Request().Context(), id)
+	return err
+}
+
+func (a AuthService) GetUser(ctx echo.Context) (*models.User, error) {
 	user := ctx.Get("user").(*jwt.Token)
 	claims := user.Claims.(*CustomClaims)
-	User, err := au.UserRep.Get(ctx.Request().Context(), claims.Username)
+	User, err := a.UserRep.Get(ctx.Request().Context(), claims.Username)
 	return User, err
 }
