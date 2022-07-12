@@ -29,12 +29,12 @@ func TestRepositoryAuthCreate(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	sessionFromDb, err := repAuth.Get(ctx, fakeSession.ID.String())
+	sessionFromDb, err := repAuth.Get(ctx, fakeSession.ID)
 	if err != nil {
 		t.Error(err)
 	}
 	t.Cleanup(func() {
-		repAuth.Delete(ctx, sessionFromDb.ID.String())
+		repAuth.Delete(ctx, sessionFromDb.ID)
 		repUser.Delete(ctx, user.UserName)
 
 	})
@@ -67,11 +67,11 @@ func TestRepositoryAuthUpdate(t *testing.T) {
 		t.Error(err)
 	}
 	t.Cleanup(func() {
-		repAuth.Delete(ctx, fakeSession.ID.String())
+		repAuth.Delete(ctx, fakeSession.ID)
 		repUser.Delete(ctx, user.UserName)
 
 	})
-	sessionFromDb, err := repAuth.Get(ctx, fakeSession.ID.String())
+	sessionFromDb, err := repAuth.Get(ctx, fakeSession.ID)
 	if err != nil {
 		t.Error(err)
 	}
@@ -80,7 +80,7 @@ func TestRepositoryAuthUpdate(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	sessionFromDbAfterUpdate, err := repAuth.Get(ctx, fakeSession.ID.String())
+	sessionFromDbAfterUpdate, err := repAuth.Get(ctx, fakeSession.ID)
 	if err != nil {
 		t.Error(err)
 	}
@@ -110,12 +110,12 @@ func TestRepositoryAuthGet(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	sessionFromDb, err := repAuth.Get(ctx, fakeSession.ID.String())
+	sessionFromDb, err := repAuth.Get(ctx, fakeSession.ID)
 	if err != nil {
 		t.Error(err)
 	}
 	t.Cleanup(func() {
-		repAuth.Delete(ctx, sessionFromDb.ID.String())
+		repAuth.Delete(ctx, sessionFromDb.ID)
 		repUser.Delete(ctx, user.UserName)
 
 	})
@@ -147,12 +147,12 @@ func TestRepositoryAuthDelete(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	sessionFromDb, err := repAuth.Get(ctx, fakeSession.ID.String())
+	sessionFromDb, err := repAuth.Get(ctx, fakeSession.ID)
 	if err != nil {
 		t.Error(err)
 	}
 	t.Cleanup(func() {
-		repAuth.Delete(ctx, sessionFromDb.ID.String())
+		repAuth.Delete(ctx, sessionFromDb.ID)
 		repUser.Delete(ctx, user.UserName)
 
 	})
@@ -162,9 +162,9 @@ func TestRepositoryAuthDelete(t *testing.T) {
 		t.Error("Not equal")
 	}
 
-	err = repAuth.Delete(ctx, sessionFromDb.ID.String())
+	err = repAuth.Delete(ctx, sessionFromDb.ID)
 
-	sessionFromDbAfterDelete, _ := repAuth.Get(ctx, fakeSession.ID.String())
+	sessionFromDbAfterDelete, _ := repAuth.Get(ctx, fakeSession.ID)
 	if sessionFromDbAfterDelete != nil {
 		t.Error("Session didn't delete")
 	}

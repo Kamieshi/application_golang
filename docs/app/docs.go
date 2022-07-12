@@ -16,6 +16,19 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/auth/info": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "responses": {}
+            }
+        },
         "/auth/login": {
             "post": {
                 "tags": [

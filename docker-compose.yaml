@@ -56,5 +56,7 @@ services:
     command: "-url=jdbc:postgresql://postgres:5432/postgres -schemas=public -user=$POSTGRES_USER -password=$POSTGRES_PASSWORD -connectRetries=10 migrate"
     volumes:
       - ./migrations:/flyway/sql
+    environment:
+      FLYWAY_BASELINE_ON_MIGRATE: "true"
     depends_on:
       - postgres

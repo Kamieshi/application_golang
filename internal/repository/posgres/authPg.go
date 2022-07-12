@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
+	log "github.com/sirupsen/logrus"
 )
 
 type RepoAuthPostgres struct {
@@ -53,14 +54,14 @@ func (r RepoAuthPostgres) Update(ctx context.Context, session *models.Session) e
 	return nil
 }
 
-func (r RepoAuthPostgres) Get(ctx context.Context, SessionId string) (*models.Session, error) {
+func (r RepoAuthPostgres) Get(ctx context.Context, SessionId uuid.UUID) (*models.Session, error) {
 	query := fmt.Sprintf("SELECT %s FROM sessions WHERE id=$1", orderColumnsSessions)
 	var row pgx.Row = r.pool.QueryRow(ctx, query, SessionId)
 	ent, err := rowToSession(row)
 	return ent, err
 }
 
-func (r RepoAuthPostgres) Delete(ctx context.Context, sessionId string) error {
+func (r RepoAuthPostgres) Delete(ctx context.Context, sessionId uuid.UUID) error {
 
 	query := "DELETE FROM sessions WHERE id=$1"
 	com, err := r.pool.Exec(ctx, query, sessionId)
@@ -73,4 +74,11 @@ func (r RepoAuthPostgres) Delete(ctx context.Context, sessionId string) error {
 	}
 
 	return nil
+}
+
+func (r RepoAuthPostgres) Disable(ctx context.Context, sessionId uuid.UUID) error {
+	query := "UPDATE sessions SET disabled=$1 WHERE id=$2"
+	com, err := r.pool.Exec(ctx, query, true, sessionId)
+	log.Info(com)
+	return err
 }

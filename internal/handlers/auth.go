@@ -3,6 +3,7 @@ package handlers
 import (
 	"app/internal/service"
 	"fmt"
+	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"time"
@@ -47,7 +48,7 @@ func (a *AuthHandler) Login(c echo.Context) error {
 	if err != nil {
 		return echo.ErrUnauthorized
 	}
-	token, err := a.AuthService.CreateToken(user.UserName, user.Admin, session.ID.String())
+	token, err := a.AuthService.CreateToken(user.UserName, user.Admin, session.ID)
 	if err != nil {
 		return err
 	}
@@ -58,7 +59,10 @@ func (a *AuthHandler) Login(c echo.Context) error {
 	})
 }
 
-// Info check auth
+// Info godoc
+// @tags Auth
+// @Security ApiKeyAuth
+// @Router /auth/info [get]
 func (a *AuthHandler) Info(c echo.Context) error {
 	user, _ := a.AuthService.GetUser(c)
 	if user != nil {
@@ -72,6 +76,12 @@ func (a *AuthHandler) Info(c echo.Context) error {
 // @Security ApiKeyAuth
 // @Router /auth/logout [get]
 func (a *AuthHandler) Logout(c echo.Context) error {
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*service.CustomClaims)
+	err := a.AuthService.DisableSession(c, claims.IdSession)
+	if err != nil {
+		return c.String(http.StatusBadRequest, err.Error())
+	}
 	cookie := new(http.Cookie)
 	cookie.Name = "token"
 	cookie.Value = ""

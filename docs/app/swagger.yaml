@@ -29,6 +29,13 @@ info:
   title: Golang Application Swagger
   version: "0.1"
 paths:
+  /auth/info:
+    get:
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Auth
   /auth/login:
     post:
       parameters:
