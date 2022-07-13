@@ -1,26 +1,46 @@
 syntax = "proto3";
-option go_package = "/entity";
-package entity;
+option go_package = "./protocGen";
+package applicationGolang;
 
-service Reverse {
-  rpc Do(Request) returns (Response) {}
-  rpc GetObjectById(Id) returns (CustomStruct){}
+service Entity {
+  rpc GetEntityById(GetEntityByIdRequest) returns (GetEntityByIdResponse) {}
+  rpc GetAllEntity(GetAllEntityRequest) returns (GetAllEntityResponse) {}
+  rpc UpdateEntity(UpdateEntityRequest) returns(UpdateEntityResponse) {}
+  rpc DeleteEntity(DeleteEntityRequest) returns (DeleteEntityResponse) {}
 }
 
-message Request {
-  string message = 1;
+service User{
+
 }
 
-message Response {
-  string message = 1;
-}
-
-message Id{
-  string uuId = 1;
-}
-
-message CustomStructResponse{
-  string uuId = 1;
+message EntityStruct {
+  string id = 1;
   string name = 2;
-  uint32 age = 3;
+  int64 price = 3;
+  bool isActive = 4;
 }
+
+
+message GetEntityByIdRequest {
+  string entityId = 1;
+}
+message GetEntityByIdResponse {
+  EntityStruct entity = 1;
+}
+
+message GetAllEntityRequest{}
+message GetAllEntityResponse{
+  repeated EntityStruct entity = 1;
+}
+
+message UpdateEntityRequest{
+  string id = 1;
+  EntityStruct entity = 2;
+}
+message UpdateEntityResponse{}
+
+message DeleteEntityRequest {
+  string entityId = 1;
+}
+message DeleteEntityResponse{}
+

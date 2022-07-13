@@ -40,12 +40,12 @@ func (ur UserRepoMongoDB) Delete(ctx context.Context, username string) error {
 	return res.Err()
 }
 
-func (ur UserRepoMongoDB) GetAll(ctx context.Context) ([]models.User, error) {
+func (ur UserRepoMongoDB) GetAll(ctx context.Context) ([]*models.User, error) {
 	cursor, err := ur.collection.Find(ctx, bson.D{{}})
 	if err != nil {
 		return nil, err
 	}
-	var resUser []models.User
+	var resUser []*models.User
 
 	err = cursor.All(ctx, &resUser)
 	if err != nil {

@@ -58,21 +58,21 @@ func (r RepoUsersPostgres) Delete(ctx context.Context, username string) error {
 	return nil
 }
 
-func (r RepoUsersPostgres) GetAll(ctx context.Context) ([]models.User, error) {
+func (r RepoUsersPostgres) GetAll(ctx context.Context) ([]*models.User, error) {
 	query := fmt.Sprintf("SELECT %s FROM users", orderColumnsUser)
 	rows, err := r.pool.Query(ctx, query)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var users = make([]models.User, 0, len(rows.FieldDescriptions()))
+	var users = make([]*models.User, 0, len(rows.FieldDescriptions()))
 
 	for rows.Next() {
 		user, err := rowToUser(rows)
 		if err != nil {
 			return nil, err
 		}
-		users = append(users, *user)
+		users = append(users, user)
 	}
 	return users, nil
 }

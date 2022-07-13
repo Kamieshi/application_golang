@@ -14,9 +14,9 @@ type UserService struct {
 	rep repository.RepoUser
 }
 
-func NewUserService(rep *repository.RepoUser) *UserService {
+func NewUserService(rep repository.RepoUser) *UserService {
 	return &UserService{
-		rep: *rep,
+		rep: rep,
 	}
 }
 
@@ -57,7 +57,7 @@ func (us *UserService) Get(ctx context.Context, username string) (*models.User, 
 	return us.rep.Get(ctx, username)
 }
 
-func (us *UserService) GetAll(ctx context.Context) ([]models.User, error) {
+func (us *UserService) GetAll(ctx context.Context) ([]*models.User, error) {
 
 	users, err := us.rep.GetAll(ctx)
 	if err != nil {
