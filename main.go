@@ -2,7 +2,6 @@ package main
 
 import (
 	_ "app/docs/app"
-	adapters2 "app/internal/adapters"
 	adapters "app/internal/adapters/http"
 	"app/internal/config"
 	"app/internal/repository"
@@ -84,7 +83,7 @@ func main() {
 
 	//Creating services Postgres
 
-	services := &adapters2.ServicesApp{
+	services := &service.ServicesApp{
 		AuthService:   service.NewAuthService(&repoUsers, &repoAuth),
 		EntityService: service.NewEntityService(&repoEntity, repoCashEntity),
 		ImageService:  service.NewImageService(&repoImages),
@@ -97,6 +96,7 @@ func main() {
 	var wg sync.WaitGroup
 
 	wg.Add(1)
-	go httpAdapter.Start(&wg, context.Background())
+	go httpAdapter.Start(context.Background(), &wg)
+
 	wg.Wait()
 }

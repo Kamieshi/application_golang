@@ -6,5 +6,5 @@ import (
 )
 
 type AdapterInterface interface {
-	Start(wg *sync.WaitGroup, ctx context.Context) error
+	Start(ctx context.Context, wg *sync.WaitGroup) error
 }

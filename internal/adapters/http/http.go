@@ -16,7 +16,7 @@ type EchoHTTP struct {
 	echoInstance *echo.Echo
 }
 
-func (e *EchoHTTP) Start(wg *sync.WaitGroup, ctx context.Context) error {
+func (e *EchoHTTP) Start(ctx context.Context, wg *sync.WaitGroup) error {
 	defer wg.Done()
 	err := e.echoInstance.Start(":8005")
 	return err
