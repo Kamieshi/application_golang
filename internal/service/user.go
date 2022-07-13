@@ -14,9 +14,9 @@ type UserService struct {
 	rep repository.RepoUser
 }
 
-func NewUserService(rep repository.RepoUser) UserService {
-	return UserService{
-		rep: rep,
+func NewUserService(rep *repository.RepoUser) *UserService {
+	return &UserService{
+		rep: *rep,
 	}
 }
 
@@ -26,7 +26,7 @@ func createHash256Password(user *models.User, password string) string {
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
-func (us UserService) Create(ctx context.Context, userName string, password string) (*models.User, error) {
+func (us *UserService) Create(ctx context.Context, userName string, password string) (*models.User, error) {
 	user, err := us.rep.Get(ctx, userName)
 	if user != nil {
 		return user, errors.New("username already in use")
@@ -49,15 +49,15 @@ func (us UserService) Create(ctx context.Context, userName string, password stri
 
 }
 
-func (us UserService) Delete(ctx context.Context, username string) error {
+func (us *UserService) Delete(ctx context.Context, username string) error {
 	return us.rep.Delete(ctx, username)
 }
 
-func (us UserService) Get(ctx context.Context, username string) (*models.User, error) {
+func (us *UserService) Get(ctx context.Context, username string) (*models.User, error) {
 	return us.rep.Get(ctx, username)
 }
 
-func (us UserService) GetAll(ctx context.Context) ([]models.User, error) {
+func (us *UserService) GetAll(ctx context.Context) ([]models.User, error) {
 
 	users, err := us.rep.GetAll(ctx)
 	if err != nil {

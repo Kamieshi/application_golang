@@ -12,18 +12,18 @@ import (
 
 type ImageRepoMongoDB struct {
 	mongoClient     *mongo.Client
-	collectionImage mongo.Collection
+	collectionImage *mongo.Collection
 }
 
-func NewImageRepoMongoDB(client mongo.Client) ImageRepoMongoDB {
+func NewImageRepoMongoDB(client *mongo.Client) *ImageRepoMongoDB {
 	collection := client.Database(os.Getenv("APP_MONGO_DB")).Collection(os.Getenv("IMAGE_COLLECTION"))
-	return ImageRepoMongoDB{
-		mongoClient:     &client,
-		collectionImage: *collection,
+	return &ImageRepoMongoDB{
+		mongoClient:     client,
+		collectionImage: collection,
 	}
 }
 
-func (repImg ImageRepoMongoDB) Save(ctx context.Context, img models.Image) (interface{}, error) {
+func (repImg *ImageRepoMongoDB) Save(ctx context.Context, img models.Image) (interface{}, error) {
 
 	bytesArr := *img.Data
 	img.Data = nil
@@ -46,7 +46,7 @@ func (repImg ImageRepoMongoDB) Save(ctx context.Context, img models.Image) (inte
 	return res.UpsertedID, err
 }
 
-func (repImg ImageRepoMongoDB) Get(ctx context.Context, easyLink string) (*models.Image, error) {
+func (repImg *ImageRepoMongoDB) Get(ctx context.Context, easyLink string) (*models.Image, error) {
 	var image models.Image
 	err := repImg.collectionImage.FindOne(ctx, bson.D{{"easy_link", easyLink}}).Decode(&image)
 	if err != nil {
@@ -56,7 +56,7 @@ func (repImg ImageRepoMongoDB) Get(ctx context.Context, easyLink string) (*model
 	return &image, err
 }
 
-func (repImg ImageRepoMongoDB) Delete(ctx context.Context, id interface{}) error {
+func (repImg *ImageRepoMongoDB) Delete(ctx context.Context, id interface{}) error {
 	res := repImg.collectionImage.FindOneAndDelete(ctx, bson.D{{"_id", id}})
 	return res.Err()
 }

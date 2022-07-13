@@ -9,7 +9,7 @@ import (
 )
 
 type ImageHandler struct {
-	ImageService service.ImageService
+	ImageService *service.ImageService
 }
 
 func (ih ImageHandler) Load(c echo.Context) error {

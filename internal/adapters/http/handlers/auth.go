@@ -11,7 +11,7 @@ import (
 
 // AuthHandler Handler for work with AuthService
 type AuthHandler struct {
-	AuthService service.AuthService
+	AuthService *service.AuthService
 }
 
 func (a *AuthHandler) IsAuthentication(c echo.Context) error {

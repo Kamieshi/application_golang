@@ -15,10 +15,10 @@ type UserRepoMongoDB struct {
 	collection  mongo.Collection
 }
 
-func NewUserRepoMongoDB(client mongo.Client) UserRepoMongoDB {
+func NewUserRepoMongoDB(client *mongo.Client) *UserRepoMongoDB {
 	collection := client.Database(os.Getenv("APP_MONGO_DB")).Collection(os.Getenv("USER_COLLECTION"))
-	return UserRepoMongoDB{
-		mongoClient: &client,
+	return &UserRepoMongoDB{
+		mongoClient: client,
 		collection:  *collection,
 	}
 }

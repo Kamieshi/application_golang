@@ -14,14 +14,14 @@ import (
 
 type RepoEntityMongoDB struct {
 	mongoClient      *mongo.Client
-	collectionEntity mongo.Collection
+	collectionEntity *mongo.Collection
 }
 
-func NewRepoEntityMongoDB(client mongo.Client) RepoEntityMongoDB {
+func NewRepoEntityMongoDB(client *mongo.Client) *RepoEntityMongoDB {
 	collection := client.Database(os.Getenv("APP_MONGO_DB")).Collection(os.Getenv("ENTITY_COLLECTION"))
-	return RepoEntityMongoDB{
-		mongoClient:      &client,
-		collectionEntity: *collection,
+	return &RepoEntityMongoDB{
+		mongoClient:      client,
+		collectionEntity: collection,
 	}
 }
 

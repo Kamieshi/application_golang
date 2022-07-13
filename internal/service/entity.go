@@ -14,10 +14,10 @@ type EntityService struct {
 }
 
 // NewEntityService return
-func NewEntityService(rep repository.RepoEntity, cahRep repository.CacheEntityRepository) *EntityService {
+func NewEntityService(rep *repository.RepoEntity, cahRep repository.CacheEntityRepository) *EntityService {
 
 	return &EntityService{
-		rep:     rep,
+		rep:     *rep,
 		cashRep: cahRep,
 	}
 }

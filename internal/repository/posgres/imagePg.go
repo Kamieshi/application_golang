@@ -10,8 +10,8 @@ type RepoImagePostgres struct {
 	pool *pgxpool.Pool
 }
 
-func NewRepoImagePostgres(pool *pgxpool.Pool) RepoImagePostgres {
-	return RepoImagePostgres{
+func NewRepoImagePostgres(pool *pgxpool.Pool) *RepoImagePostgres {
+	return &RepoImagePostgres{
 		pool: pool,
 	}
 }

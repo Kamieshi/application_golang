@@ -9,7 +9,7 @@ import (
 )
 
 type UserHandler struct {
-	Ser service.UserService
+	Ser *service.UserService
 }
 
 type usPss struct {

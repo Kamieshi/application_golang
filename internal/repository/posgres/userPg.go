@@ -14,8 +14,8 @@ type RepoUsersPostgres struct {
 	pool *pgxpool.Pool
 }
 
-func NewRepoUsersPostgres(pool *pgxpool.Pool) RepoUsersPostgres {
-	return RepoUsersPostgres{
+func NewRepoUsersPostgres(pool *pgxpool.Pool) *RepoUsersPostgres {
+	return &RepoUsersPostgres{
 		pool: pool,
 	}
 }

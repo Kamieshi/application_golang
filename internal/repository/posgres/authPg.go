@@ -15,8 +15,8 @@ type RepoAuthPostgres struct {
 	pool *pgxpool.Pool
 }
 
-func NewRepoAuthPostgres(pool *pgxpool.Pool) RepoAuthPostgres {
-	return RepoAuthPostgres{
+func NewRepoAuthPostgres(pool *pgxpool.Pool) *RepoAuthPostgres {
+	return &RepoAuthPostgres{
 		pool: pool,
 	}
 }
