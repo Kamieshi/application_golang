@@ -1,8 +1,8 @@
 package adapters
 
 import (
-	"app/internal/adapters"
 	"app/internal/adapters/http/handlers"
+	"app/internal/service"
 	"context"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -12,7 +12,7 @@ import (
 )
 
 type EchoHTTP struct {
-	appServices  *adapters.ServicesApp
+	appServices  *service.ServicesApp
 	echoInstance *echo.Echo
 }
 
@@ -22,7 +22,7 @@ func (e *EchoHTTP) Start(wg *sync.WaitGroup, ctx context.Context) error {
 	return err
 }
 
-func NewEchoHTTP(services *adapters.ServicesApp) *EchoHTTP {
+func NewEchoHTTP(services *service.ServicesApp) *EchoHTTP {
 	// Creating handlers
 	e := &EchoHTTP{
 		echoInstance: echo.New(),
