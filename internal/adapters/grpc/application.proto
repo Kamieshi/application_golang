@@ -1,0 +1,46 @@
+syntax = "proto3";
+option go_package = "./protocGen";
+package applicationGolang;
+
+service Entity {
+  rpc GetEntityById(GetEntityByIdRequest) returns (GetEntityByIdResponse) {}
+  rpc GetAllEntity(GetAllEntityRequest) returns (GetAllEntityResponse) {}
+  rpc UpdateEntity(UpdateEntityRequest) returns(UpdateEntityResponse) {}
+  rpc DeleteEntity(DeleteEntityRequest) returns (DeleteEntityResponse) {}
+}
+
+service User{
+
+}
+
+message EntityStruct {
+  string id = 1;
+  string name = 2;
+  int64 price = 3;
+  bool isActive = 4;
+}
+
+
+message GetEntityByIdRequest {
+  string entityId = 1;
+}
+message GetEntityByIdResponse {
+  EntityStruct entity = 1;
+}
+
+message GetAllEntityRequest{}
+message GetAllEntityResponse{
+  repeated EntityStruct entity = 1;
+}
+
+message UpdateEntityRequest{
+  string id = 1;
+  EntityStruct entity = 2;
+}
+message UpdateEntityResponse{}
+
+message DeleteEntityRequest {
+  string entityId = 1;
+}
+message DeleteEntityResponse{}
+

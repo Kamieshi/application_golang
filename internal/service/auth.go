@@ -24,12 +24,12 @@ import (
 type AuthService struct {
 	UserRep   repository.RepoUser
 	AuthRep   repository.RepoSession
-	JWTConfig middleware.JWTConfig
+	JWTConfig *middleware.JWTConfig
 }
 
-func NewAuthService(userRep repository.RepoUser, sessionRep repository.RepoSession) AuthService {
+func NewAuthService(userRep *repository.RepoUser, sessionRep *repository.RepoSession) *AuthService {
 	headerAuthorization := echo.HeaderAuthorization
-	config := middleware.JWTConfig{
+	config := &middleware.JWTConfig{
 		Claims:        &CustomClaims{},
 		SigningKey:    []byte(os.Getenv("SECRET_KEY")),
 		AuthScheme:    "Bearer",
@@ -78,9 +78,9 @@ func NewAuthService(userRep repository.RepoUser, sessionRep repository.RepoSessi
 		},
 	}
 
-	return AuthService{
-		UserRep:   userRep,
-		AuthRep:   sessionRep,
+	return &AuthService{
+		UserRep:   *userRep,
+		AuthRep:   *sessionRep,
 		JWTConfig: config,
 	}
 }
@@ -94,6 +94,7 @@ type CustomClaims struct {
 
 func (a AuthService) IsAuthentication(ctx context.Context, username string, password string) (*models.User, bool, error) {
 	user, err := a.UserRep.Get(ctx, username)
+
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"username": username}).Warn("Unsuccessful login attempt")
 		return user, false, err

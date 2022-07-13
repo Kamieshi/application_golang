@@ -14,8 +14,8 @@ type RepoEntityPostgres struct {
 	pool *pgxpool.Pool
 }
 
-func NewRepoEntityPostgres(pool *pgxpool.Pool) RepoEntityPostgres {
-	return RepoEntityPostgres{
+func NewRepoEntityPostgres(pool *pgxpool.Pool) *RepoEntityPostgres {
+	return &RepoEntityPostgres{
 		pool: pool,
 	}
 }

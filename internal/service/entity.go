@@ -22,7 +22,7 @@ func NewEntityService(rep repository.RepoEntity, cahRep repository.CacheEntityRe
 	}
 }
 
-func (e EntityService) GetAll(ctx context.Context) ([]*models.Entity, error) {
+func (e *EntityService) GetAll(ctx context.Context) ([]*models.Entity, error) {
 
 	entities, err := e.rep.GetAll(ctx)
 	if err != nil {
@@ -52,7 +52,7 @@ func (e *EntityService) GetForID(ctx context.Context, id string) (*models.Entity
 	return entity, err
 }
 
-func (e EntityService) Add(ctx context.Context, obj *models.Entity) error {
+func (e *EntityService) Add(ctx context.Context, obj *models.Entity) error {
 	err := e.rep.Add(ctx, obj)
 	if err != nil {
 		return err
@@ -68,13 +68,13 @@ func (e EntityService) Add(ctx context.Context, obj *models.Entity) error {
 	return err
 }
 
-func (e EntityService) Delete(ctx context.Context, id string) error {
+func (e *EntityService) Delete(ctx context.Context, id string) error {
 	err := e.rep.Delete(ctx, id)
 	e.cashRep.Delete(ctx, id)
 	return err
 }
 
-func (e EntityService) Update(ctx context.Context, id string, obj *models.Entity) error {
+func (e *EntityService) Update(ctx context.Context, id string, obj *models.Entity) error {
 	err := e.rep.Update(ctx, id, obj)
 	if err != nil {
 		return err

@@ -15,10 +15,10 @@ type UserRepoMongoDB struct {
 	collection  mongo.Collection
 }
 
-func NewUserRepoMongoDB(client mongo.Client) UserRepoMongoDB {
+func NewUserRepoMongoDB(client *mongo.Client) *UserRepoMongoDB {
 	collection := client.Database(os.Getenv("APP_MONGO_DB")).Collection(os.Getenv("USER_COLLECTION"))
-	return UserRepoMongoDB{
-		mongoClient: &client,
+	return &UserRepoMongoDB{
+		mongoClient: client,
 		collection:  *collection,
 	}
 }
@@ -40,12 +40,12 @@ func (ur UserRepoMongoDB) Delete(ctx context.Context, username string) error {
 	return res.Err()
 }
 
-func (ur UserRepoMongoDB) GetAll(ctx context.Context) ([]models.User, error) {
+func (ur UserRepoMongoDB) GetAll(ctx context.Context) ([]*models.User, error) {
 	cursor, err := ur.collection.Find(ctx, bson.D{{}})
 	if err != nil {
 		return nil, err
 	}
-	var resUser []models.User
+	var resUser []*models.User
 
 	err = cursor.All(ctx, &resUser)
 	if err != nil {

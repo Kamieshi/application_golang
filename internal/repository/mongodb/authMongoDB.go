@@ -15,10 +15,10 @@ type AuthRepoMongoDB struct {
 	collection  mongo.Collection
 }
 
-func NewAuthRepoMongoDB(client mongo.Client) AuthRepoMongoDB {
+func NewAuthRepoMongoDB(client *mongo.Client) *AuthRepoMongoDB {
 	collection := client.Database(os.Getenv("APP_MONGO_DB")).Collection(os.Getenv("SESSION_COLLECTION"))
-	return AuthRepoMongoDB{
-		mongoClient: &client,
+	return &AuthRepoMongoDB{
+		mongoClient: client,
 		collection:  *collection,
 	}
 }
