@@ -1,0 +1,26 @@
+syntax = "proto3";
+option go_package = "/entity";
+package entity;
+
+service Reverse {
+  rpc Do(Request) returns (Response) {}
+  rpc GetObjectById(Id) returns (CustomStruct){}
+}
+
+message Request {
+  string message = 1;
+}
+
+message Response {
+  string message = 1;
+}
+
+message Id{
+  string uuId = 1;
+}
+
+message CustomStructResponse{
+  string uuId = 1;
+  string name = 2;
+  uint32 age = 3;
+}
