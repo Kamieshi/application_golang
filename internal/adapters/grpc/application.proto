@@ -13,10 +13,14 @@ service User{
 
 }
 
+service ImageManager{
+  rpc GetImageByEasyLink(GetImageByIDRequest) returns (stream GetImageByIDResponse){}
+}
+
 message EntityStruct {
   string id = 1;
   string name = 2;
-  int64 price = 3;
+  int32 price = 3;
   bool isActive = 4;
 }
 
@@ -43,4 +47,18 @@ message DeleteEntityRequest {
   string entityId = 1;
 }
 message DeleteEntityResponse{}
+
+message ImageStruct{
+  string fileName = 1;
+  int32 size = 2;
+}
+
+message GetImageByIDRequest{
+  string easy_link = 1 ;
+}
+message GetImageByIDResponse{
+  ImageStruct metaData = 1;
+  bytes data = 2;
+}
+
 

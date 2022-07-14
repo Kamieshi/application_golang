@@ -2,10 +2,10 @@ package main
 
 import (
 	_ "app/docs/app"
-	entitygRPC "app/internal/adapters/grpc/heandlers"
 
+	grpsHandlers "app/internal/adapters/grpc/heandlers"
 	gr "app/internal/adapters/grpc/protocGen"
-	"app/internal/adapters/http/handlers"
+	httpHandlers "app/internal/adapters/http/handlers"
 	"app/internal/config"
 	"app/internal/repository"
 	repositoryMongoDB "app/internal/repository/mongodb"
@@ -100,10 +100,10 @@ func main() {
 	// Creating adapters
 	// Echo HTTP
 	e := echo.New()
-	handlerEntity := handlers.EntityHandler{EntityService: EntityService}
-	userHandler := handlers.UserHandler{Ser: UserService}
-	authHandler := handlers.AuthHandler{AuthService: AuthService}
-	imageHandler := handlers.ImageHandler{ImageService: ImageService}
+	handlerEntity := httpHandlers.EntityHandler{EntityService: EntityService}
+	userHandler := httpHandlers.UserHandler{Ser: UserService}
+	authHandler := httpHandlers.AuthHandler{AuthService: AuthService}
+	imageHandler := httpHandlers.ImageHandler{ImageService: ImageService}
 
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: "${method}   ${uri}  ${status}    ${latency_human}\n",
@@ -132,16 +132,16 @@ func main() {
 	e.GET("/ping", func(c echo.Context) error { return c.String(http.StatusOK, "pong") })
 
 	//Creating gRPC adapter
-	listener, err := net.Listen("tcp", ":5300")
+	listener, err := net.Listen(configuration.GRPC_PROTOCOL, ":"+configuration.GRPC_PORT)
 	opts := []grpc.ServerOption{}
 	grpcServer := grpc.NewServer(opts...)
 
 	serverUser := struct {
 		gr.UserServer
 	}{}
-	gr.RegisterEntityServer(grpcServer, &entitygRPC.EntityServerImplement{EntityRep: repoEntity})
+	gr.RegisterEntityServer(grpcServer, &grpsHandlers.EntityServerImplement{EntityServ: EntityService})
 	gr.RegisterUserServer(grpcServer, &serverUser)
-
+	gr.RegisterImageManagerServer(grpcServer, &grpsHandlers.ImageServerImplement{ImageService: ImageService})
 	// Run Server
 	var wg sync.WaitGroup
 

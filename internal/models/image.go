@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
@@ -9,14 +10,15 @@ import (
 )
 
 type Image struct {
-	Filename string  `json:"filename" bson:"filename"`
-	RootPath string  `json:"root_path" bson:"root_path"`
-	Data     *[]byte `json:"data,omitempty" bson:"data,omitempty"`
-	EasyLink string  `json:"easy_link" bson:"easy_link"`
+	Id       uuid.UUID `json:"id,omitempty"`
+	Filename string    `json:"filename" bson:"filename" json:"filename,omitempty"`
+	RootPath string    `json:"root_path" bson:"root_path" json:"root_path,omitempty"`
+	Data     *[]byte   `json:"data,omitempty" bson:"data,omitempty" json:"data,omitempty"`
+	EasyLink string    `json:"easy_link" bson:"easy_link" json:"easy_link,omitempty"`
 }
 
 func (img *Image) Byte() (*[]byte, error) {
-	dat, err := os.ReadFile(img.RootPath)
+	dat, err := os.ReadFile(img.RootPath + img.Filename)
 	if err != nil {
 		logrus.Error(err)
 		return nil, err

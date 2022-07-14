@@ -3,6 +3,7 @@ package repository
 import (
 	"app/internal/models"
 	"context"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -23,7 +24,7 @@ func NewImageRepoMongoDB(client *mongo.Client) *ImageRepoMongoDB {
 	}
 }
 
-func (repImg *ImageRepoMongoDB) Save(ctx context.Context, img models.Image) (interface{}, error) {
+func (repImg *ImageRepoMongoDB) Save(ctx context.Context, img *models.Image) error {
 
 	bytesArr := *img.Data
 	img.Data = nil
@@ -39,11 +40,11 @@ func (repImg *ImageRepoMongoDB) Save(ctx context.Context, img models.Image) (int
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"full_path": img.FullPath()}).Error("Unsuccessful write in mongodb")
 		logrus.WithError(err).Error()
-		return nil, err
+		return err
 	}
 	img.Data = &bytesArr
 	logrus.Info(res)
-	return res.UpsertedID, err
+	return err
 }
 
 func (repImg *ImageRepoMongoDB) Get(ctx context.Context, easyLink string) (*models.Image, error) {
@@ -56,7 +57,7 @@ func (repImg *ImageRepoMongoDB) Get(ctx context.Context, easyLink string) (*mode
 	return &image, err
 }
 
-func (repImg *ImageRepoMongoDB) Delete(ctx context.Context, id interface{}) error {
+func (repImg *ImageRepoMongoDB) Delete(ctx context.Context, id uuid.UUID) error {
 	res := repImg.collectionImage.FindOneAndDelete(ctx, bson.D{{"_id", id}})
 	return res.Err()
 }

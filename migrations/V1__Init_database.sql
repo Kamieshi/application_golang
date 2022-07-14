@@ -24,3 +24,10 @@ CREATE TABLE sessions(
                          PRIMARY KEY (id),
                          FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
+CREATE TABLE images(
+    id uuid not null unique,
+    file_name varchar(400) not null ,
+    root_path varchar(500) not null ,
+    easy_link varchar(200)not null
+)
