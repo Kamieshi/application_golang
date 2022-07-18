@@ -1,8 +1,8 @@
-package handlers
+package http
 
 import (
 	"app/internal/service"
-	"github.com/labstack/echo/v4"
+	ech "github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 	"io"
 	"net/http"
@@ -26,7 +26,7 @@ type ImageHandler struct {
 // @Failure 400 {string} Missing jwt token
 // @Failure 401 {string} unAuthorized
 // @Router /upload [post]
-func (ih ImageHandler) Load(c echo.Context) error {
+func (ih ImageHandler) Load(c ech.Context) error {
 	file, err := c.FormFile("image")
 	if err != nil {
 		return err
@@ -34,19 +34,19 @@ func (ih ImageHandler) Load(c echo.Context) error {
 
 	data, err := file.Open()
 	if err != nil {
-		logrus.WithError(err)
+		logrus.WithError(err).Error()
 		return err
 	}
 	defer func() {
 		err = data.Close()
 		if err != nil {
-			logrus.WithError(err)
+			logrus.WithError(err).Error()
 		}
 	}()
 
 	loadData, err := io.ReadAll(data)
 	if err != nil {
-		logrus.WithError(err)
+		logrus.WithError(err).Error()
 		return err
 	}
 
@@ -71,7 +71,7 @@ func (ih ImageHandler) Load(c echo.Context) error {
 // @Failure 400 {string} Missing jwt token
 // @Failure 401 {string} unAuthorized
 // @Router /load/{easy_link} [get]
-func (ih ImageHandler) Get(c echo.Context) error {
+func (ih ImageHandler) Get(c ech.Context) error {
 	easyLink := c.Param("easy_link")
 
 	img, err := ih.ImageService.Get(c.Request().Context(), easyLink)

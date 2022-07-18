@@ -1,6 +1,7 @@
-package tests
+package http
 
 import (
+	"app/internal/adapters/http/handlers/tests"
 	"app/internal/models"
 	repository "app/internal/repository/posgres"
 	"app/internal/service"
@@ -24,11 +25,11 @@ func TestRegisterUser(t *testing.T) {
 		"username": "string",
 	})
 	buf := bytes.NewReader(dataJSON)
-	resp, err := http.Post(URLCreateUser, "application/json", buf)
+	resp, err := http.Post(tests.URLCreateUser, "application/json", buf)
 	defer func() {
 		err = resp.Body.Close()
 		if err != nil {
-			log.WithError(err)
+			log.WithError(err).Error()
 		}
 	}()
 	if err != nil {
@@ -46,21 +47,21 @@ func TestRegisterUser(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	userRep := repository.NewRepoUsersPostgres(connPullDB)
+	userRep := repository.NewRepoUsersPostgres(tests.connPullDB)
 	t.Cleanup(func() {
-		if err = userRep.Delete(ctx, actualUser.UserName); err != nil {
-			log.WithError(err)
+		if err = userRep.Delete(tests.ctx, actualUser.UserName); err != nil {
+			log.WithError(err).Error()
 		}
 	})
 
-	expectUser, _ := userRep.Get(ctx, actualUser.UserName)
+	expectUser, _ := userRep.Get(tests.ctx, actualUser.UserName)
 	assert.Equal(t, expectUser.ID, actualUser.ID)
 }
 
 func TestLogin(t *testing.T) {
-	userRep := repository.NewRepoUsersPostgres(connPullDB)
+	userRep := repository.NewRepoUsersPostgres(tests.connPullDB)
 	userServ := service.NewUserService(userRep)
-	_, err := userServ.Create(ctx, "test", "test")
+	_, err := userServ.Create(tests.ctx, "test", "test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,14 +72,14 @@ func TestLogin(t *testing.T) {
 	})
 
 	buf := bytes.NewReader(dataJSON)
-	resp, err := http.Post(urlLogin, "application/json", buf)
+	resp, err := http.Post(tests.urlLogin, "application/json", buf)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer func() {
 		err = resp.Body.Close()
 		if err != nil {
-			log.WithError(err)
+			log.WithError(err).Error()
 		}
 	}()
 
@@ -95,14 +96,14 @@ func TestLogin(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req, err := http.NewRequest("GET", urlCheckAuth, nil)
+	req, err := http.NewRequest("GET", tests.urlCheckAuth, nil)
 	req.Header.Add("Authorization", "Bearer "+AccessData.AccessTk)
 
 	client := http.DefaultClient
 	resp, err = client.Do(req)
 
 	if resp.StatusCode != http.StatusAccepted {
-		log.WithError(errors.New("error create token"))
+		log.WithError(errors.New("error create token")).Error()
 	}
 
 	var actualUser models.User
@@ -115,7 +116,7 @@ func TestLogin(t *testing.T) {
 		if t.Method.Alg() != algSign {
 			return nil, fmt.Errorf("unexpected jwt signing method=%v", t.Header["alg"])
 		}
-		return []byte(secretKey), nil
+		return []byte(tests.secretKey), nil
 	}
 
 	token, err := jwt.Parse(AccessData.AccessTk, keyFunc)
@@ -124,27 +125,27 @@ func TestLogin(t *testing.T) {
 	}
 	claims := token.Claims.(jwt.MapClaims)
 	idSession := claims["id_session"].(string)
-	repAuth := repository.NewRepoAuthPostgres(connPullDB)
+	repAuth := repository.NewRepoAuthPostgres(tests.connPullDB)
 
-	session, err := repAuth.Get(ctx, uuid.MustParse(idSession))
+	session, err := repAuth.Get(tests.ctx, uuid.MustParse(idSession))
 	if err != nil {
 		t.Fatalf("Not found session :%s", idSession)
 	}
 	t.Cleanup(func() {
-		if err = repAuth.Delete(ctx, uuid.MustParse(idSession)); err != nil {
-			log.WithError(err)
+		if err = repAuth.Delete(tests.ctx, uuid.MustParse(idSession)); err != nil {
+			log.WithError(err).Error()
 		}
-		if err = userRep.Delete(ctx, actualUser.UserName); err != nil {
-			log.WithError(err)
+		if err = userRep.Delete(tests.ctx, actualUser.UserName); err != nil {
+			log.WithError(err).Error()
 		}
 	})
 	assert.Equal(t, session.RfToken, AccessData.RefreshTk)
 }
 
 func TestLogOut(t *testing.T) {
-	userRep := repository.NewRepoUsersPostgres(connPullDB)
+	userRep := repository.NewRepoUsersPostgres(tests.connPullDB)
 	userServ := service.NewUserService(userRep)
-	_, err := userServ.Create(ctx, "test", "test")
+	_, err := userServ.Create(tests.ctx, "test", "test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -155,14 +156,14 @@ func TestLogOut(t *testing.T) {
 	})
 
 	buf := bytes.NewReader(dataJSON)
-	resp, err := http.Post(urlLogin, "application/json", buf)
+	resp, err := http.Post(tests.urlLogin, "application/json", buf)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer func() {
 		err = resp.Body.Close()
 		if err != nil {
-			log.WithError(err)
+			log.WithError(err).Error()
 		}
 	}()
 
@@ -178,7 +179,7 @@ func TestLogOut(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	req, err := http.NewRequest("GET", urlCheckAuth, nil)
+	req, err := http.NewRequest("GET", tests.urlCheckAuth, nil)
 	req.Header.Add("Authorization", "Bearer "+AccessData.AccessTk)
 
 	client := http.DefaultClient
@@ -197,7 +198,7 @@ func TestLogOut(t *testing.T) {
 		if t.Method.Alg() != algSign {
 			return nil, fmt.Errorf("unexpected jwt signing method=%v", t.Header["alg"])
 		}
-		return []byte(secretKey), nil
+		return []byte(tests.secretKey), nil
 	}
 
 	token, err := jwt.Parse(AccessData.AccessTk, keyFunc)
@@ -206,24 +207,24 @@ func TestLogOut(t *testing.T) {
 	}
 	claims := token.Claims.(jwt.MapClaims)
 	idSession := claims["id_session"].(string)
-	repAuth := repository.NewRepoAuthPostgres(connPullDB)
+	repAuth := repository.NewRepoAuthPostgres(tests.connPullDB)
 
 	t.Cleanup(func() {
-		if err = repAuth.Delete(ctx, uuid.MustParse(idSession)); err != nil {
-			log.WithError(err)
+		if err = repAuth.Delete(tests.ctx, uuid.MustParse(idSession)); err != nil {
+			log.WithError(err).Error()
 		}
-		if err = userRep.Delete(ctx, actualUser.UserName); err != nil {
-			log.WithError(err)
+		if err = userRep.Delete(tests.ctx, actualUser.UserName); err != nil {
+			log.WithError(err).Error()
 		}
 	})
 
-	req, _ = http.NewRequest("GET", urlLogOut, nil)
+	req, _ = http.NewRequest("GET", tests.urlLogOut, nil)
 	req.Header.Add("Authorization", "Bearer "+AccessData.AccessTk)
 	resp, err = client.Do(req)
 	if err != nil {
 		t.Fatal(err)
 	}
-	userSession, err := repAuth.Get(ctx, uuid.MustParse(idSession))
+	userSession, err := repAuth.Get(tests.ctx, uuid.MustParse(idSession))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -231,9 +232,9 @@ func TestLogOut(t *testing.T) {
 }
 
 func TestRefresh(t *testing.T) {
-	userRep := repository.NewRepoUsersPostgres(connPullDB)
+	userRep := repository.NewRepoUsersPostgres(tests.connPullDB)
 	userServ := service.NewUserService(userRep)
-	_, err := userServ.Create(ctx, "test", "test")
+	_, err := userServ.Create(tests.ctx, "test", "test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -244,7 +245,7 @@ func TestRefresh(t *testing.T) {
 	})
 
 	buf := bytes.NewReader(dataJSON)
-	resp, err := http.Post(urlLogin, "application/json", buf)
+	resp, err := http.Post(tests.urlLogin, "application/json", buf)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -260,7 +261,7 @@ func TestRefresh(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	req, err := http.NewRequest("GET", urlCheckAuth, nil)
+	req, err := http.NewRequest("GET", tests.urlCheckAuth, nil)
 	req.Header.Add("Authorization", "Bearer "+AccessData.AccessTk)
 
 	client := http.DefaultClient
@@ -279,7 +280,7 @@ func TestRefresh(t *testing.T) {
 		if t.Method.Alg() != algSign {
 			return nil, fmt.Errorf("unexpected jwt signing method=%v", t.Header["alg"])
 		}
-		return []byte(secretKey), nil
+		return []byte(tests.secretKey), nil
 	}
 
 	token, err := jwt.Parse(AccessData.AccessTk, keyFunc)
@@ -288,18 +289,18 @@ func TestRefresh(t *testing.T) {
 	}
 	claims := token.Claims.(jwt.MapClaims)
 	idSession := claims["id_session"].(string)
-	repAuth := repository.NewRepoAuthPostgres(connPullDB)
+	repAuth := repository.NewRepoAuthPostgres(tests.connPullDB)
 
 	t.Cleanup(func() {
-		if err = repAuth.Delete(ctx, uuid.MustParse(idSession)); err != nil {
-			log.WithError(err)
+		if err = repAuth.Delete(tests.ctx, uuid.MustParse(idSession)); err != nil {
+			log.WithError(err).Error()
 		}
-		if err = userRep.Delete(ctx, actualUser.UserName); err != nil {
-			log.WithError(err)
+		if err = userRep.Delete(tests.ctx, actualUser.UserName); err != nil {
+			log.WithError(err).Error()
 		}
 	})
 
-	sessionBeforeRefresh, err := repAuth.Get(ctx, uuid.MustParse(idSession))
+	sessionBeforeRefresh, err := repAuth.Get(tests.ctx, uuid.MustParse(idSession))
 	if err != nil {
 		t.Fatal("Get session object before refresh")
 	}
@@ -308,7 +309,7 @@ func TestRefresh(t *testing.T) {
 		"refresh": AccessData.RefreshTk,
 	})
 	buf = bytes.NewReader(dataJson)
-	req, _ = http.NewRequest("POST", urlRefresh, buf)
+	req, _ = http.NewRequest("POST", tests.urlRefresh, buf)
 	req.Header.Add("Authorization", "Bearer "+AccessData.AccessTk)
 	req.Header.Add("Content-Type", "application/json")
 	resp, err = client.Do(req)
@@ -319,7 +320,7 @@ func TestRefresh(t *testing.T) {
 	if resp.StatusCode != http.StatusAccepted {
 		t.Fatal("Can't get new RfToken")
 	}
-	sessionAfterRefresh, err := repAuth.Get(ctx, uuid.MustParse(idSession))
+	sessionAfterRefresh, err := repAuth.Get(tests.ctx, uuid.MustParse(idSession))
 	if err != nil {
 		t.Fatal("Get session object after refresh")
 	}

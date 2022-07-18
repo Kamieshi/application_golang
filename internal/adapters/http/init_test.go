@@ -1,4 +1,4 @@
-package tests
+package http
 
 import (
 	"context"
@@ -34,7 +34,9 @@ func TestMain(m *testing.M) {
 	}
 	closer := func(resource *dockertest.Resource) {
 		if resource != nil {
-			resource.Close()
+			if err = resource.Close(); err != nil {
+				log.WithError(err).Error()
+			}
 		}
 	}
 
@@ -135,7 +137,9 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Could not connect to database: %s", err)
 	}
 
-	os.Setenv("SECRET_KEY", secretKey)
+	if err = os.Setenv("SECRET_KEY", secretKey); err != nil {
+		log.WithError(err).Panic()
+	}
 
 	code := m.Run()
 

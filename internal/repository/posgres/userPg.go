@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v4"
+	pg "github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
@@ -22,7 +22,7 @@ func NewRepoUsersPostgres(pool *pgxpool.Pool) *RepoUsersPostgres {
 
 const orderColumnsUser string = "id, username, password_hash, is_admin"
 
-func rowToUser(row pgx.Row) (*models.User, error) {
+func rowToUser(row pg.Row) (*models.User, error) {
 	var user models.User
 	err := row.Scan(&user.ID, &user.UserName, &user.PasswordHash, &user.Admin)
 	if err != nil {

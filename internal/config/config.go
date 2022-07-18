@@ -23,6 +23,7 @@ type Configuration struct {
 	GrpcPort         string `env:"GRPC_PORT"`
 	GrpcProtocol     string `env:"GRPC_PROTOCOL"`
 	EchoPort         string `env:"ECHO_PORT"`
+	PathToMigration  string `env:"PATH_TO_MIGRATIONS"`
 }
 
 // ConnectingURLPostgres  Return connection string to Postgres
@@ -36,9 +37,15 @@ func (c *Configuration) ConnectingURLMongo() string {
 }
 
 // GetConfig Get instance config object
-func GetConfig() (*Configuration, error) {
+func GetConfig(args ...string) (*Configuration, error) {
 	conf := Configuration{}
-
+	if len(args) != 0 {
+		absPath := args[0]
+		err := godotenv.Load(absPath)
+		if err != nil {
+			return &conf, fmt.Errorf("config.go/GetConfig Error parse data from file : %v", err)
+		}
+	}
 	_, exist := os.LookupEnv("POSTGRES_PORT")
 	if !exist {
 		err := godotenv.Load("./localConfig.env")

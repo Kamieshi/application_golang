@@ -6,7 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/go-redis/redis/v8"
+	rds "github.com/go-redis/redis/v8"
 	"github.com/sirupsen/logrus"
 	"os"
 	"strconv"
@@ -35,15 +35,15 @@ func (co CacheObj) MarshalBinary() ([]byte, error) {
 
 type CashEntityRepositoryRedis struct {
 	entityRep repository.RepoEntity
-	client    *redis.Client
+	client    *rds.Client
 }
 
-func (c CashEntityRepositoryRedis) Client() *redis.Client {
+func (c CashEntityRepositoryRedis) Client() *rds.Client {
 	return c.client
 }
 
 func NewCashEntityRepository(addr string, entityRep *repository.RepoEntity) *CashEntityRepositoryRedis {
-	client := redis.NewClient(&redis.Options{
+	client := rds.NewClient(&rds.Options{
 		Addr:     addr,
 		Password: "", // no password set
 		DB:       0,  // use default DB
@@ -80,7 +80,7 @@ func (c CashEntityRepositoryRedis) Get(ctx context.Context, id string) (*models.
 	logrus.Info("Try get with cache")
 	val, err := c.client.Get(ctx, id).Result()
 
-	if err != redis.Nil {
+	if err != rds.Nil {
 		logrus.WithError(err).Error("Get in redis")
 		return &ent, err
 	}

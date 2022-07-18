@@ -9,3 +9,4 @@ RUN go build main.go
 EXPOSE 8005
 
 CMD [ "./main" ]
+

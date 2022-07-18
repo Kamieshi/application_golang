@@ -1,14 +1,14 @@
-package tests
+package repository
 
 import (
 	"app/internal/models"
-	"app/internal/repository/posgres"
+	log "github.com/sirupsen/logrus"
 	"reflect"
 	"testing"
 )
 
 func TestRepositoryEntityAdd(t *testing.T) {
-	repEntity := repository.NewRepoEntityPostgres(pgPool)
+	repEntity := NewRepoEntityPostgres(pgPool)
 	var entity = models.Entity{
 		Name:     "TestEntity1",
 		Price:    250,
@@ -20,7 +20,10 @@ func TestRepositoryEntityAdd(t *testing.T) {
 	}
 
 	t.Cleanup(func() {
-		repEntity.Delete(ctx, entity.ID.String())
+		err = repEntity.Delete(ctx, entity.ID.String())
+		if err != nil {
+			log.WithError(err).Error()
+		}
 	})
 
 	entityFromDb, err := repEntity.GetForID(ctx, entity.ID.String())
@@ -33,7 +36,7 @@ func TestRepositoryEntityAdd(t *testing.T) {
 }
 
 func TestRepositoryEntityGet(t *testing.T) {
-	repEntity := repository.NewRepoEntityPostgres(pgPool)
+	repEntity := NewRepoEntityPostgres(pgPool)
 	var entity = models.Entity{
 		Name:     "TestEntity1",
 		Price:    250,
@@ -45,7 +48,10 @@ func TestRepositoryEntityGet(t *testing.T) {
 	}
 
 	t.Cleanup(func() {
-		repEntity.Delete(ctx, entity.ID.String())
+		err = repEntity.Delete(ctx, entity.ID.String())
+		if err != nil {
+			log.WithError(err).Error()
+		}
 	})
 
 	entityFromDb, err := repEntity.GetForID(ctx, entity.ID.String())
@@ -58,7 +64,7 @@ func TestRepositoryEntityGet(t *testing.T) {
 }
 
 func TestRepositoryEntityDelete(t *testing.T) {
-	repEntity := repository.NewRepoEntityPostgres(pgPool)
+	repEntity := NewRepoEntityPostgres(pgPool)
 	var entity = models.Entity{
 		Name:     "TestEntity1",
 		Price:    250,
@@ -81,7 +87,7 @@ func TestRepositoryEntityDelete(t *testing.T) {
 }
 
 func TestRepositoryEntityUpdate(t *testing.T) {
-	repEntity := repository.NewRepoEntityPostgres(pgPool)
+	repEntity := NewRepoEntityPostgres(pgPool)
 	var entity = models.Entity{
 		Name:     "TestEntity1",
 		Price:    250,
@@ -93,7 +99,10 @@ func TestRepositoryEntityUpdate(t *testing.T) {
 	}
 
 	t.Cleanup(func() {
-		repEntity.Delete(ctx, entity.ID.String())
+		err = repEntity.Delete(ctx, entity.ID.String())
+		if err != nil {
+			log.WithError(err).Error()
+		}
 	})
 
 	entity.Name = "New name"
@@ -112,7 +121,7 @@ func TestRepositoryEntityUpdate(t *testing.T) {
 }
 
 func TestRepositoryEntityGetAll(t *testing.T) {
-	repEntity := repository.NewRepoEntityPostgres(pgPool)
+	repEntity := NewRepoEntityPostgres(pgPool)
 	var entity1 = models.Entity{
 		Name:     "TestEntity1",
 		Price:    250,
@@ -133,8 +142,14 @@ func TestRepositoryEntityGetAll(t *testing.T) {
 	}
 
 	t.Cleanup(func() {
-		repEntity.Delete(ctx, entity1.ID.String())
-		repEntity.Delete(ctx, entity2.ID.String())
+		err = repEntity.Delete(ctx, entity1.ID.String())
+		if err != nil {
+			log.WithError(err).Error()
+		}
+		err = repEntity.Delete(ctx, entity2.ID.String())
+		if err != nil {
+			log.WithError(err).Error()
+		}
 	})
 
 	entitiesFromDB, err := repEntity.GetAll(ctx)

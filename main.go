@@ -2,9 +2,8 @@ package main
 
 import (
 	_ "app/docs/app"
-	gRPCHandlers "app/internal/adapters/grpc/heandlers"
-	gr "app/internal/adapters/grpc/protocGen"
-	httpHandlers "app/internal/adapters/http/handlers"
+	gr "app/internal/adapters/grpc"
+	http2 "app/internal/adapters/http"
 	"app/internal/config"
 	"app/internal/repository"
 	repositoryMongoDB "app/internal/repository/mongodb"
@@ -97,10 +96,10 @@ func main() {
 	// Creating adapters
 	// Echo HTTP
 	e := echo.New()
-	handlerEntity := httpHandlers.EntityHandler{EntityService: EntityService}
-	userHandler := httpHandlers.UserHandler{Ser: UserService}
-	authHandler := httpHandlers.AuthHandler{AuthService: AuthService}
-	imageHandler := httpHandlers.ImageHandler{ImageService: ImageService}
+	handlerEntity := http2.EntityHandler{EntityService: EntityService}
+	userHandler := http2.UserHandler{Ser: UserService}
+	authHandler := http2.AuthHandler{AuthService: AuthService}
+	imageHandler := http2.ImageHandler{ImageService: ImageService}
 
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: "${method}   ${uri}  ${status}    ${latency_human}\n",
@@ -139,9 +138,9 @@ func main() {
 	serverUser := struct {
 		gr.UserServer
 	}{}
-	gr.RegisterEntityServer(grpcServer, &gRPCHandlers.EntityServerImplement{EntityServ: EntityService})
+	gr.RegisterEntityServer(grpcServer, &gr.EntityServerImplement{EntityServ: EntityService})
 	gr.RegisterUserServer(grpcServer, &serverUser)
-	gr.RegisterImageManagerServer(grpcServer, &gRPCHandlers.ImageServerImplement{ImageService: ImageService})
+	gr.RegisterImageManagerServer(grpcServer, &gr.ImageServerImplement{ImageService: ImageService})
 	// Run Server
 	var wg sync.WaitGroup
 

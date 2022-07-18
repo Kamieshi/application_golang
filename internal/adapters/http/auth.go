@@ -1,5 +1,5 @@
 // Package handlers Work with http adapter from Echo
-package handlers
+package http
 
 import (
 	"app/internal/service"

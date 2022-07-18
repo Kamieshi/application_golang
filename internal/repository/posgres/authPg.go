@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v4"
+	pgx "github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	log "github.com/sirupsen/logrus"
 )
@@ -21,7 +21,7 @@ func NewRepoAuthPostgres(pool *pgxpool.Pool) *RepoAuthPostgres {
 	}
 }
 
-func rowToSession(row pgx.Row) (*models.Session, error) {
+func rowToSession(row pgx.Row) (*models.Session, error) { //nolint:typecheck
 	var session models.Session
 	err := row.Scan(&session.ID, &session.UserID, &session.RfToken, &session.UniqueSignature, &session.CreatedAt, &session.Disabled)
 	if err != nil {
@@ -56,7 +56,7 @@ func (r RepoAuthPostgres) Update(ctx context.Context, session *models.Session) e
 
 func (r RepoAuthPostgres) Get(ctx context.Context, SessionId uuid.UUID) (*models.Session, error) {
 	query := fmt.Sprintf("SELECT %s FROM sessions WHERE id=$1", orderColumnsSessions)
-	var row pgx.Row = r.pool.QueryRow(ctx, query, SessionId)
+	var row = r.pool.QueryRow(ctx, query, SessionId)
 	ent, err := rowToSession(row)
 	return ent, err
 }

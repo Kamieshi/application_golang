@@ -16,8 +16,8 @@ var errorFromRepo error
 var errorFormCache error
 
 func TestMain(t *testing.M) {
-	errorFromRepo = errors.New("Error from repositpory")
-	errorFormCache = errors.New("Error form cache")
+	errorFromRepo = errors.New("error from repository")
+	errorFormCache = errors.New("error form cache")
 	ctx = context.Background()
 	code := t.Run()
 	os.Exit(code)
@@ -211,7 +211,7 @@ func TestAddNegative(t *testing.T) {
 		IsActive: false,
 	}
 	repoEntityMock.On("Add", ctx, expectEntity1).Return(errorFromRepo)
-	repoCacheMock.On("Set", ctx, expectEntity1).Return(errors.New("Error form cache"))
+	repoCacheMock.On("Set", ctx, expectEntity1).Return(errors.New("error form cache"))
 	err := entityService.Add(ctx, expectEntity1)
 	_assert.Error(err)
 }

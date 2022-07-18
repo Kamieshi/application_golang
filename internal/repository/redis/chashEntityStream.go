@@ -4,7 +4,8 @@ import (
 	"app/internal/models"
 	"app/internal/repository"
 	"context"
-	"github.com/go-redis/redis/v8"
+	rds "github.com/go-redis/redis/v8"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"strconv"
 	"sync"
@@ -67,7 +68,7 @@ func unMarshalCommand(data map[string]interface{}) *Command {
 }
 
 func (r *CashSteamEntityRep) sendCommand(ctx context.Context, command Command) error {
-	arg := redis.XAddArgs{
+	arg := rds.XAddArgs{
 		Stream: r.StreamCommand,
 		MaxLen: 0,
 		ID:     "",
@@ -106,13 +107,16 @@ func (r *CashSteamEntityRep) Delete(ctx context.Context, idEntity string) {
 	delete(r.LocalStorage.storage, idEntity)
 	r.LocalStorage.M.Unlock()
 	deleteCommand := Command{Type: "delete", EntityId: idEntity}
-	r.sendCommand(ctx, deleteCommand)
+	err := r.sendCommand(ctx, deleteCommand)
+	if err != nil {
+		log.WithError(err).Error("Delete haven't worked")
+	}
 }
 
 func (r *CashSteamEntityRep) Listener(ctx context.Context) {
 	r.client.XGroupDestroy(ctx, r.StreamCommand, r.GroupName)
 	r.client.XGroupCreate(ctx, r.StreamCommand, r.GroupName, "$")
-	args := redis.XReadGroupArgs{
+	args := rds.XReadGroupArgs{
 		Group:    r.GroupName,
 		Consumer: "Reader",
 		Streams:  []string{r.StreamCommand, ">"},

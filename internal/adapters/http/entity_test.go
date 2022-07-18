@@ -1,4 +1,4 @@
-package tests
+package http
 
 import (
 	"app/internal/models"
@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
@@ -42,7 +43,9 @@ func NewMaker(username, password string) (*MakerAuthRequest, error) {
 		return nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		repUser.Delete(ctx, username)
+		if err = repUser.Delete(ctx, username); err != nil {
+			log.WithError(err).Error()
+		}
 		return nil, errors.New(fmt.Sprintf("Trouble with auth %d", resp.StatusCode))
 	}
 
@@ -73,8 +76,12 @@ func NewMaker(username, password string) (*MakerAuthRequest, error) {
 	repAuth := repository.NewRepoAuthPostgres(connPullDB)
 
 	cleanerFunc := func() {
-		repAuth.Delete(ctx, idSession)
-		repUser.Delete(ctx, username)
+		if err = repAuth.Delete(ctx, idSession); err != nil {
+			log.WithError(err).Error()
+		}
+		if err = repUser.Delete(ctx, username); err != nil {
+			log.WithError(err).Error()
+		}
 	}
 	return &MakerAuthRequest{
 		username:    username,
@@ -151,7 +158,10 @@ func TestCreate(t *testing.T) {
 		t.Fatal("Failed get entity from Repository")
 	}
 	t.Cleanup(func() {
-		repEntity.Delete(ctx, entityFormRepository.ID.String())
+		if err = repEntity.Delete(ctx, entityFormRepository.ID.String()); err != nil {
+			log.WithError(err).Error()
+		}
+
 	})
 	assert.Equal(t, entityFormRepository.ID, actualEntity.ID)
 	assert.Equal(t, entityFormRepository.Name, actualEntity.Name)
@@ -184,8 +194,12 @@ func TestGetAll(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() {
-		repEntity.Delete(ctx, entity1.ID.String())
-		repEntity.Delete(ctx, entity2.ID.String())
+		if err = repEntity.Delete(ctx, entity1.ID.String()); err != nil {
+			log.WithError(err).Error()
+		}
+		if err = repEntity.Delete(ctx, entity2.ID.String()); err != nil {
+			log.WithError(err).Error()
+		}
 	})
 	req := maker.GetAuthGet(urlGetAllEntity)
 	client := http.DefaultClient
@@ -221,7 +235,9 @@ func TestUpdate(t *testing.T) {
 	}
 
 	t.Cleanup(func() {
-		repEntity.Delete(ctx, entityExpected.ID.String())
+		if err = repEntity.Delete(ctx, entityExpected.ID.String()); err != nil {
+			log.WithError(err).Error()
+		}
 	})
 
 	entityBeforeUpdate, err := repEntity.GetForID(ctx, entityExpected.ID.String())
@@ -268,7 +284,9 @@ func TestGetByID(t *testing.T) {
 	}
 
 	t.Cleanup(func() {
-		repEntity.Delete(ctx, entityExpected.ID.String())
+		if err = repEntity.Delete(ctx, entityExpected.ID.String()); err != nil {
+			log.WithError(err).Error()
+		}
 	})
 
 	req := maker.GetAuthGet(urlGetByIdEntity + entityExpected.ID.String())
@@ -307,7 +325,9 @@ func TestDelete(t *testing.T) {
 	}
 
 	t.Cleanup(func() {
-		repEntity.Delete(ctx, entityExpected.ID.String())
+		if err = repEntity.Delete(ctx, entityExpected.ID.String()); err != nil {
+			log.WithError(err).Error()
+		}
 	})
 
 	req := maker.GetAuthDelete(urlDeleteEntity + entityExpected.ID.String())

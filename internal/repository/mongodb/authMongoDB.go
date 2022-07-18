@@ -57,5 +57,6 @@ func (ar AuthRepoMongoDB) Delete(ctx context.Context, sessionId uuid.UUID) error
 
 // Disable session(session.Disabled false->true)
 func (ar AuthRepoMongoDB) Disable(ctx context.Context, sessionId uuid.UUID) error {
+
 	return nil
 }

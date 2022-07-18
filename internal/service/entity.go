@@ -33,8 +33,8 @@ func (e *EntityService) GetAll(ctx context.Context) ([]*models.Entity, error) {
 
 func (e *EntityService) GetForID(ctx context.Context, id string) (*models.Entity, error) {
 
-	entity, is_exist := e.cashRep.Get(ctx, id)
-	if is_exist {
+	entity, exist := e.cashRep.Get(ctx, id)
+	if exist {
 		logrus.WithFields(logrus.Fields{
 			"id": id,
 		}).Info("Use cache")
@@ -60,7 +60,7 @@ func (e *EntityService) Add(ctx context.Context, obj *models.Entity) error {
 
 	errSet := e.cashRep.Set(ctx, obj)
 	if errSet != nil {
-		logrus.WithError(errSet)
+		logrus.WithError(errSet).Error()
 	}
 
 	logrus.Info("Value successful get in cash repository ")

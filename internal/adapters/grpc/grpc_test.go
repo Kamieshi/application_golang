@@ -1,7 +1,6 @@
 package test
 
 import (
-	"app/internal/adapters/grpc/protocGen"
 	"app/internal/config"
 	"app/internal/models"
 	repository "app/internal/repository/posgres"
@@ -10,10 +9,11 @@ import (
 	"fmt"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/joho/godotenv"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/encoding/protojson"
 	"io"
-	"log"
+
 	"os"
 
 	"google.golang.org/grpc"
@@ -22,8 +22,8 @@ import (
 )
 
 var opts []grpc.DialOption
-var clientEntity protocGen.EntityClient
-var clientImage protocGen.ImageManagerClient
+var clientEntity EntityClient
+var clientImage ImageManagerClient
 var ctx context.Context
 var connPool *pgxpool.Pool
 
@@ -36,14 +36,18 @@ func TestMain(m *testing.M) {
 	opts = []grpc.DialOption{
 		grpc.WithInsecure(),
 	}
-	grpc_adress := fmt.Sprintf("%s:%s", conf.GrpcHost, conf.GrpcPort)
-	conn, err := grpc.Dial(grpc_adress, opts...)
+	grpcAddress := fmt.Sprintf("%s:%s", conf.GrpcHost, conf.GrpcPort)
+	conn, err := grpc.Dial(grpcAddress, opts...)
 	if err != nil {
 		grpclog.Fatalf("fail to dial: %v", err)
 	}
-	clientEntity = protocGen.NewEntityClient(conn)
-	clientImage = protocGen.NewImageManagerClient(conn)
-	defer conn.Close()
+	clientEntity = NewEntityClient(conn)
+	clientImage = NewImageManagerClient(conn)
+	defer func() {
+		if err = conn.Close(); err != nil {
+			log.WithError(err).Error()
+		}
+	}()
 
 	ctx = context.Background()
 	connPool, _ = pgxpool.Connect(
@@ -65,9 +69,11 @@ func TestGetEntityById(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() {
-		repoEntity.Delete(ctx, dataEntity.ID.String())
+		if err := repoEntity.Delete(ctx, dataEntity.ID.String()); err != nil {
+			log.WithError(err).Error()
+		}
 	})
-	data, err := clientEntity.GetEntityById(context.Background(), &protocGen.GetEntityByIdRequest{EntityId: dataEntity.ID.String()})
+	data, err := clientEntity.GetEntityById(context.Background(), &GetEntityByIdRequest{EntityId: dataEntity.ID.String()})
 	assert.Nil(t, err)
 	assert.NotNil(t, data)
 
@@ -85,7 +91,7 @@ func TestGetEntityById(t *testing.T) {
 }
 
 func TestGetImagesByEasyLink(t *testing.T) {
-	imageByIdRequest := protocGen.GetImageByIDRequest{EasyLink: "14July2022_Screenshot from 2022-07-14 13-56-01.png"}
+	imageByIdRequest := GetImageByIDRequest{EasyLink: "14July2022_Screenshot from 2022-07-14 13-56-01.png"}
 	stream, err := clientImage.GetImageByEasyLink(ctx, &imageByIdRequest)
 	if err != nil {
 		t.Fatal(err)
@@ -93,7 +99,9 @@ func TestGetImagesByEasyLink(t *testing.T) {
 	for {
 		imageByResponse, err := stream.Recv()
 		if err == io.EOF {
-			stream.CloseSend()
+			if err = stream.CloseSend(); err != nil {
+				log.WithError(err).Error()
+			}
 		}
 		assert.Equal(t, imageByResponse.GetMetaData().GetSize(), int32(len(imageByResponse.GetData())))
 		break

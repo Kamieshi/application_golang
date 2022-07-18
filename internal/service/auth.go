@@ -17,8 +17,8 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	ech "github.com/labstack/echo/v4"
+	middleware "github.com/labstack/echo/v4/middleware"
 )
 
 type AuthService struct {
@@ -28,7 +28,7 @@ type AuthService struct {
 }
 
 func NewAuthService(userRep *repository.RepoUser, sessionRep *repository.RepoSession) *AuthService {
-	headerAuthorization := echo.HeaderAuthorization
+	headerAuthorization := ech.HeaderAuthorization
 	config := &middleware.JWTConfig{
 		Claims:        &CustomClaims{},
 		SigningKey:    []byte(os.Getenv("SECRET_KEY")),
@@ -36,7 +36,7 @@ func NewAuthService(userRep *repository.RepoUser, sessionRep *repository.RepoSes
 		SigningMethod: middleware.AlgorithmHS256,
 		ContextKey:    "user",
 		TokenLookup:   "header:" + headerAuthorization,
-		ParseTokenFunc: func(auth string, c echo.Context) (interface{}, error) {
+		ParseTokenFunc: func(auth string, c ech.Context) (interface{}, error) {
 			keyFunc := func(t *jwt.Token) (interface{}, error) {
 				if t.Method.Alg() != "HS256" {
 					return nil, fmt.Errorf("unexpected jwt signing method=%v", t.Header["alg"])
@@ -59,7 +59,7 @@ func NewAuthService(userRep *repository.RepoUser, sessionRep *repository.RepoSes
 			}
 			return token, nil
 		},
-		Skipper: func(c echo.Context) bool {
+		Skipper: func(c ech.Context) bool {
 			logrus.WithFields(logrus.Fields{"path": c.Path()}).Info("Skipper JWT Auth")
 			switch c.Path() {
 			case "/auth/login":
@@ -128,7 +128,7 @@ func (a AuthService) CreateToken(username string, admin bool, idSession uuid.UUI
 	return tt, nil
 }
 
-func (a AuthService) CreateAndWriteSession(ctx echo.Context, user models.User) (models.Session, error) {
+func (a AuthService) CreateAndWriteSession(ctx ech.Context, user models.User) (models.Session, error) {
 	refresh := a.createRandomOutput(user.UserName)
 
 	session := models.Session{
@@ -146,13 +146,13 @@ func (a AuthService) CreateAndWriteSession(ctx echo.Context, user models.User) (
 	return session, err
 }
 
-func (a AuthService) RefreshAndWriteSession(ctx echo.Context, rfToken string) (string, string, error) {
+func (a AuthService) RefreshAndWriteSession(ctx ech.Context, rfToken string) (string, string, error) {
 	user := ctx.Get("user").(*jwt.Token)
 	payLoad := user.Claims.(*CustomClaims)
 
 	currentSession, err := a.AuthRep.Get(ctx.Request().Context(), payLoad.IdSession)
 	if currentSession.Disabled {
-		return "", "", errors.New("This session was disabled")
+		return "", "", errors.New("this session was disabled")
 	}
 	if err != nil {
 		return "", "", err
@@ -161,7 +161,10 @@ func (a AuthService) RefreshAndWriteSession(ctx echo.Context, rfToken string) (s
 		accessToken, _ := a.CreateToken(payLoad.Username, payLoad.Admin, payLoad.IdSession)
 		newRfToken := createHashSHA256WithSalt(a.createRandomOutput())
 		currentSession.RfToken = newRfToken
-		a.AuthRep.Update(ctx.Request().Context(), currentSession)
+		err = a.AuthRep.Update(ctx.Request().Context(), currentSession)
+		if err != nil {
+			return "", "", err
+		}
 		return accessToken, newRfToken, nil
 	}
 	return "", "", errors.New("disable session")
@@ -181,12 +184,12 @@ func createHashSHA256WithSalt(s string) string {
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
-func (a AuthService) DisableSession(ctx echo.Context, id uuid.UUID) error {
+func (a AuthService) DisableSession(ctx ech.Context, id uuid.UUID) error {
 	err := a.AuthRep.Disable(ctx.Request().Context(), id)
 	return err
 }
 
-func (a AuthService) GetUser(ctx echo.Context) (*models.User, error) {
+func (a AuthService) GetUser(ctx ech.Context) (*models.User, error) {
 	user := ctx.Get("user").(*jwt.Token)
 	claims := user.Claims.(*CustomClaims)
 	User, err := a.UserRep.Get(ctx.Request().Context(), claims.Username)

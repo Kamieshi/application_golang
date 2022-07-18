@@ -4,7 +4,7 @@
 // - protoc             v3.6.1
 // source: application.proto
 
-package protocGen
+package test
 
 import (
 	context "context"
