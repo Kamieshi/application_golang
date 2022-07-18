@@ -4,7 +4,7 @@
 *.dll
 *.so
 *.dylib
-../.idea
+.idea
 .vscode
 db_init
 go-outline
@@ -14,6 +14,7 @@ gopls
 gotetest
 impl
 staticcheck
+images
 
 # Test binary, built with `go unit_tests -c`
 *.test

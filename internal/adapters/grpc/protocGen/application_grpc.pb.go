@@ -260,3 +260,116 @@ var User_ServiceDesc = grpc.ServiceDesc{
 	Streams:     []grpc.StreamDesc{},
 	Metadata:    "application.proto",
 }
+
+// ImageManagerClient is the client API for ImageManager service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type ImageManagerClient interface {
+	GetImageByEasyLink(ctx context.Context, in *GetImageByIDRequest, opts ...grpc.CallOption) (ImageManager_GetImageByEasyLinkClient, error)
+}
+
+type imageManagerClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewImageManagerClient(cc grpc.ClientConnInterface) ImageManagerClient {
+	return &imageManagerClient{cc}
+}
+
+func (c *imageManagerClient) GetImageByEasyLink(ctx context.Context, in *GetImageByIDRequest, opts ...grpc.CallOption) (ImageManager_GetImageByEasyLinkClient, error) {
+	stream, err := c.cc.NewStream(ctx, &ImageManager_ServiceDesc.Streams[0], "/applicationGolang.ImageManager/GetImageByEasyLink", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &imageManagerGetImageByEasyLinkClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type ImageManager_GetImageByEasyLinkClient interface {
+	Recv() (*GetImageByIDResponse, error)
+	grpc.ClientStream
+}
+
+type imageManagerGetImageByEasyLinkClient struct {
+	grpc.ClientStream
+}
+
+func (x *imageManagerGetImageByEasyLinkClient) Recv() (*GetImageByIDResponse, error) {
+	m := new(GetImageByIDResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// ImageManagerServer is the server API for ImageManager service.
+// All implementations must embed UnimplementedImageManagerServer
+// for forward compatibility
+type ImageManagerServer interface {
+	GetImageByEasyLink(*GetImageByIDRequest, ImageManager_GetImageByEasyLinkServer) error
+	mustEmbedUnimplementedImageManagerServer()
+}
+
+// UnimplementedImageManagerServer must be embedded to have forward compatible implementations.
+type UnimplementedImageManagerServer struct {
+}
+
+func (UnimplementedImageManagerServer) GetImageByEasyLink(*GetImageByIDRequest, ImageManager_GetImageByEasyLinkServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetImageByEasyLink not implemented")
+}
+func (UnimplementedImageManagerServer) mustEmbedUnimplementedImageManagerServer() {}
+
+// UnsafeImageManagerServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to ImageManagerServer will
+// result in compilation errors.
+type UnsafeImageManagerServer interface {
+	mustEmbedUnimplementedImageManagerServer()
+}
+
+func RegisterImageManagerServer(s grpc.ServiceRegistrar, srv ImageManagerServer) {
+	s.RegisterService(&ImageManager_ServiceDesc, srv)
+}
+
+func _ImageManager_GetImageByEasyLink_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GetImageByIDRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(ImageManagerServer).GetImageByEasyLink(m, &imageManagerGetImageByEasyLinkServer{stream})
+}
+
+type ImageManager_GetImageByEasyLinkServer interface {
+	Send(*GetImageByIDResponse) error
+	grpc.ServerStream
+}
+
+type imageManagerGetImageByEasyLinkServer struct {
+	grpc.ServerStream
+}
+
+func (x *imageManagerGetImageByEasyLinkServer) Send(m *GetImageByIDResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+// ImageManager_ServiceDesc is the grpc.ServiceDesc for ImageManager service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var ImageManager_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "applicationGolang.ImageManager",
+	HandlerType: (*ImageManagerServer)(nil),
+	Methods:     []grpc.MethodDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "GetImageByEasyLink",
+			Handler:       _ImageManager_GetImageByEasyLink_Handler,
+			ServerStreams: true,
+		},
+	},
+	Metadata: "application.proto",
+}

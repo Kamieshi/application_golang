@@ -1,20 +1,20 @@
-package entitygRPC
+package handlers
 
 import (
 	gr "app/internal/adapters/grpc/protocGen"
-	"app/internal/repository"
+	"app/internal/service"
 	"context"
 	"encoding/json"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
 type EntityServerImplement struct {
-	EntityRep repository.RepoEntity
+	EntityServ *service.EntityService
 	gr.EntityServer
 }
 
 func (e EntityServerImplement) GetEntityById(ctx context.Context, request *gr.GetEntityByIdRequest) (*gr.GetEntityByIdResponse, error) {
-	entity, err := e.EntityRep.GetForID(ctx, request.EntityId)
+	entity, err := e.EntityServ.GetForID(ctx, request.EntityId)
 	if err != nil {
 		return nil, err
 	}

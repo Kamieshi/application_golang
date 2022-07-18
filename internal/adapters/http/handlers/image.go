@@ -39,12 +39,12 @@ func (ih ImageHandler) Load(c echo.Context) error {
 }
 
 func (ih ImageHandler) Get(c echo.Context) error {
-	easyLink := c.Param("easyLink")
+	easyLink := c.Param("easy_link")
 
 	img, err := ih.ImageService.Get(c.Request().Context(), easyLink)
 	if err != nil {
 		logrus.WithError(err).Error("Handler error")
-		return err
+		return c.String(http.StatusNotFound, "Not found")
 	}
 
 	return c.File(img.FullPath())

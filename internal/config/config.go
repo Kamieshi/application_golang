@@ -8,7 +8,7 @@ import (
 )
 
 type Configuration struct {
-	POSTGRES_PASSWORD, POSTGRES_USER, POSTGRES_DB, POSTGRES_HOST, POSTGRES_PORT, MONGO_HOST, MONGO_PORT, REDIS_URL string
+	POSTGRES_PASSWORD, POSTGRES_USER, POSTGRES_DB, POSTGRES_HOST, POSTGRES_PORT, MONGO_HOST, MONGO_PORT, REDIS_URL, GRPC_HOST, GRPC_PORT, GRPC_PROTOCOL string
 }
 
 func Load() error {
@@ -33,6 +33,9 @@ func (c *Configuration) BaseInit() error {
 	c.MONGO_HOST = os.Getenv("MONGO_HOST")
 	c.MONGO_PORT = os.Getenv("MONGO_PORT")
 	c.REDIS_URL = os.Getenv("REDIS_URL")
+	c.GRPC_PROTOCOL = os.Getenv("GRPC_PROTOCOL")
+	c.GRPC_HOST = os.Getenv("GRPC_HOST")
+	c.GRPC_PORT = os.Getenv("GRPC_PORT")
 	return nil
 }
 

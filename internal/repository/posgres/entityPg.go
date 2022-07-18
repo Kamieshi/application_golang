@@ -84,7 +84,8 @@ func (sp RepoEntityPostgres) Delete(ctx context.Context, id string) error {
 	}
 	query := "DELETE FROM entity WHERE id=$1"
 	_, err = sp.pool.Exec(ctx, query, marshalUUID)
-	return err
+
+	return fmt.Errorf("Error Delete Postgres rep : %v", err)
 }
 
 func (sp RepoEntityPostgres) Update(ctx context.Context, id string, obj *models.Entity) error {
