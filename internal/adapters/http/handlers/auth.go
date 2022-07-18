@@ -1,8 +1,8 @@
+// Package handlers Work with http adapter from Echo
 package handlers
 
 import (
 	"app/internal/service"
-	"fmt"
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -14,22 +14,15 @@ type AuthHandler struct {
 	AuthService *service.AuthService
 }
 
-func (a *AuthHandler) IsAuthentication(c echo.Context) error {
-	var data usPss
-	err := c.Bind(&data)
-	if err != nil {
-		return err
-	}
-	_, isAuth, err := a.AuthService.IsAuthentication(c.Request().Context(), data.Username, data.Password)
-	if err != nil {
-		return c.JSON(http.StatusNotFound, fmt.Sprintf("{message: %v}", err))
-	}
-	return c.JSON(http.StatusOK, isAuth)
-}
-
 // Login godoc
-// @tags Auth
+// login user
+// @Summary Login User
+// @Description Login user
+// @Tags Auth
 // @Param formLogin body handlers.usPss true "Login form"
+// @Success 200 {object} responseSuccessLogin
+// @Failure 401 {string} Invalid username or password
+// @Failure 502 {string} Error create token
 // @Router /auth/login [post]
 func (a *AuthHandler) Login(c echo.Context) error {
 	var data usPss
@@ -50,18 +43,23 @@ func (a *AuthHandler) Login(c echo.Context) error {
 	}
 	token, err := a.AuthService.CreateToken(user.UserName, user.Admin, session.ID)
 	if err != nil {
-		return err
+		return c.String(http.StatusBadGateway, err.Error())
 	}
 
-	return c.JSON(http.StatusOK, echo.Map{
-		"access":  token,
-		"refresh": session.RfToken,
+	return c.JSON(http.StatusOK, responseSuccessLogin{
+		Access:  token,
+		Refresh: session.RfToken,
 	})
 }
 
 // Info godoc
+// Get info about current login user
 // @tags Auth
+// @Summary Get info about current user
+// @Description Info about current user
 // @Security ApiKeyAuth
+// @Success 202 {object} models.User
+// @Failure 401 {string} User unauthorized
 // @Router /auth/info [get]
 func (a *AuthHandler) Info(c echo.Context) error {
 	user, _ := a.AuthService.GetUser(c)
@@ -72,8 +70,12 @@ func (a *AuthHandler) Info(c echo.Context) error {
 }
 
 // Logout godoc
+// @Summary Logout route
+// @Description Logout current active user
 // @tags Auth
 // @Security ApiKeyAuth
+// @Success 202 {string} Logout complete successful
+// @Failure 400 {string} User unauthorized
 // @Router /auth/logout [get]
 func (a *AuthHandler) Logout(c echo.Context) error {
 	user := c.Get("user").(*jwt.Token)
@@ -95,23 +97,29 @@ type rft struct {
 }
 
 // Refresh godoc
+// refresh current access token
 // @tags Auth
+// @Summary Refresh session
+// @Description Refresh session for current user
 // @Security ApiKeyAuth
 // @Param refreshData body rft true "refresh"
+// @Access 202 {object} responseSuccessLogin
+// @Failure 401 {string} Uncorrected tokens
+// @Failure 400 {string} Error parsing input values
 // @Router /auth/refresh [get]
 func (a *AuthHandler) Refresh(c echo.Context) error {
 	var rt rft
 	err := c.Bind(&rt)
 	if err != nil {
-		return err
+		return c.String(http.StatusBadRequest, err.Error())
 	}
 	acToken, refToken, err := a.AuthService.RefreshAndWriteSession(c, rt.Refresh)
 	if err != nil {
-		return err
+		return c.String(http.StatusUnauthorized, err.Error())
 	}
 
-	return c.JSON(http.StatusAccepted, echo.Map{
-		"access":  acToken,
-		"refresh": refToken,
+	return c.JSON(http.StatusAccepted, responseSuccessLogin{
+		Access:  acToken,
+		Refresh: refToken,
 	})
 }

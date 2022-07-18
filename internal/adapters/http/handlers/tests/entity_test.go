@@ -25,7 +25,7 @@ type MakerAuthRequest struct {
 }
 
 func NewMaker(username, password string) (*MakerAuthRequest, error) {
-	repUser := repository.NewRepoUsersPostgres(connPullDb)
+	repUser := repository.NewRepoUsersPostgres(connPullDB)
 	servUser := service.NewUserService(repUser)
 	_, err := servUser.Create(ctx, username, password)
 	if err != nil {
@@ -70,7 +70,7 @@ func NewMaker(username, password string) (*MakerAuthRequest, error) {
 	claims := token.Claims.(jwt.MapClaims)
 	idSession := uuid.MustParse(claims["id_session"].(string))
 
-	repAuth := repository.NewRepoAuthPostgres(connPullDb)
+	repAuth := repository.NewRepoAuthPostgres(connPullDB)
 
 	cleanerFunc := func() {
 		repAuth.Delete(ctx, idSession)
@@ -145,7 +145,7 @@ func TestCreate(t *testing.T) {
 	if err != nil {
 		t.Fatal("Failed decode response body")
 	}
-	repEntity := repository.NewRepoEntityPostgres(connPullDb)
+	repEntity := repository.NewRepoEntityPostgres(connPullDB)
 	entityFormRepository, err := repEntity.GetForID(ctx, actualEntity.ID.String())
 	if err != nil {
 		t.Fatal("Failed get entity from Repository")
@@ -175,7 +175,7 @@ func TestGetAll(t *testing.T) {
 		IsActive: false,
 	}
 
-	repEntity := repository.NewRepoEntityPostgres(connPullDb)
+	repEntity := repository.NewRepoEntityPostgres(connPullDB)
 
 	if err = repEntity.Add(ctx, entity1); err != nil {
 		t.Fatal(err)
@@ -215,7 +215,7 @@ func TestUpdate(t *testing.T) {
 		Price:    0,
 		IsActive: false,
 	}
-	repEntity := repository.NewRepoEntityPostgres(connPullDb)
+	repEntity := repository.NewRepoEntityPostgres(connPullDB)
 	if err = repEntity.Add(ctx, entityExpected); err != nil {
 		t.Fatal(err)
 	}
@@ -262,7 +262,7 @@ func TestGetByID(t *testing.T) {
 		Price:    0,
 		IsActive: false,
 	}
-	repEntity := repository.NewRepoEntityPostgres(connPullDb)
+	repEntity := repository.NewRepoEntityPostgres(connPullDB)
 	if err = repEntity.Add(ctx, entityExpected); err != nil {
 		t.Fatal(err)
 	}
@@ -301,7 +301,7 @@ func TestDelete(t *testing.T) {
 		Price:    0,
 		IsActive: false,
 	}
-	repEntity := repository.NewRepoEntityPostgres(connPullDb)
+	repEntity := repository.NewRepoEntityPostgres(connPullDB)
 	if err = repEntity.Add(ctx, entityExpected); err != nil {
 		t.Fatal(err)
 	}

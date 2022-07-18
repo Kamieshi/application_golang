@@ -6,6 +6,7 @@ import (
 	"app/internal/service"
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
@@ -15,13 +16,21 @@ import (
 	"testing"
 )
 
+const algSign = "HS256"
+
 func TestRegisterUser(t *testing.T) {
-	dataJson, _ := json.Marshal(map[string]string{
+	dataJSON, _ := json.Marshal(map[string]string{
 		"password": "string",
 		"username": "string",
 	})
-	buf := bytes.NewReader(dataJson)
-	resp, err := http.Post(urlCreateUser, "application/json", buf)
+	buf := bytes.NewReader(dataJSON)
+	resp, err := http.Post(URLCreateUser, "application/json", buf)
+	defer func() {
+		err = resp.Body.Close()
+		if err != nil {
+			log.WithError(err)
+		}
+	}()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -37,9 +46,11 @@ func TestRegisterUser(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	userRep := repository.NewRepoUsersPostgres(connPullDb)
+	userRep := repository.NewRepoUsersPostgres(connPullDB)
 	t.Cleanup(func() {
-		userRep.Delete(ctx, actualUser.UserName)
+		if err = userRep.Delete(ctx, actualUser.UserName); err != nil {
+			log.WithError(err)
+		}
 	})
 
 	expectUser, _ := userRep.Get(ctx, actualUser.UserName)
@@ -47,7 +58,7 @@ func TestRegisterUser(t *testing.T) {
 }
 
 func TestLogin(t *testing.T) {
-	userRep := repository.NewRepoUsersPostgres(connPullDb)
+	userRep := repository.NewRepoUsersPostgres(connPullDB)
 	userServ := service.NewUserService(userRep)
 	_, err := userServ.Create(ctx, "test", "test")
 	if err != nil {
@@ -64,6 +75,12 @@ func TestLogin(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() {
+		err = resp.Body.Close()
+		if err != nil {
+			log.WithError(err)
+		}
+	}()
 
 	if !assert.Equal(t, http.StatusOK, resp.StatusCode) {
 		t.Fatalf("Response code: %d", resp.StatusCode)
@@ -83,8 +100,9 @@ func TestLogin(t *testing.T) {
 
 	client := http.DefaultClient
 	resp, err = client.Do(req)
+
 	if resp.StatusCode != http.StatusAccepted {
-		log.Fatal("Error create token")
+		log.WithError(errors.New("error create token"))
 	}
 
 	var actualUser models.User
@@ -94,7 +112,7 @@ func TestLogin(t *testing.T) {
 	}
 
 	keyFunc := func(t *jwt.Token) (interface{}, error) {
-		if t.Method.Alg() != "HS256" {
+		if t.Method.Alg() != algSign {
 			return nil, fmt.Errorf("unexpected jwt signing method=%v", t.Header["alg"])
 		}
 		return []byte(secretKey), nil
@@ -106,21 +124,25 @@ func TestLogin(t *testing.T) {
 	}
 	claims := token.Claims.(jwt.MapClaims)
 	idSession := claims["id_session"].(string)
-	repAuth := repository.NewRepoAuthPostgres(connPullDb)
+	repAuth := repository.NewRepoAuthPostgres(connPullDB)
 
 	session, err := repAuth.Get(ctx, uuid.MustParse(idSession))
 	if err != nil {
 		t.Fatalf("Not found session :%s", idSession)
 	}
 	t.Cleanup(func() {
-		repAuth.Delete(ctx, uuid.MustParse(idSession))
-		userRep.Delete(ctx, actualUser.UserName)
+		if err = repAuth.Delete(ctx, uuid.MustParse(idSession)); err != nil {
+			log.WithError(err)
+		}
+		if err = userRep.Delete(ctx, actualUser.UserName); err != nil {
+			log.WithError(err)
+		}
 	})
 	assert.Equal(t, session.RfToken, AccessData.RefreshTk)
 }
 
 func TestLogOut(t *testing.T) {
-	userRep := repository.NewRepoUsersPostgres(connPullDb)
+	userRep := repository.NewRepoUsersPostgres(connPullDB)
 	userServ := service.NewUserService(userRep)
 	_, err := userServ.Create(ctx, "test", "test")
 	if err != nil {
@@ -137,6 +159,13 @@ func TestLogOut(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() {
+		err = resp.Body.Close()
+		if err != nil {
+			log.WithError(err)
+		}
+	}()
+
 	if !assert.Equal(t, http.StatusOK, resp.StatusCode) {
 		t.Fatalf("Response code: %d", resp.StatusCode)
 	}
@@ -165,7 +194,7 @@ func TestLogOut(t *testing.T) {
 	}
 
 	keyFunc := func(t *jwt.Token) (interface{}, error) {
-		if t.Method.Alg() != "HS256" {
+		if t.Method.Alg() != algSign {
 			return nil, fmt.Errorf("unexpected jwt signing method=%v", t.Header["alg"])
 		}
 		return []byte(secretKey), nil
@@ -177,11 +206,15 @@ func TestLogOut(t *testing.T) {
 	}
 	claims := token.Claims.(jwt.MapClaims)
 	idSession := claims["id_session"].(string)
-	repAuth := repository.NewRepoAuthPostgres(connPullDb)
+	repAuth := repository.NewRepoAuthPostgres(connPullDB)
 
 	t.Cleanup(func() {
-		repAuth.Delete(ctx, uuid.MustParse(idSession))
-		userRep.Delete(ctx, actualUser.UserName)
+		if err = repAuth.Delete(ctx, uuid.MustParse(idSession)); err != nil {
+			log.WithError(err)
+		}
+		if err = userRep.Delete(ctx, actualUser.UserName); err != nil {
+			log.WithError(err)
+		}
 	})
 
 	req, _ = http.NewRequest("GET", urlLogOut, nil)
@@ -198,7 +231,7 @@ func TestLogOut(t *testing.T) {
 }
 
 func TestRefresh(t *testing.T) {
-	userRep := repository.NewRepoUsersPostgres(connPullDb)
+	userRep := repository.NewRepoUsersPostgres(connPullDB)
 	userServ := service.NewUserService(userRep)
 	_, err := userServ.Create(ctx, "test", "test")
 	if err != nil {
@@ -243,7 +276,7 @@ func TestRefresh(t *testing.T) {
 	}
 
 	keyFunc := func(t *jwt.Token) (interface{}, error) {
-		if t.Method.Alg() != "HS256" {
+		if t.Method.Alg() != algSign {
 			return nil, fmt.Errorf("unexpected jwt signing method=%v", t.Header["alg"])
 		}
 		return []byte(secretKey), nil
@@ -255,11 +288,15 @@ func TestRefresh(t *testing.T) {
 	}
 	claims := token.Claims.(jwt.MapClaims)
 	idSession := claims["id_session"].(string)
-	repAuth := repository.NewRepoAuthPostgres(connPullDb)
+	repAuth := repository.NewRepoAuthPostgres(connPullDB)
 
 	t.Cleanup(func() {
-		repAuth.Delete(ctx, uuid.MustParse(idSession))
-		userRep.Delete(ctx, actualUser.UserName)
+		if err = repAuth.Delete(ctx, uuid.MustParse(idSession)); err != nil {
+			log.WithError(err)
+		}
+		if err = userRep.Delete(ctx, actualUser.UserName); err != nil {
+			log.WithError(err)
+		}
 	})
 
 	sessionBeforeRefresh, err := repAuth.Get(ctx, uuid.MustParse(idSession))

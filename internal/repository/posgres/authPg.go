@@ -23,7 +23,7 @@ func NewRepoAuthPostgres(pool *pgxpool.Pool) *RepoAuthPostgres {
 
 func rowToSession(row pgx.Row) (*models.Session, error) {
 	var session models.Session
-	err := row.Scan(&session.ID, &session.UserId, &session.RfToken, &session.UniqueSignature, &session.CreatedAt, &session.Disabled)
+	err := row.Scan(&session.ID, &session.UserID, &session.RfToken, &session.UniqueSignature, &session.CreatedAt, &session.Disabled)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,7 @@ const orderColumnsSessions string = "id, user_id,  refresh_token, signature ,cre
 func (r RepoAuthPostgres) Create(ctx context.Context, session *models.Session) error {
 	session.ID = uuid.New()
 	query := "INSERT INTO sessions(id,user_id, refresh_token, signature ,created_at ,disabled) VALUES ($1,$2,$3,$4,$5,$6)"
-	_, err := r.pool.Exec(ctx, query, session.ID, session.UserId, session.RfToken, session.UniqueSignature, session.CreatedAt, session.Disabled)
+	_, err := r.pool.Exec(ctx, query, session.ID, session.UserID, session.RfToken, session.UniqueSignature, session.CreatedAt, session.Disabled)
 	if err != nil {
 		return err
 	}
@@ -44,7 +44,7 @@ func (r RepoAuthPostgres) Create(ctx context.Context, session *models.Session) e
 
 func (r RepoAuthPostgres) Update(ctx context.Context, session *models.Session) error {
 	query := "UPDATE sessions SET user_id=$1, refresh_token=$2, signature=$3 ,created_at=$4 ,disabled=$5 WHERE id=$6"
-	res, err := r.pool.Exec(ctx, query, session.UserId, session.RfToken, session.UniqueSignature, session.CreatedAt, session.Disabled, session.ID)
+	res, err := r.pool.Exec(ctx, query, session.UserID, session.RfToken, session.UniqueSignature, session.CreatedAt, session.Disabled, session.ID)
 	if err != nil {
 		return err
 	}

@@ -36,7 +36,7 @@ func TestMain(m *testing.M) {
 	opts = []grpc.DialOption{
 		grpc.WithInsecure(),
 	}
-	grpc_adress := fmt.Sprintf("%s:%s", conf.GRPC_HOST, conf.GRPC_PORT)
+	grpc_adress := fmt.Sprintf("%s:%s", conf.GrpcHost, conf.GrpcPort)
 	conn, err := grpc.Dial(grpc_adress, opts...)
 	if err != nil {
 		grpclog.Fatalf("fail to dial: %v", err)
@@ -48,7 +48,7 @@ func TestMain(m *testing.M) {
 	ctx = context.Background()
 	connPool, _ = pgxpool.Connect(
 		ctx,
-		fmt.Sprintf("postgres://%s:%s@%s:%s/%s", conf.POSTGRES_USER, conf.POSTGRES_USER, conf.POSTGRES_HOST, conf.POSTGRES_PORT, conf.POSTGRES_DB),
+		fmt.Sprintf("postgres://%s:%s@%s:%s/%s", conf.PostgresUser, conf.PostgresPassword, conf.PostgresHost, conf.PostgresPort, conf.PostgresDB),
 	)
 	code := m.Run()
 	os.Exit(code)

@@ -8,14 +8,19 @@ import (
 	"net/http"
 )
 
+// EntityHandler Handler for work with Entity service
 type EntityHandler struct {
 	EntityService *service.EntityService
 }
 
 // List godoc
+// Get all entities from DB
 // @tags Entity
-// @Security ApiKeyAuth
+// @Summary Get list Entities
+// @Description Get all entities from DB
 // @Success      200  {array}  models.Entity
+// @Failure 400 {string} Missing jwt token
+// @Failure 401 {string} unAuthorized
 // @Router /entity [get]
 func (eh EntityHandler) List(c echo.Context) error {
 	entities, err := eh.EntityService.GetAll(c.Request().Context())
@@ -26,11 +31,16 @@ func (eh EntityHandler) List(c echo.Context) error {
 }
 
 // GetDetail godoc
-// @tags Entity
+// Get object models.Entity
 // @Security ApiKeyAuth
-// @success 200 {object} models.Entity "desc"
+// @Summary Get detail about entity
+// @Description Get detail about entity
+// @tags Entity
+// @Param id path string false "UU ID string"
+// @Success 200 {object} models.Entity "Success"
+// @Failure 400 {string} Missing jwt token
+// @Failure 401 {string} unAuthorized
 // @Router /entity/{id} [get]
-// @Param id path string false "ID of the mongo"
 func (eh EntityHandler) GetDetail(c echo.Context) error {
 	id := c.Param("id")
 
@@ -43,11 +53,16 @@ func (eh EntityHandler) GetDetail(c echo.Context) error {
 }
 
 // Update godoc
+// update models.Entity
 // @tags Entity
+// @Summary Update entity
+// @Description Update entity
 // @Security ApiKeyAuth
-// @Success      200  {string} {status : 'Update successful'}
 // @Param id path string false "UU ID string"
 // @Param DataEntity body models.Entity true "Entity model"
+// @Success 201 {string} Update successful
+// @Failure 400 {string} Missing jwt token
+// @Failure 401 {string} unAuthorized
 // @Router /entity/{id} [put]
 func (eh EntityHandler) Update(c echo.Context) error {
 	id := c.Param("id")
@@ -60,20 +75,28 @@ func (eh EntityHandler) Update(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusNotFound, fmt.Sprintf("{message: %v}", err))
 	}
-	return c.JSON(http.StatusOK, "{status : 'Update successful'}")
+	return c.String(http.StatusCreated, "Update successful")
 }
 
 // Create godoc
+// create models.Entity
+// Create new Entity
 // @tags Entity
+// @Summary Create entity
+// @Description Create entity
 // @Security ApiKeyAuth
 // @Param DataEntity body models.Entity true "Entity model"
+// @Success 201 {object} models.Entity
+// @Failure 500 {string} Error Parse input data
+// @Failure 400 {string} Missing jwt token
+// @Failure 401 {string} unAuthorized
 // @Router /entity [post]
 func (eh EntityHandler) Create(c echo.Context) error {
 	entity := models.Entity{}
 
 	err := c.Bind(&entity)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, fmt.Sprintf("{message: %v}", err))
+		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
 	err = eh.EntityService.Add(c.Request().Context(), &entity)
@@ -81,18 +104,27 @@ func (eh EntityHandler) Create(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, fmt.Sprintf("{message: %v}", err))
 	}
 
-	return c.JSON(http.StatusOK, entity)
+	return c.JSON(http.StatusCreated, entity)
 }
 
 // Delete godoc
+// delete models.Entity
 // @tags Entity
+// @Summary Delete entity
+// @Description Delete entity
 // @Security ApiKeyAuth
 // @Param id path string false "ID of the mongo"
+// @Success 204 {} Delete successful
+// @Failure 500 {string} DeleteError
+// @Failure 400 {string} Missing jwt token
+// @Failure 401 {string} unAuthorized
 // @Router /entity/{id} [delete]
 func (eh EntityHandler) Delete(c echo.Context) error {
 	id := c.Param("id")
 
-	eh.EntityService.Delete(c.Request().Context(), id)
-
-	return c.JSON(http.StatusOK, "{message : 'Delete successful'}")
+	err := eh.EntityService.Delete(c.Request().Context(), id)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+	return c.NoContent(http.StatusNoContent)
 }

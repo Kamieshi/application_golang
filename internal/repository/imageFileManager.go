@@ -7,6 +7,7 @@ import (
 	"os"
 )
 
+// WriteImageInHost Write image into host machine
 func WriteImageInHost(image models.Image) error {
 	bytes := image.Data
 	err := os.MkdirAll(image.RootPath, os.ModePerm)
@@ -34,6 +35,7 @@ func WriteImageInHost(image models.Image) error {
 	return err
 }
 
+// CheckImageData Check exist and access to image file
 func CheckImageData(image *models.Image) error {
 	file, err := os.Open(image.FullPath())
 	data := make([]byte, 64)
@@ -43,8 +45,8 @@ func CheckImageData(image *models.Image) error {
 	}
 	for {
 		_, bite := file.Read(data)
-		if bite == io.EOF { // если конец файла
-			break // выходим из цикла
+		if bite == io.EOF {
+			break
 		}
 	}
 	return err

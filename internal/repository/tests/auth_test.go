@@ -19,7 +19,7 @@ func TestRepositoryAuthCreate(t *testing.T) {
 	}
 
 	fakeSession := models.Session{
-		UserId:          user.ID,
+		UserID:          user.ID,
 		RfToken:         "Test",
 		UniqueSignature: "unit_tests",
 		CreatedAt:       time.Now(),
@@ -56,7 +56,7 @@ func TestRepositoryAuthUpdate(t *testing.T) {
 	}
 
 	fakeSession := models.Session{
-		UserId:          user.ID,
+		UserID:          user.ID,
 		RfToken:         "Test",
 		UniqueSignature: "unit_tests",
 		CreatedAt:       time.Now(),
@@ -100,7 +100,7 @@ func TestRepositoryAuthGet(t *testing.T) {
 	}
 
 	fakeSession := models.Session{
-		UserId:          user.ID,
+		UserID:          user.ID,
 		RfToken:         "Test",
 		UniqueSignature: "unit_tests",
 		CreatedAt:       time.Now(),
@@ -137,7 +137,7 @@ func TestRepositoryAuthDelete(t *testing.T) {
 	}
 
 	fakeSession := models.Session{
-		UserId:          user.ID,
+		UserID:          user.ID,
 		RfToken:         "Test",
 		UniqueSignature: "unit_tests",
 		CreatedAt:       time.Now(),

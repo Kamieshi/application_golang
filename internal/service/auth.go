@@ -133,7 +133,7 @@ func (a AuthService) CreateAndWriteSession(ctx echo.Context, user models.User) (
 
 	session := models.Session{
 		ID:              uuid.New(),
-		UserId:          user.ID,
+		UserID:          user.ID,
 		CreatedAt:       time.Now(),
 		Disabled:        false,
 		RfToken:         createHashSHA256WithSalt(refresh),

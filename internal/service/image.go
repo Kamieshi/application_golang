@@ -30,7 +30,7 @@ func (ims ImageService) Save(ctx context.Context, fileName string, data *[]byte)
 	err = repository.WriteImageInHost(image)
 	if err != nil {
 		logrus.Error("Error write image in host")
-		err = ims.ImageRepository.Delete(ctx, image.Id)
+		err = ims.ImageRepository.Delete(ctx, image.ID)
 		if err != nil {
 			logrus.Error("Error delete image in db")
 			return &image, err
@@ -55,6 +55,6 @@ func (ims ImageService) Get(ctx context.Context, easyLink string) (*models.Image
 }
 
 func (ims ImageService) Delete(ctx context.Context, image models.Image) error {
-	err := ims.ImageRepository.Delete(ctx, image.Id)
+	err := ims.ImageRepository.Delete(ctx, image.ID)
 	return err
 }

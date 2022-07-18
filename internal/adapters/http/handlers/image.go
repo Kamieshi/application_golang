@@ -4,14 +4,28 @@ import (
 	"app/internal/service"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
-	"io/ioutil"
+	"io"
 	"net/http"
 )
 
+// ImageHandler Handler for work with image service
 type ImageHandler struct {
 	ImageService *service.ImageService
 }
 
+// Load godoc
+// Load image to app
+// @tags Images
+// @accept mpfd
+// @Summary Load image
+// @Description Load Image
+// @Security ApiKeyAuth
+// @Param image formData file true "File"
+// @Success 200 {object} models.Image
+// @Failure 500 {string} Error Parse input data
+// @Failure 400 {string} Missing jwt token
+// @Failure 401 {string} unAuthorized
+// @Router /upload [post]
 func (ih ImageHandler) Load(c echo.Context) error {
 	file, err := c.FormFile("image")
 	if err != nil {
@@ -20,12 +34,19 @@ func (ih ImageHandler) Load(c echo.Context) error {
 
 	data, err := file.Open()
 	if err != nil {
+		logrus.WithError(err)
 		return err
 	}
-	defer data.Close()
+	defer func() {
+		err = data.Close()
+		if err != nil {
+			logrus.WithError(err)
+		}
+	}()
 
-	loadData, err := ioutil.ReadAll(data)
+	loadData, err := io.ReadAll(data)
 	if err != nil {
+		logrus.WithError(err)
 		return err
 	}
 
@@ -35,9 +56,21 @@ func (ih ImageHandler) Load(c echo.Context) error {
 	}
 
 	img.Data = nil
-	return c.JSON(http.StatusAccepted, img)
+	return c.JSON(http.StatusOK, img)
 }
 
+// Get godoc
+// Get image from app
+// @tags Images
+// @Summary Get image
+// @Description Get Image
+// @Security ApiKeyAuth
+// @Param easy_link path string true "file easy link"
+// @Success 200 {file} file
+// @Failure 404 {string} Not found
+// @Failure 400 {string} Missing jwt token
+// @Failure 401 {string} unAuthorized
+// @Router /load/{easy_link} [get]
 func (ih ImageHandler) Get(c echo.Context) error {
 	easyLink := c.Param("easy_link")
 

@@ -13,6 +13,7 @@ import (
 // 	DeleteItem(ctx context.Context, id int) error
 // }
 
+// RepoEntity Common Interface for Entity
 type RepoEntity interface {
 	GetAll(ctx context.Context) ([]*models.Entity, error)
 	GetForID(ctx context.Context, id string) (*models.Entity, error)
@@ -21,7 +22,7 @@ type RepoEntity interface {
 	Delete(ctx context.Context, id string) error
 }
 
-//TODO use uuid
+// CacheEntityRepository Common Interface for Cache Entity
 type CacheEntityRepository interface {
 	Set(ctx context.Context, entity *models.Entity) error
 	Get(ctx context.Context, idEntity string) (*models.Entity, bool)

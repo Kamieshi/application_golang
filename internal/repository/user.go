@@ -5,6 +5,7 @@ import (
 	"context"
 )
 
+// RepoUser Common User interface
 type RepoUser interface {
 	Get(ctx context.Context, username string) (*models.User, error)
 	Add(ctx context.Context, user *models.User) error

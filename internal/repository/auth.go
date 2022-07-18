@@ -1,3 +1,4 @@
+// Package repository repositories app
 package repository
 
 import (
@@ -6,10 +7,11 @@ import (
 	"github.com/google/uuid"
 )
 
+// RepoSession Common interface for repository Session
 type RepoSession interface {
 	Create(ctx context.Context, session *models.Session) error
 	Update(ctx context.Context, session *models.Session) error
-	Get(ctx context.Context, SessionId uuid.UUID) (*models.Session, error)
-	Delete(ctx context.Context, sessionId uuid.UUID) error
-	Disable(ctx context.Context, sessionId uuid.UUID) error
+	Get(ctx context.Context, SessionID uuid.UUID) (*models.Session, error)
+	Delete(ctx context.Context, sessionID uuid.UUID) error
+	Disable(ctx context.Context, sessionID uuid.UUID) error
 }

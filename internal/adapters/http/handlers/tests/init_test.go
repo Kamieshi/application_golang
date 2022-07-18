@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-var urlCreateUser, urlLogin, urlCheckAuth, urlLogOut, urlRefresh string
+var URLCreateUser, urlLogin, urlCheckAuth, urlLogOut, urlRefresh string
 var urlCreateEntity, urlGetByIdEntity, urlGetAllEntity, urlUpdateEntity, urlDeleteEntity string
 
 const (
@@ -20,9 +20,9 @@ const (
 	ContextDirForApp = "/home/dmitryrusack/Work/application_golang"
 )
 
-var addrApi string
+var addrAPI string
 
-var connPullDb *pgxpool.Pool
+var connPullDB *pgxpool.Pool
 var ctx context.Context
 
 var secretKey = "123"
@@ -100,37 +100,37 @@ func TestMain(m *testing.M) {
 	}
 	defer closer(appApi)
 
-	addrApi = fmt.Sprintf("http://127.0.0.1:%s", appApi.GetPort("8005/tcp"))
+	addrAPI = fmt.Sprintf("http://127.0.0.1:%s", appApi.GetPort("8005/tcp"))
 	ctx = context.Background()
 	//Wait start api
 	if err = pool.Retry(func() error {
-		_, err = http.Get(addrApi + "/ping")
+		_, err = http.Get(addrAPI + "/ping")
 		return err
 	}); err != nil {
 		log.Fatalf("Could not connect to API: %s", err)
 	}
 
-	urlCreateUser = addrApi + "/user"
-	urlLogin = addrApi + "/auth/login"
-	urlCheckAuth = addrApi + "/auth/info"
-	urlLogOut = addrApi + "/auth/logout"
-	urlRefresh = addrApi + "/auth/refresh"
+	URLCreateUser = addrAPI + "/user"
+	urlLogin = addrAPI + "/auth/login"
+	urlCheckAuth = addrAPI + "/auth/info"
+	urlLogOut = addrAPI + "/auth/logout"
+	urlRefresh = addrAPI + "/auth/refresh"
 
-	urlCreateEntity = addrApi + "/entity"
-	urlGetAllEntity = addrApi + "/entity"
-	urlGetByIdEntity = addrApi + "/entity/"
-	urlUpdateEntity = addrApi + "/entity/"
-	urlDeleteEntity = addrApi + "/entity/"
+	urlCreateEntity = addrAPI + "/entity"
+	urlGetAllEntity = addrAPI + "/entity"
+	urlGetByIdEntity = addrAPI + "/entity/"
+	urlUpdateEntity = addrAPI + "/entity/"
+	urlDeleteEntity = addrAPI + "/entity/"
 
 	//Init connectionPull
 	if err = pool.Retry(func() error {
 		conStr := fmt.Sprintf("postgres://postgres:%s@%s:5432/postgres", "postgres", appPostgres.Container.NetworkSettings.IPAddress)
-		connPullDb, err = pgxpool.Connect(ctx, conStr)
+		connPullDB, err = pgxpool.Connect(ctx, conStr)
 		if err != nil {
 			return err
 		}
 
-		return connPullDb.Ping(ctx)
+		return connPullDB.Ping(ctx)
 	}); err != nil {
 		log.Fatalf("Could not connect to database: %s", err)
 	}
@@ -159,7 +159,7 @@ func TestMain(m *testing.M) {
 //	godotenv.Load("/home/dmitryrusack/Work/application_golang/.env")
 //	secretKey = os.Getenv("SECRET_KEY")
 //	addrApi = "http://127.0.0.1:8005"
-//	urlCreateUser = addrApi + "/user"
+//	URLCreateUser = addrApi + "/user"
 //	urlLogin = addrApi + "/auth/login"
 //	urlCheckAuth = addrApi + "/auth/info"
 //	urlLogOut = addrApi + "/auth/logout"
@@ -170,7 +170,7 @@ func TestMain(m *testing.M) {
 //	urlUpdateEntity = addrApi + "/entity/"
 //	urlDeleteEntity = addrApi + "/entity/"
 //	ctx = context.Background()
-//	connPullDb, _ = pgxpool.Connect(ctx, "postgres://postgres:postgres@localhost:5433/postgres")
+//	connPullDB, _ = pgxpool.Connect(ctx, "postgres://postgres:postgres@localhost:5433/postgres")
 //	code := m.Run()
 //	os.Exit(code)
 //}

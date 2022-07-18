@@ -19,10 +19,10 @@ func NewRepoImagePostgres(pool *pgxpool.Pool) *RepoImagePostgres {
 
 func (r RepoImagePostgres) Save(ctx context.Context, img *models.Image) error {
 	query := "INSERT INTO images(id,file_name,root_path,easy_link) values ($1,$2,$3,$4)"
-	img.Id = uuid.New()
-	_, err := r.pool.Exec(ctx, query, img.Id, img.Filename, img.RootPath, img.EasyLink)
+	img.ID = uuid.New()
+	_, err := r.pool.Exec(ctx, query, img.ID, img.Filename, img.RootPath, img.EasyLink)
 	if err != nil {
-		img.Id = uuid.UUID{}
+		img.ID = uuid.UUID{}
 	}
 	return err
 }
@@ -32,7 +32,7 @@ func (r RepoImagePostgres) Get(ctx context.Context, easyLink string) (*models.Im
 	query := "SELECT id,file_name,root_path,easy_link FROM images WHERE easy_link=$1"
 	row := r.pool.QueryRow(ctx, query, easyLink)
 
-	err := row.Scan(&image.Id, &image.Filename, &image.RootPath, &image.EasyLink)
+	err := row.Scan(&image.ID, &image.Filename, &image.RootPath, &image.EasyLink)
 	if err != nil {
 		return &image, err
 	}
