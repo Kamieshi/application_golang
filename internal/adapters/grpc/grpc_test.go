@@ -95,7 +95,6 @@ func TestGetImagesByEasyLink(t *testing.T) {
 		if err == io.EOF {
 			stream.CloseSend()
 		}
-
 		assert.Equal(t, imageByResponse.GetMetaData().GetSize(), int32(len(imageByResponse.GetData())))
 		break
 	}
