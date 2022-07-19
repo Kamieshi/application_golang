@@ -15,7 +15,8 @@ gotetest
 impl
 staticcheck
 images
-./localConfig.env
+localConfig.env
+
 # Test binary, built with `go unit_tests -c`
 *.test
 
