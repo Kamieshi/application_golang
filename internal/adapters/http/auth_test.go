@@ -173,19 +173,16 @@ func TestLogOut(t *testing.T) {
 		RefreshTk string `json:"refresh"`
 	}
 	var AccessData responseData
-	err = json.NewDecoder(resp.Body).Decode(&AccessData)
-	if err != nil {
+	if err = json.NewDecoder(resp.Body).Decode(&AccessData); err != nil {
 		t.Fatal(err)
 	}
 	req, err := http.NewRequest("GET", urlCheckAuth, http.NoBody)
 	req.Header.Add("Authorization", "Bearer "+AccessData.AccessTk)
-
 	client := http.DefaultClient
 	resp, err = client.Do(req)
 	if resp.StatusCode != http.StatusAccepted {
 		t.Fatalf("Error create token, response cod %d", resp.StatusCode)
 	}
-
 	var actualUser models.User
 	err = json.NewDecoder(resp.Body).Decode(&actualUser)
 	if err != nil {
@@ -304,10 +301,10 @@ func TestRefresh(t *testing.T) {
 	if err != nil {
 		t.Fatal("Get session object before refresh")
 	}
-	dataJson, _ := json.Marshal(map[string]string{
+	dataJSON, _ = json.Marshal(map[string]string{
 		"refresh": AccessData.RefreshTk,
 	})
-	buf = bytes.NewReader(dataJson)
+	buf = bytes.NewReader(dataJSON)
 	req, _ = http.NewRequest("POST", urlRefresh, buf)
 	req.Header.Add("Authorization", "Bearer "+AccessData.AccessTk)
 	req.Header.Add("Content-Type", "application/json")
@@ -332,10 +329,10 @@ func TestRefresh(t *testing.T) {
 	type rfTokenFromResponse struct {
 		RefreshTk string `json:"refresh"`
 	}
-	var rfFromResponce rfTokenFromResponse
-	err = json.NewDecoder(resp.Body).Decode(&rfFromResponce)
+	var rfFromResponse rfTokenFromResponse
+	err = json.NewDecoder(resp.Body).Decode(&rfFromResponse)
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Equal(t, rfFromResponce.RefreshTk, sessionAfterRefresh.RfToken)
+	assert.Equal(t, rfFromResponse.RefreshTk, sessionAfterRefresh.RfToken)
 }

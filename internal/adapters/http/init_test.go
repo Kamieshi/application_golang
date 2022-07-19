@@ -12,21 +12,26 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var URLCreateUser, urlLogin, urlCheckAuth, urlLogOut, urlRefresh string
-var urlCreateEntity, urlGetByIdEntity, urlGetAllEntity, urlUpdateEntity, urlDeleteEntity string
-
 const (
-	//TODO reformat
 	pathToMigrations = "/home/dmitryrusack/Work/application_golang/migrations"
 	ContextDirForApp = "/home/dmitryrusack/Work/application_golang"
 )
 
-var addrAPI string
-
-var connPullDB *pgxpool.Pool
-var ctx context.Context
-
-var secretKey = "123"
+var (
+	addrAPI          string
+	connPullDB       *pgxpool.Pool
+	ctx              context.Context
+	secretKey        = "123"
+	URLCreateUser    string
+	urlLogin         string
+	urlCheckAuth     string
+	urlLogOut        string
+	urlRefresh       string
+	urlCreateEntity  string
+	urlGetByIdEntity string
+	urlGetAllEntity  string
+	urlDeleteEntity  string
+)
 
 func TestMain(m *testing.M) {
 	pool, err := dockertest.NewPool("")
@@ -59,8 +64,11 @@ func TestMain(m *testing.M) {
 		Tag:        "latest",
 		Env:        nil,
 		Entrypoint: nil,
-		Cmd:        []string{fmt.Sprintf("-url=jdbc:postgresql://%s:5432/postgres -schemas=public -user=postgres -password=postgres -connectRetries=10 migrate", appPostgres.Container.NetworkSettings.IPAddress)},
-		Mounts:     []string{fmt.Sprintf("%s:/flyway/sql", pathToMigrations)},
+		Cmd: []string{
+			fmt.Sprintf(
+				"-url=jdbc:postgresql://%s:5432/postgres -schemas=public -user=postgres -password=postgres -connectRetries=10 migrate",
+				appPostgres.Container.NetworkSettings.IPAddress)},
+		Mounts: []string{fmt.Sprintf("%s:/flyway/sql", pathToMigrations)},
 	})
 	if err != nil {
 		log.Fatal(err)
@@ -78,7 +86,7 @@ func TestMain(m *testing.M) {
 	}
 	defer closer(appRedis)
 
-	appApi, err := pool.BuildAndRunWithBuildOptions(
+	appAPI, err := pool.BuildAndRunWithBuildOptions(
 		&dockertest.BuildOptions{
 			Dockerfile: "dockerfile",
 			ContextDir: ContextDirForApp,
@@ -101,11 +109,12 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer closer(appApi)
+	defer closer(appAPI)
 
-	addrAPI = fmt.Sprintf("http://127.0.0.1:%s", appApi.GetPort("8005/tcp"))
+	addrAPI = fmt.Sprintf("http://127.0.0.1:%s", appAPI.GetPort("8005/tcp"))
 	ctx = context.Background()
-	//Wait start api
+
+	// Wait start api
 	if err = pool.Retry(func() error {
 		_, err = http.Get(addrAPI + "/ping")
 		return err
@@ -122,10 +131,9 @@ func TestMain(m *testing.M) {
 	urlCreateEntity = addrAPI + "/entity"
 	urlGetAllEntity = addrAPI + "/entity"
 	urlGetByIdEntity = addrAPI + "/entity/"
-	urlUpdateEntity = addrAPI + "/entity/"
 	urlDeleteEntity = addrAPI + "/entity/"
 
-	//Init connectionPull
+	// Init connectionPull
 	if err = pool.Retry(func() error {
 		conStr := fmt.Sprintf("postgres://postgres:%s@%s:5432/postgres", "postgres", appPostgres.Container.NetworkSettings.IPAddress)
 		connPullDB, err = pgxpool.Connect(ctx, conStr)
@@ -150,7 +158,7 @@ func TestMain(m *testing.M) {
 	if err := pool.Purge(appFlyWay); err != nil {
 		log.Fatalf("Could not purge resource: %s", err)
 	}
-	if err := pool.Purge(appApi); err != nil {
+	if err := pool.Purge(appAPI); err != nil {
 		log.Fatalf("Could not purge resource: %s", err)
 	}
 	if err := pool.Purge(appRedis); err != nil {
@@ -159,23 +167,3 @@ func TestMain(m *testing.M) {
 
 	os.Exit(code)
 }
-
-//func TestMain(m *testing.M) {
-//	godotenv.Load("/home/dmitryrusack/Work/application_golang/localConf.env")
-//	secretKey = os.Getenv("SECRET_KEY")
-//	addrApi = "http://127.0.0.1:8005"
-//	URLCreateUser = addrApi + "/user"
-//	urlLogin = addrApi + "/auth/login"
-//	urlCheckAuth = addrApi + "/auth/info"
-//	urlLogOut = addrApi + "/auth/logout"
-//	urlRefresh = addrApi + "/auth/refresh"
-//	urlCreateEntity = addrApi + "/entity"
-//	urlGetAllEntity = addrApi + "/entity"
-//	urlGetByIdEntity = addrApi + "/entity/"
-//	urlUpdateEntity = addrApi + "/entity/"
-//	urlDeleteEntity = addrApi + "/entity/"
-//	ctx = context.Background()
-//	connPullDB, _ = pgxpool.Connect(ctx, "postgres://postgres:postgres@localhost:5433/postgres")
-//	code := m.Run()
-//	os.Exit(code)
-//}

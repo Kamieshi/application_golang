@@ -3,7 +3,6 @@ package http
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -39,8 +38,16 @@ func NewMaker(username, password string) (*MakerAuthRequest, error) {
 		"username": username,
 	},
 	)
+	if err != nil {
+		return nil, err
+	}
 	buf := bytes.NewReader(bodyForAuth)
 	resp, err := http.Post(urlLogin, "application/json", buf)
+	defer func() {
+		if err = resp.Body.Close(); err != nil {
+			log.WithError(err).Error()
+		}
+	}()
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +55,7 @@ func NewMaker(username, password string) (*MakerAuthRequest, error) {
 		if err = repUser.Delete(ctx, username); err != nil {
 			log.WithError(err).Error()
 		}
-		return nil, errors.New(fmt.Sprintf("Trouble with auth %d", resp.StatusCode))
+		return nil, fmt.Errorf("Trouble with auth %d", resp.StatusCode)
 	}
 
 	type responseData struct {
@@ -102,7 +109,7 @@ func (m *MakerAuthRequest) GetAuthPOST(url string, body io.Reader) *http.Request
 }
 
 func (m *MakerAuthRequest) GetAuthGet(url string) *http.Request {
-	req, _ := http.NewRequest("GET", url, nil)
+	req, _ := http.NewRequest("GET", url, http.NoBody)
 	req.Header.Add("Authorization", "Bearer "+m.accessToken)
 	req.Header.Add("Content-Type", "application/json")
 	return req
@@ -116,7 +123,7 @@ func (m *MakerAuthRequest) GetAuthPUT(url string, body io.Reader) *http.Request 
 }
 
 func (m *MakerAuthRequest) GetAuthDelete(url string) *http.Request {
-	req, _ := http.NewRequest("DELETE", url, nil)
+	req, _ := http.NewRequest("DELETE", url, http.NoBody)
 	req.Header.Add("Authorization", "Bearer "+m.accessToken)
 	req.Header.Add("Content-Type", "application/json")
 	return req
@@ -143,6 +150,11 @@ func TestCreate(t *testing.T) {
 	req := maker.GetAuthPOST(urlCreateEntity, bufferWrite)
 	client := http.DefaultClient
 	resp, err := client.Do(req)
+	defer func() {
+		if err = resp.Body.Close(); err != nil {
+			log.WithError(err).Error()
+		}
+	}()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -163,7 +175,6 @@ func TestCreate(t *testing.T) {
 		if err = repEntity.Delete(ctx, entityFormRepository.ID.String()); err != nil {
 			log.WithError(err).Error()
 		}
-
 	})
 	assert.Equal(t, entityFormRepository.ID, actualEntity.ID)
 	assert.Equal(t, entityFormRepository.Name, actualEntity.Name)
@@ -209,6 +220,12 @@ func TestGetAll(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() {
+		if err = resp.Body.Close(); err != nil {
+			log.WithError(err).Error()
+		}
+	}()
+
 	if resp.StatusCode != http.StatusOK {
 		t.Fatal("Error request ", resp.StatusCode)
 	}
@@ -257,6 +274,11 @@ func TestUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() {
+		if err = resp.Body.Close(); err != nil {
+			log.WithError(err).Error()
+		}
+	}()
 	if resp.StatusCode != http.StatusOK {
 		t.Fatal("Error request ", resp.StatusCode)
 	}
@@ -297,6 +319,11 @@ func TestGetByID(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() {
+		if err = resp.Body.Close(); err != nil {
+			log.WithError(err).Error()
+		}
+	}()
 	if resp.StatusCode != http.StatusOK {
 		t.Fatal("Error request ", resp.StatusCode)
 	}
@@ -338,6 +365,11 @@ func TestDelete(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() {
+		if err = resp.Body.Close(); err != nil {
+			log.WithError(err).Error()
+		}
+	}()
 	if resp.StatusCode != http.StatusOK {
 		t.Fatal("Error request ", resp.StatusCode)
 	}
@@ -345,5 +377,4 @@ func TestDelete(t *testing.T) {
 	ent, err := repEntity.GetForID(ctx, entityExpected.ID.String())
 	assert.Error(t, err)
 	assert.Nil(t, ent)
-
 }

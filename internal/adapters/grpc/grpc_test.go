@@ -23,10 +23,12 @@ import (
 	"google.golang.org/grpc/grpclog"
 )
 
-var clientEntity EntityClient
-var clientImage ImageManagerClient
-var ctx context.Context
-var connPool *pgxpool.Pool
+var (
+	clientEntity EntityClient
+	clientImage  ImageManagerClient
+	ctx          context.Context
+	connPool     *pgxpool.Pool
+)
 
 func TestMain(m *testing.M) {
 	err := godotenv.Load("/home/dmitryrusack/Work/application_golang/localConf.env")
@@ -93,8 +95,8 @@ func TestGetEntityById(t *testing.T) {
 }
 
 func TestGetImagesByEasyLink(t *testing.T) {
-	imageByIdRequest := GetImageByIDRequest{EasyLink: "14July2022_Screenshot from 2022-07-14 13-56-01.png"}
-	stream, err := clientImage.GetImageByEasyLink(ctx, &imageByIdRequest)
+	imageByIDRequest := GetImageByIDRequest{EasyLink: "14July2022_Screenshot from 2022-07-14 13-56-01.png"}
+	stream, err := clientImage.GetImageByEasyLink(ctx, &imageByIDRequest)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -104,8 +106,8 @@ func TestGetImagesByEasyLink(t *testing.T) {
 			if err = stream.(grpc.ClientStream).CloseSend(); err != nil {
 				log.WithError(err).Error()
 			}
+			break
 		}
 		assert.Equal(t, imageByResponse.GetMetaData().GetSize(), int32(len(imageByResponse.GetData())))
-		break
 	}
 }

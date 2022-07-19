@@ -13,9 +13,11 @@ import (
 	"app/internal/repository"
 )
 
-var ctx context.Context
-var errorFromRepo error
-var errorFormCache error
+var (
+	ctx            context.Context
+	errorFromRepo  error
+	errorFormCache error
+)
 
 func TestMain(t *testing.M) {
 	errorFromRepo = errors.New("error from repository")
