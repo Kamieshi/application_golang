@@ -1,8 +1,9 @@
 package repository
 
 import (
-	"app/internal/models"
 	"context"
+
+	"app/internal/models"
 )
 
 // RepoUser Common User interface

@@ -2,9 +2,11 @@
 package repository
 
 import (
-	"app/internal/models"
 	"context"
+
 	"github.com/google/uuid"
+
+	"app/internal/models"
 )
 
 // RepoSession Common interface for repository Session

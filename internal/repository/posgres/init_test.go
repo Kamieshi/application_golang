@@ -1,15 +1,17 @@
 package repository
 
 import (
-	"app/internal/config"
 	"context"
 	"fmt"
-	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/ory/dockertest"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/ory/dockertest"
+	log "github.com/sirupsen/logrus"
+
+	"app/internal/config"
 )
 
 var pgPool *pgxpool.Pool

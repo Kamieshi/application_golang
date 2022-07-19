@@ -1,16 +1,18 @@
 package repository
 
 import (
-	"app/internal/models"
-	"app/internal/repository"
 	"context"
 	"encoding/json"
 	"errors"
-	rds "github.com/go-redis/redis/v8"
-	"github.com/sirupsen/logrus"
 	"os"
 	"strconv"
 	"time"
+
+	rds "github.com/go-redis/redis/v8"
+	"github.com/sirupsen/logrus"
+
+	"app/internal/models"
+	"app/internal/repository"
 )
 
 type CacheObj struct {

@@ -3,9 +3,10 @@ package config
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
-	"os"
 )
 
 // Configuration configuration for application

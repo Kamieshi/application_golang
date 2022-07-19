@@ -1,10 +1,12 @@
 package repository
 
 import (
-	"app/internal/service"
-	log "github.com/sirupsen/logrus"
 	"reflect"
 	"testing"
+
+	log "github.com/sirupsen/logrus"
+
+	"app/internal/service"
 )
 
 func TestRepositoryUserAdd(t *testing.T) {

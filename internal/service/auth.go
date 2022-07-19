@@ -1,33 +1,39 @@
+// Package service
 package service
 
 import (
-	"app/internal/models"
-	"app/internal/repository"
 	"context"
+	"crypto/rand"
 	"crypto/sha256"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
-	"math/rand"
+	"math/big"
 	"net/http"
 	"os"
 	"reflect"
 	"strconv"
 	"time"
 
+	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
+
+	"app/internal/models"
+	"app/internal/repository"
+
 	"github.com/golang-jwt/jwt"
 	ech "github.com/labstack/echo/v4"
-	middleware "github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/echo/v4/middleware"
 )
 
+// AuthService service for work with Auth end Session
 type AuthService struct {
 	UserRep   repository.RepoUser
 	AuthRep   repository.RepoSession
 	JWTConfig *middleware.JWTConfig
 }
 
-func NewAuthService(userRep *repository.RepoUser, sessionRep *repository.RepoSession) *AuthService {
+// NewAuthService Constructor
+func NewAuthService(userRep repository.RepoUser, sessionRep *repository.RepoSession) *AuthService {
 	headerAuthorization := ech.HeaderAuthorization
 	config := &middleware.JWTConfig{
 		Claims:        &CustomClaims{},
@@ -79,19 +85,21 @@ func NewAuthService(userRep *repository.RepoUser, sessionRep *repository.RepoSes
 	}
 
 	return &AuthService{
-		UserRep:   *userRep,
+		UserRep:   userRep,
 		AuthRep:   *sessionRep,
 		JWTConfig: config,
 	}
 }
 
+// CustomClaims Payload from access token
 type CustomClaims struct {
 	Username  string    `json:"name"`
 	Admin     bool      `json:"admin"`
-	IdSession uuid.UUID `json:"id_session"`
+	IDSession uuid.UUID `json:"id_session"`
 	jwt.StandardClaims
 }
 
+// IsAuthentication Check JWT of session and
 func (a AuthService) IsAuthentication(ctx context.Context, username string, password string) (*models.User, bool, error) {
 	user, err := a.UserRep.Get(ctx, username)
 
@@ -106,6 +114,7 @@ func (a AuthService) IsAuthentication(ctx context.Context, username string, pass
 	return nil, false, err
 }
 
+// CreateToken Create access token
 func (a AuthService) CreateToken(username string, admin bool, idSession uuid.UUID) (string, error) {
 
 	timeLive, _ := strconv.Atoi(os.Getenv("TIME_LIVE_MINUTE_JWT"))
@@ -128,6 +137,7 @@ func (a AuthService) CreateToken(username string, admin bool, idSession uuid.UUI
 	return tt, nil
 }
 
+// CreateAndWriteSession Create new session and write into repository
 func (a AuthService) CreateAndWriteSession(ctx ech.Context, user models.User) (models.Session, error) {
 	refresh := a.createRandomOutput(user.UserName)
 
@@ -146,32 +156,36 @@ func (a AuthService) CreateAndWriteSession(ctx ech.Context, user models.User) (m
 	return session, err
 }
 
-func (a AuthService) RefreshAndWriteSession(ctx ech.Context, rfToken string) (string, string, error) {
+// RefreshAndWriteSession Update RF token
+func (a *AuthService) RefreshAndWriteSession(ctx ech.Context, rfToken string) (AccessToken string, RfToken string, err error) {
 	user := ctx.Get("user").(*jwt.Token)
 	payLoad := user.Claims.(*CustomClaims)
-
-	currentSession, err := a.AuthRep.Get(ctx.Request().Context(), payLoad.IdSession)
+	currentSession, err := a.AuthRep.Get(ctx.Request().Context(), payLoad.IDSession)
 	if currentSession.Disabled {
 		return "", "", errors.New("this session was disabled")
 	}
 	if err != nil {
-		return "", "", err
+		return
 	}
 	if rfToken == currentSession.RfToken {
-		accessToken, _ := a.CreateToken(payLoad.Username, payLoad.Admin, payLoad.IdSession)
-		newRfToken := createHashSHA256WithSalt(a.createRandomOutput())
-		currentSession.RfToken = newRfToken
+		AccessToken, _ = a.CreateToken(payLoad.Username, payLoad.Admin, payLoad.IDSession)
+		RfToken = createHashSHA256WithSalt(a.createRandomOutput())
+		currentSession.RfToken = RfToken
 		err = a.AuthRep.Update(ctx.Request().Context(), currentSession)
 		if err != nil {
-			return "", "", err
+			return
 		}
-		return accessToken, newRfToken, nil
+		return
 	}
 	return "", "", errors.New("disable session")
 }
 
-func (a AuthService) createRandomOutput(sal ...string) string {
-	data := fmt.Sprint(time.Now().Unix(), os.Getenv("SECRET_KEY"), rand.Int31n(1000), sal)
+func (a *AuthService) createRandomOutput(sal ...string) string {
+	nBig, err := rand.Int(rand.Reader, big.NewInt(10000))
+	if err != nil {
+		logrus.WithError(err).Error()
+	}
+	data := fmt.Sprint(time.Now().Unix(), os.Getenv("SECRET_KEY"), nBig.Int64(), sal)
 	h := sha256.New()
 	h.Write([]byte(data))
 	return fmt.Sprintf("%x", h.Sum(nil))
@@ -184,12 +198,14 @@ func createHashSHA256WithSalt(s string) string {
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
-func (a AuthService) DisableSession(ctx ech.Context, id uuid.UUID) error {
+// DisableSession Disable session (disable false -> true in repository)
+func (a *AuthService) DisableSession(ctx ech.Context, id uuid.UUID) error {
 	err := a.AuthRep.Disable(ctx.Request().Context(), id)
 	return err
 }
 
-func (a AuthService) GetUser(ctx ech.Context) (*models.User, error) {
+// GetUser Check access token and return user
+func (a *AuthService) GetUser(ctx ech.Context) (*models.User, error) {
 	user := ctx.Get("user").(*jwt.Token)
 	claims := user.Claims.(*CustomClaims)
 	User, err := a.UserRep.Get(ctx.Request().Context(), claims.Username)

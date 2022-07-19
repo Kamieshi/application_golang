@@ -1,9 +1,11 @@
 package repository
 
 import (
-	"app/internal/models"
 	"context"
+
 	"github.com/google/uuid"
+
+	"app/internal/models"
 )
 
 // RepoImage Common Interface for Image

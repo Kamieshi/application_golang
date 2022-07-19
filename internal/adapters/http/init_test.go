@@ -3,12 +3,13 @@ package http
 import (
 	"context"
 	"fmt"
-	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/ory/dockertest"
-	log "github.com/sirupsen/logrus"
 	"net/http"
 	"os"
 	"testing"
+
+	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/ory/dockertest"
+	log "github.com/sirupsen/logrus"
 )
 
 var URLCreateUser, urlLogin, urlCheckAuth, urlLogOut, urlRefresh string

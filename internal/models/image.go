@@ -2,11 +2,12 @@ package models
 
 import (
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 // Image model

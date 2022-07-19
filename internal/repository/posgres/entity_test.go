@@ -1,10 +1,12 @@
 package repository
 
 import (
-	"app/internal/models"
-	log "github.com/sirupsen/logrus"
 	"reflect"
 	"testing"
+
+	log "github.com/sirupsen/logrus"
+
+	"app/internal/models"
 )
 
 func TestRepositoryEntityAdd(t *testing.T) {

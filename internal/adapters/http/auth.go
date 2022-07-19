@@ -2,11 +2,13 @@
 package http
 
 import (
-	"app/internal/service"
-	"github.com/golang-jwt/jwt"
-	"github.com/labstack/echo/v4"
 	"net/http"
 	"time"
+
+	"github.com/golang-jwt/jwt"
+	"github.com/labstack/echo/v4"
+
+	"app/internal/service"
 )
 
 // AuthHandler Handler for work with AuthService
@@ -80,7 +82,7 @@ func (a *AuthHandler) Info(c echo.Context) error {
 func (a *AuthHandler) Logout(c echo.Context) error {
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*service.CustomClaims)
-	err := a.AuthService.DisableSession(c, claims.IdSession)
+	err := a.AuthService.DisableSession(c, claims.IDSession)
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
 	}

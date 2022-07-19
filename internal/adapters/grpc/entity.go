@@ -1,18 +1,23 @@
-package test
+// Package handlers handlers RPC
+package handlers
 
 import (
-	"app/internal/service"
 	"context"
 	"encoding/json"
+
 	"google.golang.org/protobuf/encoding/protojson"
+
+	"app/internal/service"
 )
 
+// EntityServerImplement implement method from proto-gen
 type EntityServerImplement struct {
 	EntityServ *service.EntityService
 	EntityServer
 }
 
-func (e EntityServerImplement) GetEntityById(ctx context.Context, request *GetEntityByIdRequest) (*GetEntityByIdResponse, error) {
+// GetEntityById get by ID
+func (e EntityServerImplement) GetEntityByID(ctx context.Context, request *GetEntityByIdRequest) (*GetEntityByIdResponse, error) {
 	entity, err := e.EntityServ.GetForID(ctx, request.EntityId)
 	if err != nil {
 		return nil, err

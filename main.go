@@ -1,16 +1,12 @@
 package main
 
 import (
-	_ "app/docs/app"
-	gr "app/internal/adapters/grpc"
-	http2 "app/internal/adapters/http"
-	"app/internal/config"
-	"app/internal/repository"
-	repositoryMongoDB "app/internal/repository/mongodb"
-	repositoryPg "app/internal/repository/posgres"
-	redisRepository "app/internal/repository/redis"
-	"app/internal/service"
 	ctx "context"
+	"net"
+	"net/http"
+	"sync"
+	"time"
+
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -20,10 +16,16 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"google.golang.org/grpc"
-	"net"
-	"net/http"
-	"sync"
-	"time"
+
+	_ "app/docs/app"
+	gr "app/internal/adapters/grpc"
+	http2 "app/internal/adapters/http"
+	"app/internal/config"
+	"app/internal/repository"
+	repositoryMongoDB "app/internal/repository/mongodb"
+	repositoryPg "app/internal/repository/posgres"
+	redisRepository "app/internal/repository/redis"
+	"app/internal/service"
 )
 
 // @title Golang Application Swagger
@@ -59,7 +61,7 @@ func main() {
 		repoUsers = repositoryPg.NewRepoUsersPostgres(connPool)
 		repoImages = repositoryPg.NewRepoImagePostgres(connPool)
 	} else {
-		timeOutConnect, cancel := ctx.WithTimeout(ctx.Background(), 2*time.Second)
+		timeOutConnect, cancel := ctx.WithTimeout(ctx.Background(), time.Duration(2)*time.Second)
 		var clientMongo *mongo.Client
 		clientMongo, err = mongo.Connect(timeOutConnect, options.Client().ApplyURI(configuration.ConnectingURLMongo()))
 		defer cancel()
@@ -88,7 +90,7 @@ func main() {
 
 	// Creating services Postgres
 
-	AuthService := service.NewAuthService(&repoUsers, &repoAuth)
+	AuthService := service.NewAuthService(repoUsers, &repoAuth)
 	EntityService := service.NewEntityService(repoEntity, repoCashEntity)
 	ImageService := service.NewImageService(&repoImages)
 	UserService := service.NewUserService(repoUsers)

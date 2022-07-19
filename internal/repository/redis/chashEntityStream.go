@@ -1,15 +1,17 @@
 package repository
 
 import (
-	"app/internal/models"
-	"app/internal/repository"
 	"context"
-	rds "github.com/go-redis/redis/v8"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"strconv"
 	"sync"
 	"time"
+
+	rds "github.com/go-redis/redis/v8"
+	log "github.com/sirupsen/logrus"
+
+	"app/internal/models"
+	"app/internal/repository"
 )
 
 type LocalStorage struct {

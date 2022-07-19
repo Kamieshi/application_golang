@@ -1,12 +1,14 @@
 package repository
 
 import (
-	"app/internal/models"
-	"app/internal/service"
-	log "github.com/sirupsen/logrus"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/sirupsen/logrus"
+
+	"app/internal/models"
+	"app/internal/service"
 )
 
 func TestRepositoryAuthCreate(t *testing.T) {
@@ -35,10 +37,10 @@ func TestRepositoryAuthCreate(t *testing.T) {
 	}
 	t.Cleanup(func() {
 		if errRepAuthDelete := repAuth.Delete(ctx, sessionFromDb.ID); errRepAuthDelete != nil {
-			log.WithError(errRepAuthDelete).Error()
+			logrus.WithError(errRepAuthDelete).Error()
 		}
 		if errRepUserDelete := repUser.Delete(ctx, user.UserName); errRepUserDelete != nil {
-			log.WithError(errRepUserDelete).Error()
+			logrus.WithError(errRepUserDelete).Error()
 		}
 	})
 	sessionFromDb.CreatedAt = fakeSession.CreatedAt
@@ -71,10 +73,10 @@ func TestRepositoryAuthUpdate(t *testing.T) {
 	}
 	t.Cleanup(func() {
 		if errRepAuthDelete := repAuth.Delete(ctx, fakeSession.ID); errRepAuthDelete != nil {
-			log.WithError(errRepAuthDelete).Error()
+			logrus.WithError(errRepAuthDelete).Error()
 		}
 		if errRepUserDelete := repUser.Delete(ctx, user.UserName); errRepUserDelete != nil {
-			log.WithError(errRepUserDelete).Error()
+			logrus.WithError(errRepUserDelete).Error()
 		}
 	})
 	sessionFromDb, err := repAuth.Get(ctx, fakeSession.ID)
@@ -122,10 +124,10 @@ func TestRepositoryAuthGet(t *testing.T) {
 	}
 	t.Cleanup(func() {
 		if errRepAuthDelete := repAuth.Delete(ctx, sessionFromDb.ID); errRepAuthDelete != nil {
-			log.WithError(errRepAuthDelete).Error()
+			logrus.WithError(errRepAuthDelete).Error()
 		}
 		if errRepUserDelete := repUser.Delete(ctx, user.UserName); errRepUserDelete != nil {
-			log.WithError(errRepUserDelete).Error()
+			logrus.WithError(errRepUserDelete).Error()
 		}
 	})
 	sessionFromDb.CreatedAt = fakeSession.CreatedAt
@@ -162,10 +164,10 @@ func TestRepositoryAuthDelete(t *testing.T) {
 	}
 	t.Cleanup(func() {
 		if errRepAuthDelete := repAuth.Delete(ctx, sessionFromDb.ID); errRepAuthDelete != nil {
-			log.WithError(errRepAuthDelete).Error()
+			logrus.WithError(errRepAuthDelete).Error()
 		}
 		if errRepUserDelete := repUser.Delete(ctx, user.UserName); errRepUserDelete != nil {
-			log.WithError(errRepUserDelete).Error()
+			logrus.WithError(errRepUserDelete).Error()
 		}
 	})
 	sessionFromDb.CreatedAt = fakeSession.CreatedAt

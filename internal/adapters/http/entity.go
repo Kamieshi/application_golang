@@ -1,11 +1,13 @@
 package http
 
 import (
+	"fmt"
+	"net/http"
+
+	ech "github.com/labstack/echo/v4"
+
 	"app/internal/models"
 	"app/internal/service"
-	"fmt"
-	"github.com/labstack/echo/v4"
-	"net/http"
 )
 
 // EntityHandler Handler for work with Entity service
@@ -22,7 +24,7 @@ type EntityHandler struct {
 // @Failure 400 {string} Missing jwt token
 // @Failure 401 {string} unAuthorized
 // @Router /entity [get]
-func (eh EntityHandler) List(c echo.Context) error {
+func (eh EntityHandler) List(c ech.Context) error {
 	entities, err := eh.EntityService.GetAll(c.Request().Context())
 	if err != nil {
 		return err
@@ -41,7 +43,7 @@ func (eh EntityHandler) List(c echo.Context) error {
 // @Failure 400 {string} Missing jwt token
 // @Failure 401 {string} unAuthorized
 // @Router /entity/{id} [get]
-func (eh EntityHandler) GetDetail(c echo.Context) error {
+func (eh EntityHandler) GetDetail(c ech.Context) error {
 	id := c.Param("id")
 
 	entity, err := eh.EntityService.GetForID(c.Request().Context(), id)
@@ -64,7 +66,7 @@ func (eh EntityHandler) GetDetail(c echo.Context) error {
 // @Failure 400 {string} Missing jwt token
 // @Failure 401 {string} unAuthorized
 // @Router /entity/{id} [put]
-func (eh EntityHandler) Update(c echo.Context) error {
+func (eh EntityHandler) Update(c ech.Context) error {
 	id := c.Param("id")
 	entity := models.Entity{}
 	err := c.Bind(&entity)
@@ -91,7 +93,7 @@ func (eh EntityHandler) Update(c echo.Context) error {
 // @Failure 400 {string} Missing jwt token
 // @Failure 401 {string} unAuthorized
 // @Router /entity [post]
-func (eh EntityHandler) Create(c echo.Context) error {
+func (eh EntityHandler) Create(c ech.Context) error {
 	entity := models.Entity{}
 
 	err := c.Bind(&entity)
@@ -119,7 +121,7 @@ func (eh EntityHandler) Create(c echo.Context) error {
 // @Failure 400 {string} Missing jwt token
 // @Failure 401 {string} unAuthorized
 // @Router /entity/{id} [delete]
-func (eh EntityHandler) Delete(c echo.Context) error {
+func (eh EntityHandler) Delete(c ech.Context) error {
 	id := c.Param("id")
 
 	err := eh.EntityService.Delete(c.Request().Context(), id)

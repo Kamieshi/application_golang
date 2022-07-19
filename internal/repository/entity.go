@@ -1,8 +1,9 @@
 package repository
 
 import (
-	"app/internal/models"
 	"context"
+
+	"app/internal/models"
 )
 
 // type ControllerEntity interface {
@@ -13,7 +14,7 @@ import (
 // 	DeleteItem(ctx context.Context, id int) error
 // }
 
-// RepoEntity Common Interface for Entity
+// RepoEntity RepoEntityMock Common Interface for Entity
 type RepoEntity interface {
 	GetAll(ctx context.Context) ([]*models.Entity, error)
 	GetForID(ctx context.Context, id string) (*models.Entity, error)

@@ -4,7 +4,7 @@
 // - protoc             v3.6.1
 // source: application.proto
 
-package test
+package handlers
 
 import (
 	context "context"
@@ -38,7 +38,7 @@ func NewEntityClient(cc grpc.ClientConnInterface) EntityClient {
 
 func (c *entityClient) GetEntityById(ctx context.Context, in *GetEntityByIdRequest, opts ...grpc.CallOption) (*GetEntityByIdResponse, error) {
 	out := new(GetEntityByIdResponse)
-	err := c.cc.Invoke(ctx, "/applicationGolang.Entity/GetEntityById", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/applicationGolang.Entity/GetEntityByID", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func (c *entityClient) DeleteEntity(ctx context.Context, in *DeleteEntityRequest
 // All implementations must embed UnimplementedEntityServer
 // for forward compatibility
 type EntityServer interface {
-	GetEntityById(context.Context, *GetEntityByIdRequest) (*GetEntityByIdResponse, error)
+	GetEntityByID(context.Context, *GetEntityByIdRequest) (*GetEntityByIdResponse, error)
 	GetAllEntity(context.Context, *GetAllEntityRequest) (*GetAllEntityResponse, error)
 	UpdateEntity(context.Context, *UpdateEntityRequest) (*UpdateEntityResponse, error)
 	DeleteEntity(context.Context, *DeleteEntityRequest) (*DeleteEntityResponse, error)
@@ -88,7 +88,7 @@ type UnimplementedEntityServer struct {
 }
 
 func (UnimplementedEntityServer) GetEntityById(context.Context, *GetEntityByIdRequest) (*GetEntityByIdResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetEntityById not implemented")
+	return nil, status.Errorf(codes.Unimplemented, "method GetEntityByID not implemented")
 }
 func (UnimplementedEntityServer) GetAllEntity(context.Context, *GetAllEntityRequest) (*GetAllEntityResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllEntity not implemented")
@@ -118,14 +118,14 @@ func _Entity_GetEntityById_Handler(srv interface{}, ctx context.Context, dec fun
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(EntityServer).GetEntityById(ctx, in)
+		return srv.(EntityServer).GetEntityByID(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/applicationGolang.Entity/GetEntityById",
+		FullMethod: "/applicationGolang.Entity/GetEntityByID",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EntityServer).GetEntityById(ctx, req.(*GetEntityByIdRequest))
+		return srv.(EntityServer).GetEntityByID(ctx, req.(*GetEntityByIdRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -192,7 +192,7 @@ var Entity_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*EntityServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetEntityById",
+			MethodName: "GetEntityByID",
 			Handler:    _Entity_GetEntityById_Handler,
 		},
 		{

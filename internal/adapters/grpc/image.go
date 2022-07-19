@@ -1,15 +1,18 @@
-package test
+package handlers
 
 import (
-	"app/internal/service"
 	"context"
+
+	"app/internal/service"
 )
 
+// ImageServerImplement implement method from proto-gen
 type ImageServerImplement struct {
 	ImageService *service.ImageService
 	ImageManagerServer
 }
 
+// GetImageByEasyLink Get image by ID
 func (i *ImageServerImplement) GetImageByEasyLink(req *GetImageByIDRequest, resp ImageManager_GetImageByEasyLinkServer) error {
 	image, err := i.ImageService.Get(context.Background(), req.EasyLink)
 	if err != nil {

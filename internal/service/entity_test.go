@@ -1,14 +1,16 @@
 package service
 
 import (
-	"app/internal/models"
-	repoMock "app/internal/repository/mocks"
 	"context"
 	"errors"
-	"github.com/google/uuid"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
+
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
+
+	"app/internal/models"
+	"app/internal/repository"
 )
 
 var ctx context.Context
@@ -24,8 +26,8 @@ func TestMain(t *testing.M) {
 }
 
 func TestGetAllPositive(t *testing.T) {
-	repoEntityMock := new(repoMock.RepoEntity)
-	repoCacheMock := new(repoMock.CacheEntityRepository)
+	repoEntityMock := new(repository.RepoEntityMock)
+	repoCacheMock := new(repository.CacheEntityRepositoryMock)
 	entityService := NewEntityService(repoEntityMock, repoCacheMock)
 	_assert := assert.New(t)
 	dataForAllQuery := []*models.Entity{
@@ -51,8 +53,8 @@ func TestGetAllPositive(t *testing.T) {
 }
 
 func TestGetForIDPositive(t *testing.T) {
-	repoEntityMock := new(repoMock.RepoEntity)
-	repoCacheMock := new(repoMock.CacheEntityRepository)
+	repoEntityMock := new(repository.RepoEntityMock)
+	repoCacheMock := new(repository.CacheEntityRepositoryMock)
 	entityService := NewEntityService(repoEntityMock, repoCacheMock)
 	_assert := assert.New(t)
 	expectEntity1 := &models.Entity{
@@ -85,8 +87,8 @@ func TestGetForIDPositive(t *testing.T) {
 }
 
 func TestUpdatePositive(t *testing.T) {
-	repoEntityMock := new(repoMock.RepoEntity)
-	repoCacheMock := new(repoMock.CacheEntityRepository)
+	repoEntityMock := new(repository.RepoEntityMock)
+	repoCacheMock := new(repository.CacheEntityRepositoryMock)
 	entityService := NewEntityService(repoEntityMock, repoCacheMock)
 	_assert := assert.New(t)
 	expectEntity1 := &models.Entity{
@@ -102,8 +104,8 @@ func TestUpdatePositive(t *testing.T) {
 }
 
 func TestAddPositive(t *testing.T) {
-	repoEntityMock := new(repoMock.RepoEntity)
-	repoCacheMock := new(repoMock.CacheEntityRepository)
+	repoEntityMock := new(repository.RepoEntityMock)
+	repoCacheMock := new(repository.CacheEntityRepositoryMock)
 	entityService := NewEntityService(repoEntityMock, repoCacheMock)
 	_assert := assert.New(t)
 	expectEntity1 := &models.Entity{
@@ -118,8 +120,8 @@ func TestAddPositive(t *testing.T) {
 }
 
 func TestDeletePositive(t *testing.T) {
-	repoEntityMock := new(repoMock.RepoEntity)
-	repoCacheMock := new(repoMock.CacheEntityRepository)
+	repoEntityMock := new(repository.RepoEntityMock)
+	repoCacheMock := new(repository.CacheEntityRepositoryMock)
 	entityService := NewEntityService(repoEntityMock, repoCacheMock)
 	_assert := assert.New(t)
 	expectEntity1 := &models.Entity{
@@ -136,8 +138,8 @@ func TestDeletePositive(t *testing.T) {
 }
 
 func TestGetAllNegative(t *testing.T) {
-	repoEntityMock := new(repoMock.RepoEntity)
-	repoCacheMock := new(repoMock.CacheEntityRepository)
+	repoEntityMock := new(repository.RepoEntityMock)
+	repoCacheMock := new(repository.CacheEntityRepositoryMock)
 	entityService := NewEntityService(repoEntityMock, repoCacheMock)
 	_assert := assert.New(t)
 	dataForAllQuery := []*models.Entity{
@@ -163,8 +165,8 @@ func TestGetAllNegative(t *testing.T) {
 }
 
 func TestGetForIDNegative(t *testing.T) {
-	repoEntityMock := new(repoMock.RepoEntity)
-	repoCacheMock := new(repoMock.CacheEntityRepository)
+	repoEntityMock := new(repository.RepoEntityMock)
+	repoCacheMock := new(repository.CacheEntityRepositoryMock)
 	entityService := NewEntityService(repoEntityMock, repoCacheMock)
 	_assert := assert.New(t)
 	expectEntity1 := &models.Entity{
@@ -184,8 +186,8 @@ func TestGetForIDNegative(t *testing.T) {
 }
 
 func TestUpdateNegative(t *testing.T) {
-	repoEntityMock := new(repoMock.RepoEntity)
-	repoCacheMock := new(repoMock.CacheEntityRepository)
+	repoEntityMock := new(repository.RepoEntityMock)
+	repoCacheMock := new(repository.CacheEntityRepositoryMock)
 	entityService := NewEntityService(repoEntityMock, repoCacheMock)
 	_assert := assert.New(t)
 	expectEntity1 := &models.Entity{
@@ -201,8 +203,8 @@ func TestUpdateNegative(t *testing.T) {
 }
 
 func TestAddNegative(t *testing.T) {
-	repoEntityMock := new(repoMock.RepoEntity)
-	repoCacheMock := new(repoMock.CacheEntityRepository)
+	repoEntityMock := new(repository.RepoEntityMock)
+	repoCacheMock := new(repository.CacheEntityRepositoryMock)
 	entityService := NewEntityService(repoEntityMock, repoCacheMock)
 	_assert := assert.New(t)
 	expectEntity1 := &models.Entity{
@@ -217,8 +219,8 @@ func TestAddNegative(t *testing.T) {
 }
 
 func TestDeleteNegative(t *testing.T) {
-	repoEntityMock := new(repoMock.RepoEntity)
-	repoCacheMock := new(repoMock.CacheEntityRepository)
+	repoEntityMock := new(repository.RepoEntityMock)
+	repoCacheMock := new(repository.CacheEntityRepositoryMock)
 	entityService := NewEntityService(repoEntityMock, repoCacheMock)
 	_assert := assert.New(t)
 	expectEntity1 := &models.Entity{

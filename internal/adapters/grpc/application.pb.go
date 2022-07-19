@@ -4,7 +4,7 @@
 // 	protoc        v3.6.1
 // source: application.proto
 
-package test
+package handlers
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -727,12 +727,12 @@ var file_application_proto_depIdxs = []int32{
 	0,  // 1: applicationGolang.GetAllEntityResponse.entity:type_name -> applicationGolang.EntityStruct
 	0,  // 2: applicationGolang.UpdateEntityRequest.entity:type_name -> applicationGolang.EntityStruct
 	9,  // 3: applicationGolang.GetImageByIDResponse.metaData:type_name -> applicationGolang.ImageStruct
-	1,  // 4: applicationGolang.Entity.GetEntityById:input_type -> applicationGolang.GetEntityByIdRequest
+	1,  // 4: applicationGolang.Entity.GetEntityByID:input_type -> applicationGolang.GetEntityByIdRequest
 	3,  // 5: applicationGolang.Entity.GetAllEntity:input_type -> applicationGolang.GetAllEntityRequest
 	5,  // 6: applicationGolang.Entity.UpdateEntity:input_type -> applicationGolang.UpdateEntityRequest
 	7,  // 7: applicationGolang.Entity.DeleteEntity:input_type -> applicationGolang.DeleteEntityRequest
 	10, // 8: applicationGolang.ImageManager.GetImageByEasyLink:input_type -> applicationGolang.GetImageByIDRequest
-	2,  // 9: applicationGolang.Entity.GetEntityById:output_type -> applicationGolang.GetEntityByIdResponse
+	2,  // 9: applicationGolang.Entity.GetEntityByID:output_type -> applicationGolang.GetEntityByIdResponse
 	4,  // 10: applicationGolang.Entity.GetAllEntity:output_type -> applicationGolang.GetAllEntityResponse
 	6,  // 11: applicationGolang.Entity.UpdateEntity:output_type -> applicationGolang.UpdateEntityResponse
 	8,  // 12: applicationGolang.Entity.DeleteEntity:output_type -> applicationGolang.DeleteEntityResponse

@@ -1,11 +1,13 @@
 package http
 
 import (
-	"app/internal/service"
-	ech "github.com/labstack/echo/v4"
-	"github.com/sirupsen/logrus"
 	"io"
 	"net/http"
+
+	ech "github.com/labstack/echo/v4"
+	"github.com/sirupsen/logrus"
+
+	"app/internal/service"
 )
 
 // ImageHandler Handler for work with image service

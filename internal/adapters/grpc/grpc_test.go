@@ -1,24 +1,25 @@
-package test
+package handlers
 
 import (
-	"app/internal/config"
-	"app/internal/models"
-	repository "app/internal/repository/posgres"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
+	"testing"
+
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/encoding/protojson"
-	"io"
 
-	"os"
+	"app/internal/config"
+	"app/internal/models"
+	repository "app/internal/repository/posgres"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/grpclog"
-	"testing"
 )
 
 var opts []grpc.DialOption

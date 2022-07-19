@@ -1,20 +1,22 @@
 package http
 
 import (
-	"app/internal/models"
-	repository "app/internal/repository/posgres"
-	"app/internal/service"
 	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"testing"
+
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"io"
-	"net/http"
-	"testing"
+
+	"app/internal/models"
+	repository "app/internal/repository/posgres"
+	"app/internal/service"
 )
 
 type MakerAuthRequest struct {

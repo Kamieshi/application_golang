@@ -1,9 +1,10 @@
 package http
 
 import (
-	"app/internal/service"
 	"fmt"
 	"net/http"
+
+	"app/internal/service"
 
 	"github.com/labstack/echo/v4"
 )
