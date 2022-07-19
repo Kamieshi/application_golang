@@ -14,8 +14,10 @@ import (
 	"app/internal/config"
 )
 
-var pgPool *pgxpool.Pool
-var ctx = context.Background()
+var (
+	pgPool *pgxpool.Pool          //nolint:gochecknoglobals
+	ctx    = context.Background() //nolint:gochecknoglobals
+)
 
 func TestMain(t *testing.M) {
 	configuration, err := config.GetConfig("/home/rusak/application_golang/localConf.env")
@@ -46,8 +48,12 @@ func TestMain(t *testing.M) {
 		Tag:        "latest",
 		Env:        nil,
 		Entrypoint: nil,
-		Cmd:        []string{fmt.Sprintf("-url=jdbc:postgresql://%s:5432/postgres -schemas=public -user=postgres -password=postgres -connectRetries=10 migrate", appPostgres.Container.NetworkSettings.IPAddress)},
-		Mounts:     []string{fmt.Sprintf("%s:/flyway/sql", configuration.PathToMigration)},
+		Cmd: []string{
+			fmt.Sprintf(
+				"-url=jdbc:postgresql://%s:5432/postgres -schemas=public -user=postgres -password=postgres -connectRetries=10 migrate",
+				appPostgres.Container.NetworkSettings.IPAddress),
+		},
+		Mounts: []string{fmt.Sprintf("%s:/flyway/sql", configuration.PathToMigration)},
 	})
 	if err != nil {
 		log.Fatal(err)
@@ -63,7 +69,7 @@ func TestMain(t *testing.M) {
 		if err != nil {
 			return err
 		}
-		tContext, tContextCancel := context.WithTimeout(ctx, time.Duration(1*time.Second))
+		tContext, tContextCancel := context.WithTimeout(ctx, time.Second)
 		defer tContextCancel()
 		return pgPool.Ping(tContext)
 	}); err != nil {

@@ -74,7 +74,6 @@ func TestRepositoryUserDelete(t *testing.T) {
 	if reflect.DeepEqual(userFromDB, NewQueryUser) {
 		t.Error("User has not deleted")
 	}
-
 }
 
 func TestRepositoryUserGetAll(t *testing.T) {
@@ -113,13 +112,13 @@ func TestRepositoryUserUpdate(t *testing.T) {
 		t.Fatal("Error in service user", err)
 	}
 	user1.UserName = "New name"
-	userFromDbBeforeUpdate, _ := repUser.Get(ctx, user1.UserName)
+	userFromDBBeforeUpdate, _ := repUser.Get(ctx, user1.UserName)
 	err = repUser.Update(ctx, user1)
 	if err != nil {
 		t.Error(err)
 	}
-	userFromDbAfterUpdate, _ := repUser.Get(ctx, user1.UserName)
-	if reflect.DeepEqual(userFromDbAfterUpdate, userFromDbBeforeUpdate) {
+	userFromDBAfterUpdate, _ := repUser.Get(ctx, user1.UserName)
+	if reflect.DeepEqual(userFromDBAfterUpdate, userFromDBBeforeUpdate) {
 		t.Error("Update don't work")
 	}
 	t.Cleanup(func() {

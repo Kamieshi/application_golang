@@ -156,29 +156,28 @@ func TestRepositoryAuthDelete(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	sessionFromDb, err := repAuth.Get(ctx, fakeSession.ID)
+	sessionFromDB, err := repAuth.Get(ctx, fakeSession.ID)
 	if err != nil {
 		t.Error(err)
 	}
 	t.Cleanup(func() {
-		if errRepAuthDelete := repAuth.Delete(ctx, sessionFromDb.ID); errRepAuthDelete != nil {
+		if errRepAuthDelete := repAuth.Delete(ctx, sessionFromDB.ID); errRepAuthDelete != nil {
 			logrus.WithError(errRepAuthDelete).Error()
 		}
 		if errRepUserDelete := repUser.Delete(ctx, user.UserName); errRepUserDelete != nil {
 			logrus.WithError(errRepUserDelete).Error()
 		}
 	})
-	sessionFromDb.CreatedAt = fakeSession.CreatedAt
+	sessionFromDB.CreatedAt = fakeSession.CreatedAt
 
-	if !reflect.DeepEqual(*sessionFromDb, fakeSession) {
+	if !reflect.DeepEqual(*sessionFromDB, fakeSession) {
 		t.Error("Not equal")
 	}
-
-	err = repAuth.Delete(ctx, sessionFromDb.ID)
-
-	sessionFromDbAfterDelete, _ := repAuth.Get(ctx, fakeSession.ID)
-	if sessionFromDbAfterDelete != nil {
+	if err = repAuth.Delete(ctx, sessionFromDB.ID); err != nil {
+		t.Error(err)
+	}
+	sessionFromDBAfterDelete, _ := repAuth.Get(ctx, fakeSession.ID)
+	if sessionFromDBAfterDelete != nil {
 		t.Error("Session didn't delete")
 	}
-
 }

@@ -28,11 +28,11 @@ func TestRepositoryEntityAdd(t *testing.T) {
 		}
 	})
 
-	entityFromDb, err := repEntity.GetForID(ctx, entity.ID.String())
+	entityFromDB, err := repEntity.GetForID(ctx, entity.ID.String())
 	if err != nil {
 		t.Error(err)
 	}
-	if reflect.DeepEqual(*entityFromDb, entity) == false {
+	if reflect.DeepEqual(*entityFromDB, entity) == false {
 		t.Error("Error")
 	}
 }
@@ -56,11 +56,11 @@ func TestRepositoryEntityGet(t *testing.T) {
 		}
 	})
 
-	entityFromDb, err := repEntity.GetForID(ctx, entity.ID.String())
+	entityFromDB, err := repEntity.GetForID(ctx, entity.ID.String())
 	if err != nil {
 		t.Error(err)
 	}
-	if reflect.DeepEqual(*entityFromDb, entity) == false {
+	if reflect.DeepEqual(*entityFromDB, entity) == false {
 		t.Error("No equal")
 	}
 }
@@ -83,6 +83,9 @@ func TestRepositoryEntityDelete(t *testing.T) {
 	}
 
 	checkEntity, err := repEntity.GetForID(ctx, entity.ID.String())
+	if err != nil {
+		t.Error(err)
+	}
 	if checkEntity != nil {
 		t.Error("Error delete")
 	}
@@ -106,8 +109,8 @@ func TestRepositoryEntityUpdate(t *testing.T) {
 			log.WithError(err).Error()
 		}
 	})
-
-	entity.Name = "New name"
+	newName := "Name name"
+	entity.Name = newName
 	err = repEntity.Update(ctx, entity.ID.String(), &entity)
 	if err != nil {
 		t.Error(err)
@@ -119,7 +122,6 @@ func TestRepositoryEntityUpdate(t *testing.T) {
 	if reflect.DeepEqual(*checkEntity, entity) == false {
 		t.Error("No equal")
 	}
-
 }
 
 func TestRepositoryEntityGetAll(t *testing.T) {
