@@ -60,7 +60,7 @@ func GetConfig(args ...string) (*Configuration, error) {
 	}
 	_, exist := os.LookupEnv("POSTGRES_PORT")
 	if !exist {
-		err := godotenv.Load("./localConfig.env")
+		err := godotenv.Load(os.Getenv("PATH_TO_CONFIG_FILE"))
 		if err != nil {
 			return &conf, fmt.Errorf("config.go/GetConfig Error parse data from file : %v", err)
 		}
