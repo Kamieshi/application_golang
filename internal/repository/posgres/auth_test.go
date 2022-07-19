@@ -1,17 +1,19 @@
-package tests
+package repository
 
 import (
-	"app/internal/models"
-	"app/internal/repository/posgres"
-	"app/internal/service"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/sirupsen/logrus"
+
+	"app/internal/models"
+	"app/internal/service"
 )
 
 func TestRepositoryAuthCreate(t *testing.T) {
-	repAuth := repository.NewRepoAuthPostgres(pgPool)
-	repUser := repository.NewRepoUsersPostgres(pgPool)
+	repAuth := NewRepoAuthPostgres(pgPool)
+	repUser := NewRepoUsersPostgres(pgPool)
 	servUser := service.NewUserService(repUser)
 	user, err := servUser.Create(ctx, "unit_tests", "unit_tests")
 	if err != nil {
@@ -19,7 +21,7 @@ func TestRepositoryAuthCreate(t *testing.T) {
 	}
 
 	fakeSession := models.Session{
-		UserId:          user.ID,
+		UserID:          user.ID,
 		RfToken:         "Test",
 		UniqueSignature: "unit_tests",
 		CreatedAt:       time.Now(),
@@ -34,9 +36,12 @@ func TestRepositoryAuthCreate(t *testing.T) {
 		t.Error(err)
 	}
 	t.Cleanup(func() {
-		repAuth.Delete(ctx, sessionFromDb.ID)
-		repUser.Delete(ctx, user.UserName)
-
+		if errRepAuthDelete := repAuth.Delete(ctx, sessionFromDb.ID); errRepAuthDelete != nil {
+			logrus.WithError(errRepAuthDelete).Error()
+		}
+		if errRepUserDelete := repUser.Delete(ctx, user.UserName); errRepUserDelete != nil {
+			logrus.WithError(errRepUserDelete).Error()
+		}
 	})
 	sessionFromDb.CreatedAt = fakeSession.CreatedAt
 
@@ -47,8 +52,8 @@ func TestRepositoryAuthCreate(t *testing.T) {
 }
 
 func TestRepositoryAuthUpdate(t *testing.T) {
-	repAuth := repository.NewRepoAuthPostgres(pgPool)
-	repUser := repository.NewRepoUsersPostgres(pgPool)
+	repAuth := NewRepoAuthPostgres(pgPool)
+	repUser := NewRepoUsersPostgres(pgPool)
 	servUser := service.NewUserService(repUser)
 	user, err := servUser.Create(ctx, "unit_tests", "unit_tests")
 	if err != nil {
@@ -56,7 +61,7 @@ func TestRepositoryAuthUpdate(t *testing.T) {
 	}
 
 	fakeSession := models.Session{
-		UserId:          user.ID,
+		UserID:          user.ID,
 		RfToken:         "Test",
 		UniqueSignature: "unit_tests",
 		CreatedAt:       time.Now(),
@@ -67,9 +72,12 @@ func TestRepositoryAuthUpdate(t *testing.T) {
 		t.Error(err)
 	}
 	t.Cleanup(func() {
-		repAuth.Delete(ctx, fakeSession.ID)
-		repUser.Delete(ctx, user.UserName)
-
+		if errRepAuthDelete := repAuth.Delete(ctx, fakeSession.ID); errRepAuthDelete != nil {
+			logrus.WithError(errRepAuthDelete).Error()
+		}
+		if errRepUserDelete := repUser.Delete(ctx, user.UserName); errRepUserDelete != nil {
+			logrus.WithError(errRepUserDelete).Error()
+		}
 	})
 	sessionFromDb, err := repAuth.Get(ctx, fakeSession.ID)
 	if err != nil {
@@ -91,8 +99,8 @@ func TestRepositoryAuthUpdate(t *testing.T) {
 }
 
 func TestRepositoryAuthGet(t *testing.T) {
-	repAuth := repository.NewRepoAuthPostgres(pgPool)
-	repUser := repository.NewRepoUsersPostgres(pgPool)
+	repAuth := NewRepoAuthPostgres(pgPool)
+	repUser := NewRepoUsersPostgres(pgPool)
 	servUser := service.NewUserService(repUser)
 	user, err := servUser.Create(ctx, "unit_tests", "unit_tests")
 	if err != nil {
@@ -100,7 +108,7 @@ func TestRepositoryAuthGet(t *testing.T) {
 	}
 
 	fakeSession := models.Session{
-		UserId:          user.ID,
+		UserID:          user.ID,
 		RfToken:         "Test",
 		UniqueSignature: "unit_tests",
 		CreatedAt:       time.Now(),
@@ -115,9 +123,12 @@ func TestRepositoryAuthGet(t *testing.T) {
 		t.Error(err)
 	}
 	t.Cleanup(func() {
-		repAuth.Delete(ctx, sessionFromDb.ID)
-		repUser.Delete(ctx, user.UserName)
-
+		if errRepAuthDelete := repAuth.Delete(ctx, sessionFromDb.ID); errRepAuthDelete != nil {
+			logrus.WithError(errRepAuthDelete).Error()
+		}
+		if errRepUserDelete := repUser.Delete(ctx, user.UserName); errRepUserDelete != nil {
+			logrus.WithError(errRepUserDelete).Error()
+		}
 	})
 	sessionFromDb.CreatedAt = fakeSession.CreatedAt
 
@@ -128,8 +139,8 @@ func TestRepositoryAuthGet(t *testing.T) {
 }
 
 func TestRepositoryAuthDelete(t *testing.T) {
-	repAuth := repository.NewRepoAuthPostgres(pgPool)
-	repUser := repository.NewRepoUsersPostgres(pgPool)
+	repAuth := NewRepoAuthPostgres(pgPool)
+	repUser := NewRepoUsersPostgres(pgPool)
 	servUser := service.NewUserService(repUser)
 	user, err := servUser.Create(ctx, "unit_tests", "unit_tests")
 	if err != nil {
@@ -137,7 +148,7 @@ func TestRepositoryAuthDelete(t *testing.T) {
 	}
 
 	fakeSession := models.Session{
-		UserId:          user.ID,
+		UserID:          user.ID,
 		RfToken:         "Test",
 		UniqueSignature: "unit_tests",
 		CreatedAt:       time.Now(),
@@ -152,9 +163,12 @@ func TestRepositoryAuthDelete(t *testing.T) {
 		t.Error(err)
 	}
 	t.Cleanup(func() {
-		repAuth.Delete(ctx, sessionFromDb.ID)
-		repUser.Delete(ctx, user.UserName)
-
+		if errRepAuthDelete := repAuth.Delete(ctx, sessionFromDb.ID); errRepAuthDelete != nil {
+			logrus.WithError(errRepAuthDelete).Error()
+		}
+		if errRepUserDelete := repUser.Delete(ctx, user.UserName); errRepUserDelete != nil {
+			logrus.WithError(errRepUserDelete).Error()
+		}
 	})
 	sessionFromDb.CreatedAt = fakeSession.CreatedAt
 

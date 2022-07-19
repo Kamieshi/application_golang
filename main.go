@@ -1,33 +1,31 @@
 package main
 
 import (
-	_ "app/docs/app"
+	ctx "context"
+	"net"
+	"net/http"
+	"sync"
+	"time"
 
-	grpsHandlers "app/internal/adapters/grpc/heandlers"
-	gr "app/internal/adapters/grpc/protocGen"
-	httpHandlers "app/internal/adapters/http/handlers"
+	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	log "github.com/sirupsen/logrus"
+	echoSwagger "github.com/swaggo/echo-swagger"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
+	"google.golang.org/grpc"
+
+	_ "app/docs/app"
+	gr "app/internal/adapters/grpc"
+	http2 "app/internal/adapters/http"
 	"app/internal/config"
 	"app/internal/repository"
 	repositoryMongoDB "app/internal/repository/mongodb"
 	repositoryPg "app/internal/repository/posgres"
 	redisRepository "app/internal/repository/redis"
 	"app/internal/service"
-	"context"
-	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
-	echoSwagger "github.com/swaggo/echo-swagger"
-	"google.golang.org/grpc"
-	"net"
-	"net/http"
-	"sync"
-
-	//nolint:typecheck
-	log "github.com/sirupsen/logrus"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
-	"time"
 )
 
 // @title Golang Application Swagger
@@ -44,18 +42,18 @@ func main() {
 	log.SetLevel(log.TraceLevel)
 	log.SetFormatter(&log.TextFormatter{})
 
-	//Create repository
+	// Create repository
 	var repoEntity repository.RepoEntity
 	var repoUsers repository.RepoUser
 	var repoImages repository.RepoImage
 	var repoAuth repository.RepoSession
 
-	//Init repository
-	typeDB := "pg"
-	if typeDB == "pg" {
-		connPool, err := pgxpool.Connect(context.Background(), configuration.UrlPostgres())
+	// Init repository
+	if configuration.UsedDB == "pg" {
+		var connPool *pgxpool.Pool
+		connPool, err = pgxpool.Connect(ctx.Background(), configuration.ConnectingURLPostgres())
 		if err != nil {
-			log.Println("Connecting url", configuration.UrlPostgres())
+			log.Println("Connecting url", configuration.ConnectingURLPostgres())
 			log.Fatal(err)
 		}
 		repoEntity = repositoryPg.NewRepoEntityPostgres(connPool)
@@ -63,9 +61,9 @@ func main() {
 		repoUsers = repositoryPg.NewRepoUsersPostgres(connPool)
 		repoImages = repositoryPg.NewRepoImagePostgres(connPool)
 	} else {
-		timeOutConnect, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-
-		clientMongo, err := mongo.Connect(timeOutConnect, options.Client().ApplyURI(configuration.ConnectUrlMongo()))
+		timeOutConnect, cancel := ctx.WithTimeout(ctx.Background(), time.Duration(2)*time.Second)
+		var clientMongo *mongo.Client
+		clientMongo, err = mongo.Connect(timeOutConnect, options.Client().ApplyURI(configuration.ConnectingURLMongo()))
 		defer cancel()
 		if err != nil {
 			log.WithError(err).Panic("Error with mongo connection")
@@ -82,17 +80,17 @@ func main() {
 		repoImages = repositoryMongoDB.NewImageRepoMongoDB(clientMongo)
 	}
 
-	//Cash repo
-	repoCashEntity := redisRepository.NewCashSteamEntityRep(configuration.REDIS_URL, &repoEntity)
+	// Cash repo
+	repoCashEntity := redisRepository.NewCashSteamEntityRep(configuration.RedisURL, &repoEntity)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
 
-	go repoCashEntity.Listener(context.Background())
+	go repoCashEntity.Listener(ctx.Background())
 
-	//Creating services Postgres
+	// Creating services Postgres
 
-	AuthService := service.NewAuthService(&repoUsers, &repoAuth)
+	AuthService := service.NewAuthService(repoUsers, &repoAuth)
 	EntityService := service.NewEntityService(repoEntity, repoCashEntity)
 	ImageService := service.NewImageService(&repoImages)
 	UserService := service.NewUserService(repoUsers)
@@ -100,10 +98,10 @@ func main() {
 	// Creating adapters
 	// Echo HTTP
 	e := echo.New()
-	handlerEntity := httpHandlers.EntityHandler{EntityService: EntityService}
-	userHandler := httpHandlers.UserHandler{Ser: UserService}
-	authHandler := httpHandlers.AuthHandler{AuthService: AuthService}
-	imageHandler := httpHandlers.ImageHandler{ImageService: ImageService}
+	handlerEntity := http2.EntityHandler{EntityService: EntityService}
+	userHandler := http2.UserHandler{Ser: UserService}
+	authHandler := http2.AuthHandler{AuthService: AuthService}
+	imageHandler := http2.ImageHandler{ImageService: ImageService}
 
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: "${method}   ${uri}  ${status}    ${latency_human}\n",
@@ -131,17 +129,20 @@ func main() {
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	e.GET("/ping", func(c echo.Context) error { return c.String(http.StatusOK, "pong") })
 
-	//Creating gRPC adapter
-	listener, err := net.Listen(configuration.GRPC_PROTOCOL, ":"+configuration.GRPC_PORT)
-	opts := []grpc.ServerOption{}
-	grpcServer := grpc.NewServer(opts...)
+	// Creating gRPC adapter
+	listener, err := net.Listen(configuration.GrpcProtocol, ":"+configuration.GrpcPort)
+	if err != nil {
+		log.Errorf("main.go/main Start Lisening protocol %s port %s : %v", configuration.GrpcProtocol, configuration.GrpcPort, err)
+	}
+
+	grpcServer := grpc.NewServer()
 
 	serverUser := struct {
 		gr.UserServer
 	}{}
-	gr.RegisterEntityServer(grpcServer, &grpsHandlers.EntityServerImplement{EntityServ: EntityService})
+	gr.RegisterEntityServer(grpcServer, &gr.EntityServerImplement{EntityServ: EntityService})
 	gr.RegisterUserServer(grpcServer, &serverUser)
-	gr.RegisterImageManagerServer(grpcServer, &grpsHandlers.ImageServerImplement{ImageService: ImageService})
+	gr.RegisterImageManagerServer(grpcServer, &gr.ImageServerImplement{ImageService: ImageService})
 	// Run Server
 	var wg sync.WaitGroup
 
@@ -149,7 +150,7 @@ func main() {
 	go func() {
 		defer wg.Done()
 		log.Info("HTTP ECHO Start work")
-		log.Info(e.Start(":8005"))
+		log.Info(e.Start(":" + configuration.EchoPort))
 		log.Info("HTTP ECHO End work")
 	}()
 	wg.Add(1)

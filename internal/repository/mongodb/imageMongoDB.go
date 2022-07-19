@@ -1,21 +1,25 @@
 package repository
 
 import (
-	"app/internal/models"
 	"context"
+	"os"
+
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"os"
+
+	"app/internal/models"
 )
 
+// ImageRepoMongoDB implement interface RepositoryImage like mongoDB
 type ImageRepoMongoDB struct {
 	mongoClient     *mongo.Client
 	collectionImage *mongo.Collection
 }
 
+// NewImageRepoMongoDB Constructor
 func NewImageRepoMongoDB(client *mongo.Client) *ImageRepoMongoDB {
 	collection := client.Database(os.Getenv("APP_MONGO_DB")).Collection(os.Getenv("IMAGE_COLLECTION"))
 	return &ImageRepoMongoDB{
@@ -24,6 +28,7 @@ func NewImageRepoMongoDB(client *mongo.Client) *ImageRepoMongoDB {
 	}
 }
 
+// Save image
 func (repImg *ImageRepoMongoDB) Save(ctx context.Context, img *models.Image) error {
 
 	bytesArr := *img.Data
@@ -47,6 +52,7 @@ func (repImg *ImageRepoMongoDB) Save(ctx context.Context, img *models.Image) err
 	return err
 }
 
+// Get image
 func (repImg *ImageRepoMongoDB) Get(ctx context.Context, easyLink string) (*models.Image, error) {
 	var image models.Image
 	err := repImg.collectionImage.FindOne(ctx, bson.D{{"easy_link", easyLink}}).Decode(&image)
@@ -57,6 +63,7 @@ func (repImg *ImageRepoMongoDB) Get(ctx context.Context, easyLink string) (*mode
 	return &image, err
 }
 
+// Delete image
 func (repImg *ImageRepoMongoDB) Delete(ctx context.Context, id uuid.UUID) error {
 	res := repImg.collectionImage.FindOneAndDelete(ctx, bson.D{{"_id", id}})
 	return res.Err()

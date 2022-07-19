@@ -1,16 +1,20 @@
 package service
 
 import (
+	"context"
+
+	"github.com/sirupsen/logrus"
+
 	"app/internal/models"
 	"app/internal/repository"
-	"context"
-	"github.com/sirupsen/logrus"
 )
 
+// ImageService Service for work with image
 type ImageService struct {
 	ImageRepository repository.RepoImage
 }
 
+// NewImageService Constructor
 func NewImageService(imagerRepository *repository.RepoImage) *ImageService {
 	return &ImageService{
 		ImageRepository: *imagerRepository,
@@ -18,6 +22,7 @@ func NewImageService(imagerRepository *repository.RepoImage) *ImageService {
 
 }
 
+// Save image
 func (ims ImageService) Save(ctx context.Context, fileName string, data *[]byte) (*models.Image, error) {
 	image := models.NewImage(fileName, data)
 
@@ -30,7 +35,7 @@ func (ims ImageService) Save(ctx context.Context, fileName string, data *[]byte)
 	err = repository.WriteImageInHost(image)
 	if err != nil {
 		logrus.Error("Error write image in host")
-		err = ims.ImageRepository.Delete(ctx, image.Id)
+		err = ims.ImageRepository.Delete(ctx, image.ID)
 		if err != nil {
 			logrus.Error("Error delete image in db")
 			return &image, err
@@ -40,6 +45,7 @@ func (ims ImageService) Save(ctx context.Context, fileName string, data *[]byte)
 	return &image, err
 }
 
+// Get image
 func (ims ImageService) Get(ctx context.Context, easyLink string) (*models.Image, error) {
 	image, err := ims.ImageRepository.Get(ctx, easyLink)
 	if err != nil {
@@ -54,7 +60,8 @@ func (ims ImageService) Get(ctx context.Context, easyLink string) (*models.Image
 	return image, err
 }
 
+// Delete Image
 func (ims ImageService) Delete(ctx context.Context, image models.Image) error {
-	err := ims.ImageRepository.Delete(ctx, image.Id)
+	err := ims.ImageRepository.Delete(ctx, image.ID)
 	return err
 }

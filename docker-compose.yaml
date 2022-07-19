@@ -4,9 +4,9 @@ services:
   postgres:
     image: postgres:latest
     environment:
-      POSTGRES_DB: "${POSTGRES_DB}"
-      POSTGRES_USER: "${POSTGRES_USER}"
-      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_DB: "postgres"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
       POSTGRES_HOST: "postgres"
     ports:
       - "5433:5432"
@@ -17,9 +17,10 @@ services:
       context: ./
       dockerfile: dockerfile
     environment:
-      POSTGRES_DB: "${POSTGRES_DB}"
-      POSTGRES_USER: "${POSTGRES_USER}"
-      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      USED_DB: "pg"
+      POSTGRES_DB: "postgres"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
       POSTGRES_HOST: "postgres"
       POSTGRES_PORT: 5432
       ENTITY_COLLECTION: "entity"
@@ -33,6 +34,7 @@ services:
       REDIS_URL: "redis:6379"
       TIME_LIVE_MINUTE_JWT: 1000
       TIME_EXPIRED_CACHE_MINUTE: 1
+      ECHO_PORT: "8005"
     ports:
       - "8005:8000"
     depends_on:
@@ -53,7 +55,7 @@ services:
 
   flyway:
     image: flyway/flyway
-    command: "-url=jdbc:postgresql://postgres:5432/postgres -schemas=public -user=$POSTGRES_USER -password=$POSTGRES_PASSWORD -connectRetries=10 migrate"
+    command: "-url=jdbc:postgresql://postgres:5432/postgres -schemas=public -user=postgres -password=postgres -connectRetries=10 migrate"
     volumes:
       - ./migrations:/flyway/sql
     environment:

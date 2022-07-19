@@ -1,28 +1,32 @@
 package repository
 
 import (
-	"app/internal/models"
 	"context"
 	"errors"
-	"fmt"
+
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
+
+	"app/internal/models"
 )
 
+// RepoUsersPostgres implement RepositoryUser
 type RepoUsersPostgres struct {
 	pool *pgxpool.Pool
 }
 
+// NewRepoUsersPostgres constructor
 func NewRepoUsersPostgres(pool *pgxpool.Pool) *RepoUsersPostgres {
 	return &RepoUsersPostgres{
 		pool: pool,
 	}
 }
 
-const orderColumnsUser string = "id, username, password_hash, is_admin"
+// Get user
+func (r RepoUsersPostgres) Get(ctx context.Context, username string) (*models.User, error) {
+	query := "SELECT id, username, password_hash, is_admin FROM users WHERE username='$1'"
+	row := r.pool.QueryRow(ctx, query, username)
 
-func rowToUser(row pgx.Row) (*models.User, error) {
 	var user models.User
 	err := row.Scan(&user.ID, &user.UserName, &user.PasswordHash, &user.Admin)
 	if err != nil {
@@ -31,14 +35,7 @@ func rowToUser(row pgx.Row) (*models.User, error) {
 	return &user, err
 }
 
-func (r RepoUsersPostgres) Get(ctx context.Context, username string) (*models.User, error) {
-	query := fmt.Sprintf("SELECT %s FROM users WHERE username='%s'", orderColumnsUser, username)
-	row := r.pool.QueryRow(ctx, query)
-
-	user, err := rowToUser(row)
-	return user, err
-}
-
+// Add user
 func (r RepoUsersPostgres) Add(ctx context.Context, user *models.User) error {
 	user.ID = uuid.New()
 	query := "INSERT INTO users( id,username, password_hash, is_admin) values ($1,$2,$3,$4)"
@@ -46,6 +43,7 @@ func (r RepoUsersPostgres) Add(ctx context.Context, user *models.User) error {
 	return err
 }
 
+// Delete user
 func (r RepoUsersPostgres) Delete(ctx context.Context, username string) error {
 	query := "DELETE FROM users WHERE username=$1"
 	com, err := r.pool.Exec(ctx, query, username)
@@ -58,8 +56,9 @@ func (r RepoUsersPostgres) Delete(ctx context.Context, username string) error {
 	return nil
 }
 
+// GetAll users
 func (r RepoUsersPostgres) GetAll(ctx context.Context) ([]*models.User, error) {
-	query := fmt.Sprintf("SELECT %s FROM users", orderColumnsUser)
+	query := "SELECT id, username, password_hash, is_admin FROM users"
 	rows, err := r.pool.Query(ctx, query)
 	if err != nil {
 		return nil, err
@@ -68,15 +67,20 @@ func (r RepoUsersPostgres) GetAll(ctx context.Context) ([]*models.User, error) {
 	var users = make([]*models.User, 0, len(rows.FieldDescriptions()))
 
 	for rows.Next() {
-		user, err := rowToUser(rows)
+		var user models.User
+		err = rows.Scan(&user.ID, &user.UserName, &user.PasswordHash, &user.Admin)
 		if err != nil {
 			return nil, err
 		}
-		users = append(users, user)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, &user)
 	}
 	return users, nil
 }
 
+// Update user
 func (r RepoUsersPostgres) Update(ctx context.Context, user *models.User) error {
 	query := "UPDATE users SET username=$1, password_hash=$2, is_admin=$3 WHERE id=$4"
 	com, err := r.pool.Exec(ctx, query, user.UserName, user.PasswordHash, user.Admin, user.ID)
@@ -86,6 +90,5 @@ func (r RepoUsersPostgres) Update(ctx context.Context, user *models.User) error 
 	if com.String() == "UPDATE 0" {
 		return errors.New("no find entity for ID")
 	}
-
 	return nil
 }

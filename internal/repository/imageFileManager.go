@@ -1,12 +1,16 @@
 package repository
 
 import (
-	"app/internal/models"
-	"github.com/sirupsen/logrus"
 	"io"
 	"os"
+
+	"github.com/sirupsen/logrus"
+
+	"app/internal/config"
+	"app/internal/models"
 )
 
+// WriteImageInHost Write image into host machine
 func WriteImageInHost(image models.Image) error {
 	bytes := image.Data
 	err := os.MkdirAll(image.RootPath, os.ModePerm)
@@ -24,7 +28,8 @@ func WriteImageInHost(image models.Image) error {
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(image.FullPath(), *bytes, 0644)
+
+	err = os.WriteFile(image.FullPath(), *bytes, os.ModePerm)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
 			"root_path": image.RootPath,
@@ -34,17 +39,18 @@ func WriteImageInHost(image models.Image) error {
 	return err
 }
 
+// CheckImageData Check exist and access to image file
 func CheckImageData(image *models.Image) error {
 	file, err := os.Open(image.FullPath())
-	data := make([]byte, 64)
+	data := make([]byte, config.Config().MaxFileSize)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"full_path": image.FullPath()}).Error("Error Open file")
 		return err
 	}
 	for {
 		_, bite := file.Read(data)
-		if bite == io.EOF { // если конец файла
-			break // выходим из цикла
+		if bite == io.EOF {
+			break
 		}
 	}
 	return err

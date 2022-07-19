@@ -1,19 +1,23 @@
+// Package handlers handlers RPC
 package handlers
 
 import (
-	gr "app/internal/adapters/grpc/protocGen"
-	"app/internal/service"
 	"context"
 	"encoding/json"
+
 	"google.golang.org/protobuf/encoding/protojson"
+
+	"app/internal/service"
 )
 
+// EntityServerImplement implement method from proto-gen
 type EntityServerImplement struct {
 	EntityServ *service.EntityService
-	gr.EntityServer
+	EntityServer
 }
 
-func (e EntityServerImplement) GetEntityById(ctx context.Context, request *gr.GetEntityByIdRequest) (*gr.GetEntityByIdResponse, error) {
+// GetEntityById get by ID
+func (e EntityServerImplement) GetEntityByID(ctx context.Context, request *GetEntityByIdRequest) (*GetEntityByIdResponse, error) {
 	entity, err := e.EntityServ.GetForID(ctx, request.EntityId)
 	if err != nil {
 		return nil, err
@@ -23,12 +27,12 @@ func (e EntityServerImplement) GetEntityById(ctx context.Context, request *gr.Ge
 	if err != nil {
 		return nil, err
 	}
-	var messageEntity gr.EntityStruct
+	var messageEntity EntityStruct
 	err = protojson.Unmarshal(data, &messageEntity)
 	if err != nil {
 		return nil, err
 	}
-	entityResponse := &gr.GetEntityByIdResponse{
+	entityResponse := &GetEntityByIdResponse{
 		Entity: &messageEntity,
 	}
 	return entityResponse, err

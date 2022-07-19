@@ -1,21 +1,25 @@
-package tests
+package repository
 
 import (
-	"app/internal/repository/posgres"
-	"app/internal/service"
 	"reflect"
 	"testing"
+
+	log "github.com/sirupsen/logrus"
+
+	"app/internal/service"
 )
 
 func TestRepositoryUserAdd(t *testing.T) {
-	repUser := repository.NewRepoUsersPostgres(pgPool)
+	repUser := NewRepoUsersPostgres(pgPool)
 	serviceUser := service.NewUserService(repUser)
 	user, err := serviceUser.Create(ctx, "testUsername", "TestPassword")
 	if err != nil {
 		t.Fatal("Error in service user", err)
 	}
 	t.Cleanup(func() {
-		repUser.Delete(ctx, user.UserName)
+		if err = repUser.Delete(ctx, user.UserName); err != nil {
+			log.WithError(err).Error()
+		}
 	})
 	userFromDB, err := repUser.Get(ctx, user.UserName)
 	if err != nil {
@@ -27,14 +31,16 @@ func TestRepositoryUserAdd(t *testing.T) {
 }
 
 func TestRepositoryUserGet(t *testing.T) {
-	repUser := repository.NewRepoUsersPostgres(pgPool)
+	repUser := NewRepoUsersPostgres(pgPool)
 	serviceUser := service.NewUserService(repUser)
 	user, err := serviceUser.Create(ctx, "testUsername", "TestPassword")
 	if err != nil {
 		t.Fatal("Error in service user", err)
 	}
 	t.Cleanup(func() {
-		repUser.Delete(ctx, user.UserName)
+		if err = repUser.Delete(ctx, user.UserName); err != nil {
+			log.WithError(err).Error()
+		}
 	})
 	userFromDB, err := repUser.Get(ctx, user.UserName)
 	if err != nil {
@@ -46,7 +52,7 @@ func TestRepositoryUserGet(t *testing.T) {
 }
 
 func TestRepositoryUserDelete(t *testing.T) {
-	repUser := repository.NewRepoUsersPostgres(pgPool)
+	repUser := NewRepoUsersPostgres(pgPool)
 	serviceUser := service.NewUserService(repUser)
 	user, err := serviceUser.Create(ctx, "testUsername", "TestPassword")
 	if err != nil {
@@ -72,7 +78,7 @@ func TestRepositoryUserDelete(t *testing.T) {
 }
 
 func TestRepositoryUserGetAll(t *testing.T) {
-	repUser := repository.NewRepoUsersPostgres(pgPool)
+	repUser := NewRepoUsersPostgres(pgPool)
 	serviceUser := service.NewUserService(repUser)
 	user1, err := serviceUser.Create(ctx, "testUsername1", "TestPassword")
 	if err != nil {
@@ -83,8 +89,12 @@ func TestRepositoryUserGetAll(t *testing.T) {
 		t.Fatal("Error in service user", err)
 	}
 	t.Cleanup(func() {
-		repUser.Delete(ctx, user2.UserName)
-		repUser.Delete(ctx, user1.UserName)
+		if err = repUser.Delete(ctx, user2.UserName); err != nil {
+			log.WithError(err).Error()
+		}
+		if err = repUser.Delete(ctx, user1.UserName); err != nil {
+			log.WithError(err).Error()
+		}
 	})
 	allUsersFromDB, err := repUser.GetAll(ctx)
 	if err != nil {
@@ -96,7 +106,7 @@ func TestRepositoryUserGetAll(t *testing.T) {
 }
 
 func TestRepositoryUserUpdate(t *testing.T) {
-	repUser := repository.NewRepoUsersPostgres(pgPool)
+	repUser := NewRepoUsersPostgres(pgPool)
 	serviceUser := service.NewUserService(repUser)
 	user1, err := serviceUser.Create(ctx, "testUsername1", "TestPassword")
 	if err != nil {
@@ -113,6 +123,8 @@ func TestRepositoryUserUpdate(t *testing.T) {
 		t.Error("Update don't work")
 	}
 	t.Cleanup(func() {
-		repUser.Delete(ctx, user1.UserName)
+		if err = repUser.Delete(ctx, user1.UserName); err != nil {
+			log.WithError(err).Error()
+		}
 	})
 }

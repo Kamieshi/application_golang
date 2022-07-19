@@ -1,23 +1,25 @@
 package handlers
 
 import (
-	gr "app/internal/adapters/grpc/protocGen"
-	"app/internal/service"
 	"context"
+
+	"app/internal/service"
 )
 
+// ImageServerImplement implement method from proto-gen
 type ImageServerImplement struct {
 	ImageService *service.ImageService
-	gr.ImageManagerServer
+	ImageManagerServer
 }
 
-func (i *ImageServerImplement) GetImageByEasyLink(req *gr.GetImageByIDRequest, resp gr.ImageManager_GetImageByEasyLinkServer) error {
+// GetImageByEasyLink Get image by ID
+func (i *ImageServerImplement) GetImageByEasyLink(req *GetImageByIDRequest, resp ImageManager_GetImageByEasyLinkServer) error {
 	image, err := i.ImageService.Get(context.Background(), req.EasyLink)
 	if err != nil {
 		return err
 	}
-	respMessage := &gr.GetImageByIDResponse{
-		MetaData: &gr.ImageStruct{
+	respMessage := &GetImageByIDResponse{
+		MetaData: &ImageStruct{
 			FileName: image.Filename,
 			Size:     int32(len(*image.Data)),
 		},
