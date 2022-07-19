@@ -18,7 +18,7 @@ var pgPool *pgxpool.Pool
 var ctx = context.Background()
 
 func TestMain(t *testing.M) {
-	configuration, err := config.GetConfig("/home/rusak/application_golang/localConfig.env")
+	configuration, err := config.GetConfig("/home/rusak/application_golang/localConf.env")
 	if err != nil {
 		log.WithError(err).Panic()
 	}

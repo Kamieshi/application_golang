@@ -16,7 +16,7 @@ type EntityServerImplement struct {
 	EntityServer
 }
 
-// GetEntityById get by ID
+// GetEntityByID get by ID
 func (e EntityServerImplement) GetEntityByID(ctx context.Context, request *GetEntityByIdRequest) (*GetEntityByIdResponse, error) {
 	entity, err := e.EntityServ.GetForID(ctx, request.EntityId)
 	if err != nil {

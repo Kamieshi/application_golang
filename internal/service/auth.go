@@ -1,4 +1,4 @@
-// Package service
+// Package service Work with services
 package service
 
 import (
@@ -25,6 +25,8 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
+const maxRand = 10000
+
 // AuthService service for work with Auth end Session
 type AuthService struct {
 	UserRep   repository.RepoUser
@@ -33,7 +35,7 @@ type AuthService struct {
 }
 
 // NewAuthService Constructor
-func NewAuthService(userRep repository.RepoUser, sessionRep *repository.RepoSession) *AuthService {
+func NewAuthService(userRep repository.RepoUser, sessionRep repository.RepoSession) *AuthService {
 	headerAuthorization := ech.HeaderAuthorization
 	config := &middleware.JWTConfig{
 		Claims:        &CustomClaims{},
@@ -55,7 +57,7 @@ func NewAuthService(userRep repository.RepoUser, sessionRep *repository.RepoSess
 			token, err := jwt.ParseWithClaims(auth, claims, keyFunc)
 
 			if err != nil {
-				if fmt.Sprint(err)[:16] == "token is expired" && c.Path() == "/auth/refresh" {
+				if err.Error()[:16] == "token is expired" && c.Path() == "/auth/refresh" {
 					return token, nil
 				}
 				return nil, err
@@ -86,7 +88,7 @@ func NewAuthService(userRep repository.RepoUser, sessionRep *repository.RepoSess
 
 	return &AuthService{
 		UserRep:   userRep,
-		AuthRep:   *sessionRep,
+		AuthRep:   sessionRep,
 		JWTConfig: config,
 	}
 }
@@ -100,25 +102,23 @@ type CustomClaims struct {
 }
 
 // IsAuthentication Check JWT of session and
-func (a AuthService) IsAuthentication(ctx context.Context, username string, password string) (*models.User, bool, error) {
+func (a *AuthService) IsAuthentication(ctx context.Context, username, password string) (*models.User, error) {
 	user, err := a.UserRep.Get(ctx, username)
 
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"username": username}).Warn("Unsuccessful login attempt")
-		return user, false, err
+		return user, err
 	}
 	inPasswordHash := createHash256Password(user, password)
 	if user.PasswordHash == inPasswordHash {
-		return user, true, err
+		return user, err
 	}
-	return nil, false, err
+	return nil, err
 }
 
 // CreateToken Create access token
-func (a AuthService) CreateToken(username string, admin bool, idSession uuid.UUID) (string, error) {
-
+func (a *AuthService) CreateToken(username string, admin bool, idSession uuid.UUID) (string, error) {
 	timeLive, _ := strconv.Atoi(os.Getenv("TIME_LIVE_MINUTE_JWT"))
-
 	payLoad := &CustomClaims{
 		username,
 		admin,
@@ -138,7 +138,7 @@ func (a AuthService) CreateToken(username string, admin bool, idSession uuid.UUI
 }
 
 // CreateAndWriteSession Create new session and write into repository
-func (a AuthService) CreateAndWriteSession(ctx ech.Context, user models.User) (models.Session, error) {
+func (a *AuthService) CreateAndWriteSession(ctx ech.Context, user models.User) (models.Session, error) {
 	refresh := a.createRandomOutput(user.UserName)
 
 	session := models.Session{
@@ -157,7 +157,7 @@ func (a AuthService) CreateAndWriteSession(ctx ech.Context, user models.User) (m
 }
 
 // RefreshAndWriteSession Update RF token
-func (a *AuthService) RefreshAndWriteSession(ctx ech.Context, rfToken string) (AccessToken string, RfToken string, err error) {
+func (a *AuthService) RefreshAndWriteSession(ctx ech.Context, rfToken string) (AccessToken, RfToken string, err error) {
 	user := ctx.Get("user").(*jwt.Token)
 	payLoad := user.Claims.(*CustomClaims)
 	currentSession, err := a.AuthRep.Get(ctx.Request().Context(), payLoad.IDSession)
@@ -181,7 +181,7 @@ func (a *AuthService) RefreshAndWriteSession(ctx ech.Context, rfToken string) (A
 }
 
 func (a *AuthService) createRandomOutput(sal ...string) string {
-	nBig, err := rand.Int(rand.Reader, big.NewInt(10000))
+	nBig, err := rand.Int(rand.Reader, big.NewInt(maxRand))
 	if err != nil {
 		logrus.WithError(err).Error()
 	}

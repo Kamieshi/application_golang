@@ -26,9 +26,8 @@ type Configuration struct {
 	EchoPort         string `env:"ECHO_PORT"`
 	PathToMigration  string `env:"PATH_TO_MIGRATIONS"`
 	MaxFileSize      int64  `env:"MAX_FILE_SIZE" envDefault:"1000"`
+	TTLBackground    int64  `env:"TTL_BACKGROUND" envDefault:"2"`
 }
-
-var _singleConfig *Configuration //nolint:gochecknoglobals
 
 // ConnectingURLPostgres  Return connection string to Postgres
 func (c *Configuration) ConnectingURLPostgres() string {
@@ -40,16 +39,8 @@ func (c *Configuration) ConnectingURLMongo() string {
 	return fmt.Sprintf("mongodb://%v:%v", c.MongoHost, c.MongoPort)
 }
 
-// Config Get link to simpleConfig
-func Config() *Configuration {
-	return _singleConfig
-}
-
 // GetConfig Get instance config object
 func GetConfig(args ...string) (*Configuration, error) {
-	if _singleConfig != nil {
-		return _singleConfig, nil
-	}
 	conf := Configuration{}
 	if len(args) != 0 {
 		absPath := args[0]
@@ -60,7 +51,8 @@ func GetConfig(args ...string) (*Configuration, error) {
 	}
 	_, exist := os.LookupEnv("POSTGRES_PORT")
 	if !exist {
-		err := godotenv.Load(os.Getenv("PATH_TO_CONFIG_FILE"))
+		err := godotenv.Load("./localConf.env")
+
 		if err != nil {
 			return &conf, fmt.Errorf("config.go/GetConfig Error parse data from file : %v", err)
 		}
@@ -70,6 +62,6 @@ func GetConfig(args ...string) (*Configuration, error) {
 	if err != nil {
 		return nil, err
 	}
-	_singleConfig = &conf
-	return _singleConfig, nil
+
+	return &conf, nil
 }

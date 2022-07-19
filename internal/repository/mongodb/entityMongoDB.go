@@ -52,8 +52,8 @@ func (rm RepoEntityMongoDB) GetForID(ctx context.Context, id string) (*models.En
 		return nil, err
 	}
 	var entity models.Entity
-
-	err = rm.collectionEntity.FindOne(ctx, bson.D{{"_id", ID}}).Decode(&entity)
+	query := bson.D{primitive.E{Key: "_id", Value: ID}}
+	err = rm.collectionEntity.FindOne(ctx, query).Decode(&entity)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +78,8 @@ func (rm RepoEntityMongoDB) Update(ctx context.Context, id string, obj *models.E
 	updateData := bson.M{
 		"$set": obj,
 	}
-	res := rm.collectionEntity.FindOneAndUpdate(ctx, bson.D{{"_id", ID}}, updateData)
+	query := bson.D{primitive.E{Key: "_id", Value: ID}}
+	res := rm.collectionEntity.FindOneAndUpdate(ctx, query, updateData)
 	err = res.Err()
 	return err
 }
@@ -89,7 +90,8 @@ func (rm RepoEntityMongoDB) Delete(ctx context.Context, id string) error {
 	if err != nil {
 		return err
 	}
-	res := rm.collectionEntity.FindOneAndDelete(ctx, bson.D{{"_id", ID}})
+	query := bson.D{primitive.E{Key: "_id", Value: ID}}
+	res := rm.collectionEntity.FindOneAndDelete(ctx, query)
 	err = res.Err()
 	return err
 }

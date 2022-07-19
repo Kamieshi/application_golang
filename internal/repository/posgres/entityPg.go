@@ -98,7 +98,7 @@ func (sp RepoEntityPostgres) Update(ctx context.Context, id string, obj *models.
 	if err != nil {
 		return err
 	}
-	if com.String() == "UPDATE 0" {
+	if !com.Update() {
 		return errors.New("no find entity for ID")
 	}
 	return nil

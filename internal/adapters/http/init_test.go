@@ -161,7 +161,7 @@ func TestMain(m *testing.M) {
 }
 
 //func TestMain(m *testing.M) {
-//	godotenv.Load("/home/dmitryrusack/Work/application_golang/.env")
+//	godotenv.Load("/home/dmitryrusack/Work/application_golang/localConf.env")
 //	secretKey = os.Getenv("SECRET_KEY")
 //	addrApi = "http://127.0.0.1:8005"
 //	URLCreateUser = addrApi + "/user"

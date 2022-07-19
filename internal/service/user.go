@@ -30,7 +30,7 @@ func createHash256Password(user *models.User, password string) string {
 }
 
 // Create user
-func (us *UserService) Create(ctx context.Context, userName string, password string) (*models.User, error) {
+func (us *UserService) Create(ctx context.Context, userName, password string) (*models.User, error) {
 	user, err := us.rep.Get(ctx, userName)
 	if user != nil {
 		return user, errors.New("username already in use")
@@ -48,9 +48,7 @@ func (us *UserService) Create(ctx context.Context, userName string, password str
 		return nil, err
 	}
 	user, _ = us.rep.Get(ctx, userName)
-
 	return user, err
-
 }
 
 // Delete user
@@ -65,7 +63,6 @@ func (us *UserService) Get(ctx context.Context, username string) (*models.User, 
 
 // GetAll users
 func (us *UserService) GetAll(ctx context.Context) ([]*models.User, error) {
-
 	users, err := us.rep.GetAll(ctx)
 	if err != nil {
 		return nil, err

@@ -5,6 +5,8 @@ import (
 	"context"
 	"os"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
 	"app/internal/models"
 
 	"github.com/google/uuid"
@@ -36,7 +38,8 @@ func (ar *AuthRepoMongoDB) Create(ctx context.Context, session *models.Session) 
 
 // Update session
 func (ar *AuthRepoMongoDB) Update(ctx context.Context, session *models.Session) error {
-	_, err := ar.collection.ReplaceOne(ctx, bson.D{{"_id", session.ID}}, session)
+	query := bson.D{primitive.E{Key: "_id", Value: session.ID}}
+	_, err := ar.collection.ReplaceOne(ctx, query, session)
 	if err != nil {
 		return err
 	}
@@ -46,13 +49,15 @@ func (ar *AuthRepoMongoDB) Update(ctx context.Context, session *models.Session) 
 // Get session
 func (ar *AuthRepoMongoDB) Get(ctx context.Context, SessionID uuid.UUID) (*models.Session, error) {
 	var session models.Session
-	err := ar.collection.FindOne(ctx, bson.D{{"session_id", SessionID}}).Decode(&session)
+	query := bson.D{primitive.E{Key: "session_id", Value: SessionID}}
+	err := ar.collection.FindOne(ctx, query).Decode(&session)
 	return &session, err
 }
 
 // Delete session
 func (ar *AuthRepoMongoDB) Delete(ctx context.Context, sessionID uuid.UUID) error {
-	res := ar.collection.FindOneAndDelete(ctx, bson.D{{"session_id", sessionID}})
+	query := bson.D{primitive.E{Key: "session_id", Value: sessionID}}
+	res := ar.collection.FindOneAndDelete(ctx, query)
 	err := res.Err()
 	return err
 }

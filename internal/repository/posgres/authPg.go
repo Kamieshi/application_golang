@@ -41,16 +41,16 @@ func (r RepoAuthPostgres) Update(ctx context.Context, session *models.Session) e
 	if err != nil {
 		return err
 	}
-	if res.String() == "UPDATE 0" {
+	if !res.Update() {
 		return errors.New("no find entity for ID")
 	}
 	return nil
 }
 
 // Get session
-func (r RepoAuthPostgres) Get(ctx context.Context, SessionId uuid.UUID) (*models.Session, error) {
+func (r RepoAuthPostgres) Get(ctx context.Context, SessionID uuid.UUID) (*models.Session, error) {
 	query := "SELECT id, user_id,  refresh_token, signature ,created_at ,disabled FROM sessions WHERE id=$1"
-	var row = r.pool.QueryRow(ctx, query, SessionId)
+	var row = r.pool.QueryRow(ctx, query, SessionID)
 	var session models.Session
 	err := row.Scan(&session.ID, &session.UserID, &session.RfToken, &session.UniqueSignature, &session.CreatedAt, &session.Disabled)
 	if err != nil {
@@ -60,25 +60,22 @@ func (r RepoAuthPostgres) Get(ctx context.Context, SessionId uuid.UUID) (*models
 }
 
 // Delete session
-func (r RepoAuthPostgres) Delete(ctx context.Context, sessionId uuid.UUID) error {
-
+func (r RepoAuthPostgres) Delete(ctx context.Context, sessionID uuid.UUID) error {
 	query := "DELETE FROM sessions WHERE id=$1"
-	com, err := r.pool.Exec(ctx, query, sessionId)
-
+	com, err := r.pool.Exec(ctx, query, sessionID)
 	if err != nil {
 		return err
 	}
-	if com.String() == "DELETE 0" {
+	if !com.Delete() {
 		return errors.New("no find session for ID")
 	}
-
 	return nil
 }
 
 // Disable Session
-func (r RepoAuthPostgres) Disable(ctx context.Context, sessionId uuid.UUID) error {
+func (r RepoAuthPostgres) Disable(ctx context.Context, sessionID uuid.UUID) error {
 	query := "UPDATE sessions SET disabled=$1 WHERE id=$2"
-	com, err := r.pool.Exec(ctx, query, true, sessionId)
+	com, err := r.pool.Exec(ctx, query, true, sessionID)
 	log.Info(com)
 	return err
 }

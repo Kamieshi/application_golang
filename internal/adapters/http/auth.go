@@ -1,4 +1,4 @@
-// Package handlers Work with http adapter from Echo
+// Package http Work with http adapter from Echo
 package http
 
 import (
@@ -7,6 +7,7 @@ import (
 
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
+	"github.com/sirupsen/logrus"
 
 	"app/internal/service"
 )
@@ -21,7 +22,7 @@ type AuthHandler struct {
 // @Summary Login User
 // @Description Login user
 // @Tags Auth
-// @Param formLogin body handlers.usPss true "Login form"
+// @Param formLogin body usPss true "Login form"
 // @Success 200 {object} responseSuccessLogin
 // @Failure 401 {string} Invalid username or password
 // @Failure 502 {string} Error create token
@@ -30,24 +31,28 @@ func (a *AuthHandler) Login(c echo.Context) error {
 	var data usPss
 	err := c.Bind(&data)
 	if err != nil {
+		logrus.WithError(err).Error()
 		return err
 	}
-	if err = c.Validate(data); err != nil {
-		return err
+	if valError := c.Validate(data); valError != nil {
+		return valError
 	}
-	user, isAuth, err := a.AuthService.IsAuthentication(c.Request().Context(), data.Username, data.Password)
+	user, err := a.AuthService.IsAuthentication(c.Request().Context(), data.Username, data.Password)
 	if err != nil {
+		logrus.WithError(err).Error()
 		return c.String(http.StatusUnauthorized, "invalid Username or password")
 	}
-	if !isAuth {
+	if user == nil {
 		return echo.ErrUnauthorized
 	}
 	session, err := a.AuthService.CreateAndWriteSession(c, *user)
 	if err != nil {
+		logrus.WithError(err).Error()
 		return echo.ErrUnauthorized
 	}
 	token, err := a.AuthService.CreateToken(user.UserName, user.Admin, session.ID)
 	if err != nil {
+		logrus.WithError(err).Error()
 		return c.String(http.StatusBadGateway, err.Error())
 	}
 

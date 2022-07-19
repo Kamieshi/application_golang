@@ -18,8 +18,8 @@ import (
 	"google.golang.org/grpc"
 
 	_ "app/docs/app"
-	gr "app/internal/adapters/grpc"
-	http2 "app/internal/adapters/http"
+	adaptergRPC "app/internal/adapters/grpc"
+	adapterHTTP "app/internal/adapters/http"
 	"app/internal/config"
 	"app/internal/repository"
 	repositoryMongoDB "app/internal/repository/mongodb"
@@ -61,7 +61,7 @@ func main() {
 		repoUsers = repositoryPg.NewRepoUsersPostgres(connPool)
 		repoImages = repositoryPg.NewRepoImagePostgres(connPool)
 	} else {
-		timeOutConnect, cancel := ctx.WithTimeout(ctx.Background(), time.Duration(2)*time.Second)
+		timeOutConnect, cancel := ctx.WithTimeout(ctx.Background(), time.Duration(configuration.TTLBackground)*time.Second)
 		var clientMongo *mongo.Client
 		clientMongo, err = mongo.Connect(timeOutConnect, options.Client().ApplyURI(configuration.ConnectingURLMongo()))
 		defer cancel()
@@ -81,7 +81,7 @@ func main() {
 	}
 
 	// Cash repo
-	repoCashEntity := redisRepository.NewCashSteamEntityRep(configuration.RedisURL, &repoEntity)
+	repoCashEntity := redisRepository.NewCashSteamEntityRep(configuration.RedisURL, repoEntity)
 	if err != nil {
 		log.Error(err)
 	}
@@ -90,18 +90,19 @@ func main() {
 
 	// Creating services Postgres
 
-	AuthService := service.NewAuthService(repoUsers, &repoAuth)
+	AuthService := service.NewAuthService(repoUsers, repoAuth)
 	EntityService := service.NewEntityService(repoEntity, repoCashEntity)
-	ImageService := service.NewImageService(&repoImages)
+	ImageService := service.NewImageService(repoImages)
 	UserService := service.NewUserService(repoUsers)
 
 	// Creating adapters
 	// Echo HTTP
 	e := echo.New()
-	handlerEntity := http2.EntityHandler{EntityService: EntityService}
-	userHandler := http2.UserHandler{Ser: UserService}
-	authHandler := http2.AuthHandler{AuthService: AuthService}
-	imageHandler := http2.ImageHandler{ImageService: ImageService}
+	e.Validator = adapterHTTP.NewCustomValidator()
+	handlerEntity := adapterHTTP.EntityHandler{EntityService: EntityService}
+	userHandler := adapterHTTP.UserHandler{Ser: UserService}
+	authHandler := adapterHTTP.AuthHandler{AuthService: AuthService}
+	imageHandler := adapterHTTP.ImageHandler{ImageService: ImageService}
 
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: "${method}   ${uri}  ${status}    ${latency_human}\n",
@@ -138,11 +139,11 @@ func main() {
 	grpcServer := grpc.NewServer()
 
 	serverUser := struct {
-		gr.UserServer
+		adaptergRPC.UserServer
 	}{}
-	gr.RegisterEntityServer(grpcServer, &gr.EntityServerImplement{EntityServ: EntityService})
-	gr.RegisterUserServer(grpcServer, &serverUser)
-	gr.RegisterImageManagerServer(grpcServer, &gr.ImageServerImplement{ImageService: ImageService})
+	adaptergRPC.RegisterEntityServer(grpcServer, &adaptergRPC.EntityServerImplement{EntityServ: EntityService})
+	adaptergRPC.RegisterUserServer(grpcServer, &serverUser)
+	adaptergRPC.RegisterImageManagerServer(grpcServer, &adaptergRPC.ImageServerImplement{ImageService: ImageService})
 	// Run Server
 	var wg sync.WaitGroup
 

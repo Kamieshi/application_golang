@@ -24,7 +24,7 @@ func NewRepoUsersPostgres(pool *pgxpool.Pool) *RepoUsersPostgres {
 
 // Get user
 func (r RepoUsersPostgres) Get(ctx context.Context, username string) (*models.User, error) {
-	query := "SELECT id, username, password_hash, is_admin FROM users WHERE username='$1'"
+	query := "SELECT id, username, password_hash, is_admin FROM users WHERE username=$1"
 	row := r.pool.QueryRow(ctx, query, username)
 
 	var user models.User

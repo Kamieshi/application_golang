@@ -1,3 +1,4 @@
+// Package repository work with cache stream
 package repository
 
 import (
@@ -14,16 +15,19 @@ import (
 	"app/internal/repository"
 )
 
+// LocalStorage storage
 type LocalStorage struct {
 	M       sync.Mutex
 	storage map[string]*CacheEntityObject
 }
 
+// CacheEntityObject Cache obj
 type CacheEntityObject struct {
 	EntityObj *models.Entity
 	DeathTime time.Time
 }
 
+// CashSteamEntityRep rep
 type CashSteamEntityRep struct {
 	StreamCommand string
 	GroupName     string
@@ -31,7 +35,8 @@ type CashSteamEntityRep struct {
 	LocalStorage *LocalStorage
 }
 
-func NewCashSteamEntityRep(addr string, repEnt *repository.RepoEntity) *CashSteamEntityRep {
+// NewCashSteamEntityRep Constructor
+func NewCashSteamEntityRep(addr string, repEnt repository.RepoEntity) *CashSteamEntityRep {
 	localStorage := LocalStorage{storage: make(map[string]*CacheEntityObject)}
 	return &CashSteamEntityRep{
 		StreamCommand:             "StreamCommand",
@@ -41,15 +46,17 @@ func NewCashSteamEntityRep(addr string, repEnt *repository.RepoEntity) *CashStea
 	}
 }
 
+// Command type command
 type Command struct {
 	Type     string
-	EntityId string
+	EntityID string
 }
 
+// Marshal command
 func (c *Command) Marshal() map[string]string {
 	return map[string]string{
 		"Type":     c.Type,
-		"EntityId": c.EntityId,
+		"EntityID": c.EntityID,
 	}
 }
 
@@ -64,7 +71,7 @@ func creatCacheEntity(ent *models.Entity) *CacheEntityObject {
 func unMarshalCommand(data map[string]interface{}) *Command {
 	var com = Command{
 		Type:     data["Type"].(string),
-		EntityId: data["EntityId"].(string),
+		EntityID: data["EntityID"].(string),
 	}
 	return &com
 }
@@ -80,16 +87,18 @@ func (r *CashSteamEntityRep) sendCommand(ctx context.Context, command Command) e
 	return res.Err()
 }
 
+// Set new cache item
 func (r *CashSteamEntityRep) Set(ctx context.Context, entity *models.Entity) error {
 	cacheObj := creatCacheEntity(entity)
 	r.LocalStorage.M.Lock()
 	r.LocalStorage.storage[entity.ID.String()] = cacheObj
 	r.LocalStorage.M.Unlock()
-	writeCommand := Command{Type: "write", EntityId: entity.ID.String()}
+	writeCommand := Command{Type: "write", EntityID: entity.ID.String()}
 	err := r.sendCommand(ctx, writeCommand)
 	return err
 }
 
+// Get entity from cache
 func (r *CashSteamEntityRep) Get(ctx context.Context, idEntity string) (*models.Entity, bool) {
 	r.LocalStorage.M.Lock()
 	cacheObj := r.LocalStorage.storage[idEntity]
@@ -104,17 +113,19 @@ func (r *CashSteamEntityRep) Get(ctx context.Context, idEntity string) (*models.
 	return nil, false
 }
 
+// Delete value from cache
 func (r *CashSteamEntityRep) Delete(ctx context.Context, idEntity string) {
 	r.LocalStorage.M.Lock()
 	delete(r.LocalStorage.storage, idEntity)
 	r.LocalStorage.M.Unlock()
-	deleteCommand := Command{Type: "delete", EntityId: idEntity}
+	deleteCommand := Command{Type: "delete", EntityID: idEntity}
 	err := r.sendCommand(ctx, deleteCommand)
 	if err != nil {
 		log.WithError(err).Error("Delete haven't worked")
 	}
 }
 
+// Listener goroutine from listening redis stream
 func (r *CashSteamEntityRep) Listener(ctx context.Context) {
 	r.client.XGroupDestroy(ctx, r.StreamCommand, r.GroupName)
 	r.client.XGroupCreate(ctx, r.StreamCommand, r.GroupName, "$")
@@ -129,7 +140,7 @@ func (r *CashSteamEntityRep) Listener(ctx context.Context) {
 			for _, comm := range message.Messages {
 				command := unMarshalCommand(comm.Values)
 				if command.Type == "write" {
-					entity, err := r.entityRep.GetForID(ctx, command.EntityId)
+					entity, err := r.entityRep.GetForID(ctx, command.EntityID)
 					if err == nil {
 						cacheObj := creatCacheEntity(entity)
 						r.LocalStorage.M.Lock()
