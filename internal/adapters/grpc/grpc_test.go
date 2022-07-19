@@ -12,6 +12,7 @@ import (
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/encoding/protojson"
 
 	"app/internal/config"
@@ -22,23 +23,23 @@ import (
 	"google.golang.org/grpc/grpclog"
 )
 
-var opts []grpc.DialOption
 var clientEntity EntityClient
 var clientImage ImageManagerClient
 var ctx context.Context
 var connPool *pgxpool.Pool
 
 func TestMain(m *testing.M) {
-	godotenv.Load("/home/dmitryrusack/Work/application_golang/.env")
+	err := godotenv.Load("/home/dmitryrusack/Work/application_golang/.env")
+	if err != nil {
+		log.Fatal(err)
+	}
 	conf, err := config.GetConfig()
 	if err != nil {
 		log.Fatal(err)
 	}
-	opts = []grpc.DialOption{
-		grpc.WithInsecure(),
-	}
+
 	grpcAddress := fmt.Sprintf("%s:%s", conf.GrpcHost, conf.GrpcPort)
-	conn, err := grpc.Dial(grpcAddress, opts...)
+	conn, err := grpc.Dial(grpcAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		grpclog.Fatalf("fail to dial: %v", err)
 	}
@@ -100,7 +101,7 @@ func TestGetImagesByEasyLink(t *testing.T) {
 	for {
 		imageByResponse, err := stream.Recv()
 		if err == io.EOF {
-			if err = stream.CloseSend(); err != nil {
+			if err = stream.(grpc.ClientStream).CloseSend(); err != nil {
 				log.WithError(err).Error()
 			}
 		}

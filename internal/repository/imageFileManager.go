@@ -6,6 +6,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
+	"app/internal/config"
 	"app/internal/models"
 )
 
@@ -41,7 +42,7 @@ func WriteImageInHost(image models.Image) error {
 // CheckImageData Check exist and access to image file
 func CheckImageData(image *models.Image) error {
 	file, err := os.Open(image.FullPath())
-	data := make([]byte, int32(64))
+	data := make([]byte, config.Config().MaxFileSize)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"full_path": image.FullPath()}).Error("Error Open file")
 		return err

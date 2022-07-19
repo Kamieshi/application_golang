@@ -86,8 +86,8 @@ func (uh UserHandler) Delete(c echo.Context) error {
 
 // GetAll godoc
 // @tags User Control
-// @Summary get all users
-// @Description get all users
+// @Summary Get all users
+// @Description Get all users
 // @Security ApiKeyAuth
 // @Success 200 {array} models.User
 // @Failure 500 {string} Error from service
