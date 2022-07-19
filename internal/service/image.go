@@ -15,11 +15,10 @@ type ImageService struct {
 }
 
 // NewImageService Constructor
-func NewImageService(imagerRepository *repository.RepoImage) *ImageService {
+func NewImageService(imagerRepository repository.RepoImage) *ImageService {
 	return &ImageService{
-		ImageRepository: *imagerRepository,
+		ImageRepository: imagerRepository,
 	}
-
 }
 
 // Save image

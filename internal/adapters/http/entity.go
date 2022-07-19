@@ -73,8 +73,8 @@ func (eh EntityHandler) Update(c ech.Context) error {
 	if err != nil {
 		return err
 	}
-	if err = c.Validate(entity); err != nil {
-		return err
+	if valErr := c.Validate(entity); valErr != nil {
+		return valErr
 	}
 	err = eh.EntityService.Update(c.Request().Context(), id, &entity)
 	if err != nil {
@@ -103,8 +103,8 @@ func (eh EntityHandler) Create(c ech.Context) error {
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
-	if err = c.Validate(entity); err != nil {
-		return err
+	if valErr := c.Validate(entity); valErr != nil {
+		return valErr
 	}
 	err = eh.EntityService.Add(c.Request().Context(), &entity)
 	if err != nil {

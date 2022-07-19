@@ -6,9 +6,10 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"app/internal/config"
 	"app/internal/models"
 )
+
+const maxFileSize = 200
 
 // WriteImageInHost Write image into host machine
 func WriteImageInHost(image models.Image) error {
@@ -17,7 +18,6 @@ func WriteImageInHost(image models.Image) error {
 	if err != nil {
 		return err
 	}
-
 	if _, err = os.Stat(image.RootPath); os.IsNotExist(err) {
 		err = os.Mkdir(image.RootPath, os.ModePerm)
 		if err != nil {
@@ -42,7 +42,7 @@ func WriteImageInHost(image models.Image) error {
 // CheckImageData Check exist and access to image file
 func CheckImageData(image *models.Image) error {
 	file, err := os.Open(image.FullPath())
-	data := make([]byte, config.Config().MaxFileSize)
+	data := make([]byte, maxFileSize)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"full_path": image.FullPath()}).Error("Error Open file")
 		return err

@@ -1,3 +1,4 @@
+// Package repository cache
 package repository
 
 import (
@@ -15,11 +16,13 @@ import (
 	"app/internal/repository"
 )
 
+// CacheObj struct Cache object
 type CacheObj struct {
 	Data      []byte `json:"data"`
 	DeathTime int64  `json:"deathTime"`
 }
 
+// NewCache Constructor
 func NewCache(value []byte) (CacheObj, error) {
 	var cacheObj CacheObj
 	timeLive, err := strconv.Atoi(os.Getenv("TIME_EXPIRED_CACHE_MINUTE"))
@@ -31,20 +34,24 @@ func NewCache(value []byte) (CacheObj, error) {
 	return cacheObj, err
 }
 
-func (co CacheObj) MarshalBinary() ([]byte, error) {
+// MarshalBinary object -> []byte
+func (co *CacheObj) MarshalBinary() ([]byte, error) {
 	return json.Marshal(co)
 }
 
+// CashEntityRepositoryRedis Implement repoEntityCache
 type CashEntityRepositoryRedis struct {
 	entityRep repository.RepoEntity
 	client    *rds.Client
 }
 
+// Client Redis client
 func (c CashEntityRepositoryRedis) Client() *rds.Client {
 	return c.client
 }
 
-func NewCashEntityRepository(addr string, entityRep *repository.RepoEntity) *CashEntityRepositoryRedis {
+// NewCashEntityRepository Constructor
+func NewCashEntityRepository(addr string, entityRep repository.RepoEntity) *CashEntityRepositoryRedis {
 	client := rds.NewClient(&rds.Options{
 		Addr:     addr,
 		Password: "", // no password set
@@ -53,10 +60,11 @@ func NewCashEntityRepository(addr string, entityRep *repository.RepoEntity) *Cas
 
 	return &CashEntityRepositoryRedis{
 		client:    client,
-		entityRep: *entityRep,
+		entityRep: entityRep,
 	}
 }
 
+// Set set cache value
 func (c CashEntityRepositoryRedis) Set(ctx context.Context, entity *models.Entity) error {
 	key := entity.ID.String()
 	value, err := json.Marshal(entity)
@@ -76,6 +84,7 @@ func (c CashEntityRepositoryRedis) Set(ctx context.Context, entity *models.Entit
 	return nil
 }
 
+// Get get cache value
 func (c CashEntityRepositoryRedis) Get(ctx context.Context, id string) (*models.Entity, error) {
 	var cacheObj CacheObj
 	ent := models.Entity{}
@@ -106,6 +115,7 @@ func (c CashEntityRepositoryRedis) Get(ctx context.Context, id string) (*models.
 	return &ent, nil
 }
 
+// Delete delete value from redis
 func (c CashEntityRepositoryRedis) Delete(ctx context.Context, id string) {
 	c.client.Del(ctx, id)
 }

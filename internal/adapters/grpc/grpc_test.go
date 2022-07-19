@@ -29,7 +29,7 @@ var ctx context.Context
 var connPool *pgxpool.Pool
 
 func TestMain(m *testing.M) {
-	err := godotenv.Load("/home/dmitryrusack/Work/application_golang/.env")
+	err := godotenv.Load("/home/dmitryrusack/Work/application_golang/localConf.env")
 	if err != nil {
 		log.Fatal(err)
 	}

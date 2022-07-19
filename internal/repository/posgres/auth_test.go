@@ -31,24 +31,23 @@ func TestRepositoryAuthCreate(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	sessionFromDb, err := repAuth.Get(ctx, fakeSession.ID)
+	sessionFromDB, err := repAuth.Get(ctx, fakeSession.ID)
 	if err != nil {
 		t.Error(err)
 	}
 	t.Cleanup(func() {
-		if errRepAuthDelete := repAuth.Delete(ctx, sessionFromDb.ID); errRepAuthDelete != nil {
+		if errRepAuthDelete := repAuth.Delete(ctx, sessionFromDB.ID); errRepAuthDelete != nil {
 			logrus.WithError(errRepAuthDelete).Error()
 		}
 		if errRepUserDelete := repUser.Delete(ctx, user.UserName); errRepUserDelete != nil {
 			logrus.WithError(errRepUserDelete).Error()
 		}
 	})
-	sessionFromDb.CreatedAt = fakeSession.CreatedAt
+	sessionFromDB.CreatedAt = fakeSession.CreatedAt
 
-	if !reflect.DeepEqual(*sessionFromDb, fakeSession) {
+	if !reflect.DeepEqual(*sessionFromDB, fakeSession) {
 		t.Error("Not equal")
 	}
-
 }
 
 func TestRepositoryAuthUpdate(t *testing.T) {
@@ -79,7 +78,7 @@ func TestRepositoryAuthUpdate(t *testing.T) {
 			logrus.WithError(errRepUserDelete).Error()
 		}
 	})
-	sessionFromDb, err := repAuth.Get(ctx, fakeSession.ID)
+	sessionFromDB, err := repAuth.Get(ctx, fakeSession.ID)
 	if err != nil {
 		t.Error(err)
 	}
@@ -88,12 +87,12 @@ func TestRepositoryAuthUpdate(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	sessionFromDbAfterUpdate, err := repAuth.Get(ctx, fakeSession.ID)
+	sessionFromDBAfterUpdate, err := repAuth.Get(ctx, fakeSession.ID)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if reflect.DeepEqual(sessionFromDb, sessionFromDbAfterUpdate) {
+	if reflect.DeepEqual(sessionFromDB, sessionFromDBAfterUpdate) {
 		t.Error("Not updated")
 	}
 }
@@ -118,24 +117,23 @@ func TestRepositoryAuthGet(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	sessionFromDb, err := repAuth.Get(ctx, fakeSession.ID)
+	sessionFromDB, err := repAuth.Get(ctx, fakeSession.ID)
 	if err != nil {
 		t.Error(err)
 	}
 	t.Cleanup(func() {
-		if errRepAuthDelete := repAuth.Delete(ctx, sessionFromDb.ID); errRepAuthDelete != nil {
+		if errRepAuthDelete := repAuth.Delete(ctx, sessionFromDB.ID); errRepAuthDelete != nil {
 			logrus.WithError(errRepAuthDelete).Error()
 		}
 		if errRepUserDelete := repUser.Delete(ctx, user.UserName); errRepUserDelete != nil {
 			logrus.WithError(errRepUserDelete).Error()
 		}
 	})
-	sessionFromDb.CreatedAt = fakeSession.CreatedAt
+	sessionFromDB.CreatedAt = fakeSession.CreatedAt
 
-	if !reflect.DeepEqual(*sessionFromDb, fakeSession) {
+	if !reflect.DeepEqual(*sessionFromDB, fakeSession) {
 		t.Error("Not equal")
 	}
-
 }
 
 func TestRepositoryAuthDelete(t *testing.T) {

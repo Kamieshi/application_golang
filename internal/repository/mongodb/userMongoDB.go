@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"app/internal/models"
 
@@ -28,27 +29,27 @@ func NewUserRepoMongoDB(client *mongo.Client) *UserRepoMongoDB {
 }
 
 // Get user
-func (ur UserRepoMongoDB) Get(ctx context.Context, username string) (*models.User, error) {
+func (ur *UserRepoMongoDB) Get(ctx context.Context, username string) (*models.User, error) {
 	var user models.User
-	err := ur.collection.FindOne(ctx, bson.D{{"username", username}}).Decode(&user)
+	err := ur.collection.FindOne(ctx, bson.D{primitive.E{Key: "username", Value: username}}).Decode(&user)
 	return &user, err
 }
 
 // Add user
-func (ur UserRepoMongoDB) Add(ctx context.Context, user *models.User) error {
+func (ur *UserRepoMongoDB) Add(ctx context.Context, user *models.User) error {
 	user.ID = uuid.New()
 	_, err := ur.collection.InsertOne(ctx, user)
 	return err
 }
 
 // Delete user
-func (ur UserRepoMongoDB) Delete(ctx context.Context, username string) error {
-	res := ur.collection.FindOneAndDelete(ctx, bson.D{{"username", username}})
+func (ur *UserRepoMongoDB) Delete(ctx context.Context, username string) error {
+	res := ur.collection.FindOneAndDelete(ctx, bson.D{primitive.E{Key: "username", Value: username}})
 	return res.Err()
 }
 
 // GetAll users
-func (ur UserRepoMongoDB) GetAll(ctx context.Context) ([]*models.User, error) {
+func (ur *UserRepoMongoDB) GetAll(ctx context.Context) ([]*models.User, error) {
 	cursor, err := ur.collection.Find(ctx, bson.D{{}})
 	if err != nil {
 		return nil, err
@@ -63,6 +64,6 @@ func (ur UserRepoMongoDB) GetAll(ctx context.Context) ([]*models.User, error) {
 }
 
 // Update user
-func (ur UserRepoMongoDB) Update(ctx context.Context, user *models.User) error {
+func (ur *UserRepoMongoDB) Update(ctx context.Context, user *models.User) error {
 	return nil
 }

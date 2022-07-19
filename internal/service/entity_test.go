@@ -182,7 +182,6 @@ func TestGetForIDNegative(t *testing.T) {
 	actualEntity1, err := entityService.GetForID(ctx, expectEntity1.ID.String())
 	_assert.Error(err)
 	_assert.NotEqual(expectEntity1, actualEntity1)
-
 }
 
 func TestUpdateNegative(t *testing.T) {
