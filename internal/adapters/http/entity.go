@@ -73,6 +73,9 @@ func (eh EntityHandler) Update(c ech.Context) error {
 	if err != nil {
 		return err
 	}
+	if err = c.Validate(entity); err != nil {
+		return err
+	}
 	err = eh.EntityService.Update(c.Request().Context(), id, &entity)
 	if err != nil {
 		return c.JSON(http.StatusNotFound, fmt.Sprintf("{message: %v}", err))
@@ -100,7 +103,9 @@ func (eh EntityHandler) Create(c ech.Context) error {
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
-
+	if err = c.Validate(entity); err != nil {
+		return err
+	}
 	err = eh.EntityService.Add(c.Request().Context(), &entity)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, fmt.Sprintf("{message: %v}", err))

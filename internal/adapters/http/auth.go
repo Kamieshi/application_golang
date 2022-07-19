@@ -32,6 +32,9 @@ func (a *AuthHandler) Login(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	if err = c.Validate(data); err != nil {
+		return err
+	}
 	user, isAuth, err := a.AuthService.IsAuthentication(c.Request().Context(), data.Username, data.Password)
 	if err != nil {
 		return c.String(http.StatusUnauthorized, "invalid Username or password")
