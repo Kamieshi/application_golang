@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 
 	"app/internal/models"
@@ -74,16 +75,11 @@ func (sp RepoEntityPostgres) Add(ctx context.Context, obj *models.Entity) error 
 
 // Delete Delete entity form table entities
 func (sp RepoEntityPostgres) Delete(ctx context.Context, id string) error {
-	marshalUUID, err := uuid.ParseBytes([]byte(id))
-	if err != nil {
-		return err
-	}
-	if err != nil {
-		return err
-	}
 	query := "DELETE FROM entity WHERE id=$1"
-	_, err = sp.pool.Exec(ctx, query, marshalUUID)
-
+	com, err := sp.pool.Exec(ctx, query, id)
+	if com.Delete() || err == pgx.ErrNoRows {
+		return nil
+	}
 	return fmt.Errorf("error Delete Postgres rep : %v", err)
 }
 

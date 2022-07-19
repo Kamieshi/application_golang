@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -20,7 +21,11 @@ var (
 )
 
 func TestMain(t *testing.M) {
-	configuration, err := config.GetConfig("/home/rusak/application_golang/localConf.env")
+	pathToConfig, err := filepath.Abs("../../../localConf.env")
+	if err != nil {
+		log.WithError(err).Fatal()
+	}
+	configuration, err := config.GetConfig(pathToConfig)
 	if err != nil {
 		log.WithError(err).Panic()
 	}

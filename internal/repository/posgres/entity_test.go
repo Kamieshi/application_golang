@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/jackc/pgx/v4"
 	log "github.com/sirupsen/logrus"
 
 	"app/internal/models"
@@ -83,7 +84,7 @@ func TestRepositoryEntityDelete(t *testing.T) {
 	}
 
 	checkEntity, err := repEntity.GetForID(ctx, entity.ID.String())
-	if err != nil {
+	if err != pgx.ErrNoRows {
 		t.Error(err)
 	}
 	if checkEntity != nil {
