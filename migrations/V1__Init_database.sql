@@ -34,4 +34,4 @@ CREATE TABLE images
     file_name varchar(400) not null,
     root_path varchar(500) not null,
     easy_link varchar(200) not null
-)
+);

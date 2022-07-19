@@ -3,67 +3,18 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
-	"os"
 	"testing"
 
-	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/encoding/protojson"
 
-	"app/internal/config"
 	"app/internal/models"
 	repository "app/internal/repository/posgres"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/grpclog"
 )
-
-var (
-	clientEntity EntityClient       //nolint:gochecknoglobals
-	clientImage  ImageManagerClient //nolint:gochecknoglobals
-	ctx          context.Context    //nolint:gochecknoglobals
-	connPool     *pgxpool.Pool      //nolint:gochecknoglobals
-)
-
-func TestMain(m *testing.M) {
-	err := godotenv.Load("/home/dmitryrusack/Work/application_golang/localConf.env")
-	if err != nil {
-		log.Fatal(err)
-	}
-	conf, err := config.GetConfig()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	grpcAddress := fmt.Sprintf("%s:%s", conf.GrpcHost, conf.GrpcPort)
-	conn, err := grpc.Dial(grpcAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		grpclog.Fatalf("fail to dial: %v", err)
-	}
-	clientEntity = NewEntityClient(conn)
-	clientImage = NewImageManagerClient(conn)
-	defer func() {
-		if err = conn.Close(); err != nil {
-			log.WithError(err).Error()
-		}
-	}()
-
-	ctx = context.Background()
-	connPool, _ = pgxpool.Connect(
-		ctx,
-		fmt.Sprintf("postgres://%s:%s@%s:%s/%s", conf.PostgresUser, conf.PostgresPassword, conf.PostgresHost, conf.PostgresPort, conf.PostgresDB),
-	)
-	code := m.Run()
-	defer func() {
-		os.Exit(code)
-	}()
-
-}
 
 func TestGetEntityById(t *testing.T) {
 	dataEntity := &models.Entity{

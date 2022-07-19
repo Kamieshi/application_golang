@@ -63,9 +63,6 @@ func TestMain(t *testing.M) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err != nil {
-		log.WithError(err).Panic()
-	}
 
 	if err := pool.Retry(func() error {
 		var err error

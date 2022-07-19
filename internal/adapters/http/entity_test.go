@@ -150,17 +150,15 @@ func TestCreate(t *testing.T) {
 	req := maker.GetAuthPOST(urlCreateEntity, bufferWrite)
 	client := http.DefaultClient
 	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, resp.StatusCode, http.StatusCreated)
 	defer func() {
 		if err = resp.Body.Close(); err != nil {
 			log.WithError(err).Error()
 		}
 	}()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("Response status : %d", resp.StatusCode)
-	}
 	var actualEntity models.Entity
 	err = json.NewDecoder(resp.Body).Decode(&actualEntity)
 	if err != nil {
@@ -245,7 +243,7 @@ func TestUpdate(t *testing.T) {
 
 	entityExpected := &models.Entity{
 		Name:     "ent1",
-		Price:    0,
+		Price:    3,
 		IsActive: false,
 	}
 	repEntity := repository.NewRepoEntityPostgres(connPullDB)
@@ -279,9 +277,7 @@ func TestUpdate(t *testing.T) {
 			log.WithError(err).Error()
 		}
 	}()
-	if resp.StatusCode != http.StatusOK {
-		t.Fatal("Error request ", resp.StatusCode)
-	}
+	assert.Equal(t, resp.StatusCode, http.StatusCreated)
 	entityAfterUpdate, err := repEntity.GetForID(ctx, entityExpected.ID.String())
 	if err != nil {
 		t.Fatal(err)
@@ -370,10 +366,7 @@ func TestDelete(t *testing.T) {
 			log.WithError(err).Error()
 		}
 	}()
-	if resp.StatusCode != http.StatusOK {
-		t.Fatal("Error request ", resp.StatusCode)
-	}
-
+	assert.Equal(t, resp.StatusCode, http.StatusNoContent)
 	ent, err := repEntity.GetForID(ctx, entityExpected.ID.String())
 	assert.Error(t, err)
 	assert.Nil(t, ent)

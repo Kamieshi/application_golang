@@ -11,7 +11,7 @@ import (
 
 // Configuration configuration for application
 type Configuration struct {
-	UsedDB           string `env:"USED_DB"`
+	UsedDB           string `env:"USED_DB" envDefault:"pg"`
 	PostgresPassword string `env:"POSTGRES_PASSWORD"`
 	PostgresUser     string `env:"POSTGRES_USER"`
 	PostgresDB       string `env:"POSTGRES_DB"`

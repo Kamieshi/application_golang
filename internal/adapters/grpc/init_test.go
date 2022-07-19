@@ -1,4 +1,4 @@
-package http
+package handlers
 
 import (
 	"context"
@@ -12,6 +12,9 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/ory/dockertest"
 	log "github.com/sirupsen/logrus"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/grpclog"
 
 	"app/internal/config"
 )
@@ -22,21 +25,16 @@ const (
 )
 
 var (
-	addrAPI          string          //nolint:gochecknoglobals
-	connPullDB       *pgxpool.Pool   //nolint:gochecknoglobals
-	ctx              context.Context //nolint:gochecknoglobals
-	URLCreateUser    string          //nolint:gochecknoglobals
-	urlLogin         string          //nolint:gochecknoglobals
-	urlCheckAuth     string          //nolint:gochecknoglobals
-	urlLogOut        string          //nolint:gochecknoglobals
-	urlRefresh       string          //nolint:gochecknoglobals
-	urlCreateEntity  string          //nolint:gochecknoglobals
-	urlGetByIdEntity string          //nolint:gochecknoglobals
-	urlGetAllEntity  string          //nolint:gochecknoglobals
-	urlDeleteEntity  string          //nolint:gochecknoglobals
+	clientEntity EntityClient       //nolint:gochecknoglobals
+	clientImage  ImageManagerClient //nolint:gochecknoglobals
+	ctx          context.Context    //nolint:gochecknoglobals
+	connPool     *pgxpool.Pool      //nolint:gochecknoglobals
+	addrAPIEcho  string             //nolint:gochecknoglobals
+	addrRPC      string             //nolint:gochecknoglobals
 )
 
-func TestMain(m *testing.M) { //nolint:funlen
+func TestMain(m *testing.M) {
+	ctx = context.Background()
 	pathToConfig, err := filepath.Abs("../../../localConf.env")
 	if err != nil {
 		log.WithError(err).Fatal()
@@ -61,6 +59,17 @@ func TestMain(m *testing.M) { //nolint:funlen
 	if err != nil {
 		log.Fatal(err)
 	}
+	if err = pool.Retry(func() error {
+		conStr := fmt.Sprintf("postgres://postgres:%s@localhost:%s/postgres", "postgres", appPostgres.GetPort("5432/tcp"))
+		connPool, err = pgxpool.Connect(ctx, conStr)
+		if err != nil {
+			return err
+		}
+
+		return connPool.Ping(ctx)
+	}); err != nil {
+		log.Fatalf("Could not connect to database: %s", err)
+	}
 
 	appFlyWay, err := pool.RunWithOptions(&dockertest.RunOptions{
 		Hostname:   "flyWay",
@@ -70,8 +79,9 @@ func TestMain(m *testing.M) { //nolint:funlen
 		Env:        nil,
 		Entrypoint: nil,
 		Cmd: []string{
-
-			"-url=jdbc:postgresql://postgres:5432/postgres -schemas=public -user=postgres -password=postgres -connectRetries=10 migrate",
+			fmt.Sprintf(
+				"-url=jdbc:postgresql://localhost:%s/postgres -schemas=public -user=postgres -password=postgres -connectRetries=10 migrate",
+				appPostgres.GetPort("5432/tcp")),
 		},
 		Mounts: []string{fmt.Sprintf("%s:/flyway/sql", configuration.PathToMigration)},
 	})
@@ -114,12 +124,13 @@ func TestMain(m *testing.M) { //nolint:funlen
 		log.Fatal(err)
 	}
 
-	addrAPI = fmt.Sprintf("http://127.0.0.1:%s", appAPI.GetPort(fmt.Sprintf("%s/tcp", configuration.EchoPort)))
+	addrRPC = fmt.Sprintf("http://127.0.0.1:%s", appAPI.GetPort(fmt.Sprintf("%s/tcp", configuration.GrpcPort)))
+	addrAPIEcho = fmt.Sprintf("http://127.0.0.1:%s", appAPI.GetPort(fmt.Sprintf("%s/tcp", configuration.EchoPort)))
 	ctx = context.Background()
 
 	// Wait start api
 	if err = pool.Retry(func() error {
-		if resp, errResp := http.Get(addrAPI + "/ping"); errResp != nil {
+		if resp, errResp := http.Get(addrAPIEcho + "/ping"); errResp != nil {
 			if resp != nil {
 				defer func() {
 					if err = resp.Body.Close(); err != nil {
@@ -135,33 +146,19 @@ func TestMain(m *testing.M) { //nolint:funlen
 		log.Fatalf("Could not connect to API: %s", err)
 	}
 
-	URLCreateUser = addrAPI + "/user"
-	urlLogin = addrAPI + "/auth/login"
-	urlCheckAuth = addrAPI + "/auth/info"
-	urlLogOut = addrAPI + "/auth/logout"
-	urlRefresh = addrAPI + "/auth/refresh"
+	grpcAddress := addrRPC
+	conn, err := grpc.Dial(grpcAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
 
-	urlCreateEntity = addrAPI + "/entity"
-	urlGetAllEntity = addrAPI + "/entity"
-	urlGetByIdEntity = addrAPI + "/entity/"
-	urlDeleteEntity = addrAPI + "/entity/"
-
-	// Init connectionPull
-	if err = pool.Retry(func() error {
-		conStr := fmt.Sprintf("postgres://postgres:%s@%s:5432/postgres", "postgres", appPostgres.Container.NetworkSettings.IPAddress)
-		connPullDB, err = pgxpool.Connect(ctx, conStr)
-		if err != nil {
-			return err
+	if err != nil {
+		grpclog.Fatalf("fail to dial: %v", err)
+	}
+	clientEntity = NewEntityClient(conn)
+	clientImage = NewImageManagerClient(conn)
+	defer func() {
+		if err = conn.Close(); err != nil {
+			log.WithError(err).Error()
 		}
-
-		return connPullDB.Ping(ctx)
-	}); err != nil {
-		log.Fatalf("Could not connect to database: %s", err)
-	}
-
-	if err = os.Setenv("SECRET_KEY", secretKey); err != nil {
-		log.WithError(err).Panic()
-	}
+	}()
 
 	code := m.Run()
 

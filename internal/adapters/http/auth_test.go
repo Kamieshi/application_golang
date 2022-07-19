@@ -37,7 +37,7 @@ func TestRegisterUser(t *testing.T) {
 		t.Fatal(err)
 	}
 	assert.Nil(t, err)
-	assert.Equal(t, 202, resp.StatusCode)
+	assert.Equal(t, 201, resp.StatusCode)
 	if err != nil {
 		t.Fatalf("Send response error :%s", err)
 	}
