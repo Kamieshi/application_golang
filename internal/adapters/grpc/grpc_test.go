@@ -24,10 +24,10 @@ import (
 )
 
 var (
-	clientEntity EntityClient
-	clientImage  ImageManagerClient
-	ctx          context.Context
-	connPool     *pgxpool.Pool
+	clientEntity EntityClient       //nolint:gochecknoglobals
+	clientImage  ImageManagerClient //nolint:gochecknoglobals
+	ctx          context.Context    //nolint:gochecknoglobals
+	connPool     *pgxpool.Pool      //nolint:gochecknoglobals
 )
 
 func TestMain(m *testing.M) {
@@ -59,7 +59,10 @@ func TestMain(m *testing.M) {
 		fmt.Sprintf("postgres://%s:%s@%s:%s/%s", conf.PostgresUser, conf.PostgresPassword, conf.PostgresHost, conf.PostgresPort, conf.PostgresDB),
 	)
 	code := m.Run()
-	os.Exit(code)
+	defer func() {
+		os.Exit(code)
+	}()
+
 }
 
 func TestGetEntityById(t *testing.T) {

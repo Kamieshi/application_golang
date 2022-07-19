@@ -18,22 +18,22 @@ const (
 )
 
 var (
-	addrAPI          string
-	connPullDB       *pgxpool.Pool
-	ctx              context.Context
-	secretKey        = "123"
-	URLCreateUser    string
-	urlLogin         string
-	urlCheckAuth     string
-	urlLogOut        string
-	urlRefresh       string
-	urlCreateEntity  string
-	urlGetByIdEntity string
-	urlGetAllEntity  string
-	urlDeleteEntity  string
+	addrAPI          string          //nolint:gochecknoglobals
+	connPullDB       *pgxpool.Pool   //nolint:gochecknoglobals
+	ctx              context.Context //nolint:gochecknoglobals
+	secretKey        = "123"         //nolint:gochecknoglobals
+	URLCreateUser    string          //nolint:gochecknoglobals
+	urlLogin         string          //nolint:gochecknoglobals
+	urlCheckAuth     string          //nolint:gochecknoglobals
+	urlLogOut        string          //nolint:gochecknoglobals
+	urlRefresh       string          //nolint:gochecknoglobals
+	urlCreateEntity  string          //nolint:gochecknoglobals
+	urlGetByIdEntity string          //nolint:gochecknoglobals
+	urlGetAllEntity  string          //nolint:gochecknoglobals
+	urlDeleteEntity  string          //nolint:gochecknoglobals
 )
 
-func TestMain(m *testing.M) {
+func TestMain(m *testing.M) { //nolint:funlen
 	pool, err := dockertest.NewPool("")
 	if err != nil {
 		log.Fatalf("Could not connect to docker: %s", err)
@@ -70,11 +70,11 @@ func TestMain(m *testing.M) {
 				appPostgres.Container.NetworkSettings.IPAddress)},
 		Mounts: []string{fmt.Sprintf("%s:/flyway/sql", pathToMigrations)},
 	})
+
+	defer closer(appFlyWay)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer closer(appFlyWay)
-
 	appRedis, err := pool.RunWithOptions(&dockertest.RunOptions{
 		Hostname:   "redis",
 		Name:       "redis",
@@ -116,7 +116,11 @@ func TestMain(m *testing.M) {
 
 	// Wait start api
 	if err = pool.Retry(func() error {
-		_, err = http.Get(addrAPI + "/ping")
+		if resp, err := http.Get(addrAPI + "/ping"); err != nil {
+			if err = resp.Body.Close(); err != nil {
+				return err
+			}
+		}
 		return err
 	}); err != nil {
 		log.Fatalf("Could not connect to API: %s", err)

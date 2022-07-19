@@ -226,7 +226,7 @@ func TestLogOut(t *testing.T) {
 	assert.Equal(t, userSession.Disabled, true)
 }
 
-func TestRefresh(t *testing.T) {
+func TestRefresh(t *testing.T) { //nolint:funlen
 	userRep := repository.NewRepoUsersPostgres(connPullDB)
 	userServ := service.NewUserService(userRep)
 	_, err := userServ.Create(ctx, "test", "test")

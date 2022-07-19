@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	ctx            context.Context
+	ctx            context.Context //nolint:gochecknoglobals
 	errorFromRepo  error
 	errorFormCache error
 )
