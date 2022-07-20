@@ -33,10 +33,10 @@ func createHash256Password(user *models.User, password string) string {
 func (us *UserService) Create(ctx context.Context, userName, password string) (*models.User, error) {
 	user, err := us.rep.Get(ctx, userName)
 	if user != nil {
-		return user, errors.New("username already in use")
+		return user, fmt.Errorf("service user/Create : %v", errors.New("username already in use"))
 	}
 	if err.Error() != "no rows in result set" {
-		return user, err
+		return user, fmt.Errorf("service user/Create : %v", err)
 	}
 	err = nil
 	user = &models.User{}
@@ -45,7 +45,7 @@ func (us *UserService) Create(ctx context.Context, userName, password string) (*
 	user.PasswordHash = passwordHash
 	err = us.rep.Add(ctx, user)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("service user/Create : %v", err)
 	}
 	user, _ = us.rep.Get(ctx, userName)
 	return user, err
@@ -65,7 +65,7 @@ func (us *UserService) Get(ctx context.Context, username string) (*models.User, 
 func (us *UserService) GetAll(ctx context.Context) ([]*models.User, error) {
 	users, err := us.rep.GetAll(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("service user/GetAll : %v", err)
 	}
 	return users, nil
 }

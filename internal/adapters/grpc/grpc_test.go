@@ -56,12 +56,15 @@ func TestGetImagesByEasyLink(t *testing.T) {
 	}
 	for {
 		imageByResponse, err := stream.Recv()
-		if err == io.EOF {
-			if err = stream.(grpc.ClientStream).CloseSend(); err != nil {
-				log.WithError(err).Error()
+		if err != nil {
+			if err == io.EOF {
+				if err = stream.(grpc.ClientStream).CloseSend(); err != nil {
+					log.WithError(err).Error()
+				}
+
 			}
-			break
+			assert.Equal(t, imageByResponse.GetMetaData().GetSize(), int32(len(imageByResponse.GetData())))
 		}
-		assert.Equal(t, imageByResponse.GetMetaData().GetSize(), int32(len(imageByResponse.GetData())))
+		t.Fatal(err)
 	}
 }

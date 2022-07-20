@@ -50,7 +50,6 @@ func TestMain(m *testing.M) { //nolint:funlen
 	if err != nil {
 		log.Fatalf("Could not connect to docker: %s", err)
 	}
-
 	appPostgres, err := pool.RunWithOptions(&dockertest.RunOptions{
 		Hostname:   "postgres",
 		Name:       "postgres",
@@ -67,13 +66,20 @@ func TestMain(m *testing.M) { //nolint:funlen
 		Name:       "flyWay",
 		Repository: "flyway/flyway",
 		Tag:        "latest",
-		Env:        nil,
-		Entrypoint: nil,
-		Cmd: []string{
-
-			"-url=jdbc:postgresql://postgres:5432/postgres -schemas=public -user=postgres -password=postgres -connectRetries=10 migrate",
+		Env: []string{
+			fmt.Sprintf("FLYWAY_CREATE_SCHEMAS=%s", "true"),
+			fmt.Sprintf("FLYWAY_CONNECT_RETRIES_INTERVAL=%d", 2),
+			fmt.Sprintf("FLYWAY_CONNECT_RETRIES=%d", 5),
+			fmt.Sprintf("FLYWAY_PASSWORD=%s", configuration.PostgresPassword),
+			fmt.Sprintf("FLYWAY_USER=%s", configuration.PostgresUser),
+			fmt.Sprintf("FLYWAY_SCHEMAS=%s", configuration.PostgresDB),
+			fmt.Sprintf("FLYWAY_URL=%s",
+				fmt.Sprintf("jdbc:postgresql://%s:5432/%s", appPostgres.Container.NetworkSettings.IPAddress, configuration.PostgresDB)),
+			fmt.Sprintf("FLYWAY_BASELINE_ON_MIGRATE=%s", "true"),
 		},
-		Mounts: []string{fmt.Sprintf("%s:/flyway/sql", configuration.PathToMigration)},
+		Entrypoint: nil,
+		Cmd:        []string{"migrate"},
+		Mounts:     []string{fmt.Sprintf("%s:/flyway/sql", configuration.PathToMigration)},
 	})
 	if err != nil {
 		log.Fatal(err)

@@ -8,6 +8,7 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 
 	"app/internal/service"
 )
@@ -39,7 +40,7 @@ func (a *AuthHandler) Login(c echo.Context) error {
 	}
 	user, err := a.AuthService.IsAuthentication(c.Request().Context(), data.Username, data.Password)
 	if err != nil {
-		logrus.WithError(err).Error()
+		logrus.WithError(err).Error("http handler")
 		return c.String(http.StatusUnauthorized, "invalid Username or password")
 	}
 	if user == nil {
@@ -52,7 +53,7 @@ func (a *AuthHandler) Login(c echo.Context) error {
 	}
 	token, err := a.AuthService.CreateToken(user.UserName, user.Admin, session.ID)
 	if err != nil {
-		logrus.WithError(err).Error()
+		logrus.WithError(err).Error("http handler")
 		return c.String(http.StatusBadGateway, err.Error())
 	}
 
@@ -72,8 +73,9 @@ func (a *AuthHandler) Login(c echo.Context) error {
 // @Failure 401 {string} User unauthorized
 // @Router /auth/info [get]
 func (a *AuthHandler) Info(c echo.Context) error {
-	user, _ := a.AuthService.GetUser(c)
+	user, err := a.AuthService.GetUser(c)
 	if user != nil {
+		log.WithError(err).Error()
 		return c.JSON(http.StatusAccepted, user)
 	}
 	return echo.ErrUnauthorized
@@ -92,6 +94,7 @@ func (a *AuthHandler) Logout(c echo.Context) error {
 	claims := user.Claims.(*service.CustomClaims)
 	err := a.AuthService.DisableSession(c, claims.IDSession)
 	if err != nil {
+		log.WithError(err).Error()
 		return c.String(http.StatusBadRequest, err.Error())
 	}
 	cookie := new(http.Cookie)
@@ -121,10 +124,12 @@ func (a *AuthHandler) Refresh(c echo.Context) error {
 	var rt rft
 	err := c.Bind(&rt)
 	if err != nil {
+		log.WithError(err).Error()
 		return c.String(http.StatusBadRequest, err.Error())
 	}
 	acToken, refToken, err := a.AuthService.RefreshAndWriteSession(c, rt.Refresh)
 	if err != nil {
+		log.WithError(err).Error()
 		return c.String(http.StatusUnauthorized, err.Error())
 	}
 

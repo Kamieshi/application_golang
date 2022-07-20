@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 
+	log "github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/encoding/protojson"
 
 	"app/internal/service"
@@ -20,16 +21,19 @@ type EntityServerImplement struct {
 func (e EntityServerImplement) GetEntityByID(ctx context.Context, request *GetEntityByIdRequest) (*GetEntityByIdResponse, error) {
 	entity, err := e.EntityServ.GetForID(ctx, request.EntityId)
 	if err != nil {
+		log.WithError(err).Error()
 		return nil, err
 	}
 
 	data, err := json.Marshal(entity)
 	if err != nil {
+		log.WithError(err).Error()
 		return nil, err
 	}
 	var messageEntity EntityStruct
 	err = protojson.Unmarshal(data, &messageEntity)
 	if err != nil {
+		log.WithError(err).Error()
 		return nil, err
 	}
 	entityResponse := &GetEntityByIdResponse{

@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	ech "github.com/labstack/echo/v4"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 
 	"app/internal/models"
 	"app/internal/service"
@@ -21,6 +21,7 @@ type EntityHandler struct {
 // @tags Entity
 // @Summary Get list Entities
 // @Description Get all entities from DB
+// @Security ApiKeyAuth
 // @Success      200  {array}  models.Entity
 // @Failure 400 {string} Missing jwt token
 // @Failure 401 {string} unAuthorized
@@ -28,7 +29,7 @@ type EntityHandler struct {
 func (eh EntityHandler) List(c ech.Context) error {
 	entities, err := eh.EntityService.GetAll(c.Request().Context())
 	if err != nil {
-		logrus.WithError(err).Error(c.Request())
+		log.WithError(err).Error()
 		return err
 	}
 	return c.JSON(http.StatusOK, entities)
@@ -51,6 +52,7 @@ func (eh EntityHandler) GetDetail(c ech.Context) error {
 	entity, err := eh.EntityService.GetForID(c.Request().Context(), id)
 
 	if err != nil {
+		log.WithError(err).Error()
 		return c.JSON(http.StatusNotFound, fmt.Sprintf("{message: %v}", err))
 	}
 	return c.JSON(http.StatusOK, entity)
@@ -73,13 +75,16 @@ func (eh EntityHandler) Update(c ech.Context) error {
 	entity := models.Entity{}
 	err := c.Bind(&entity)
 	if err != nil {
+		log.WithError(err).Error()
 		return err
 	}
 	if valErr := c.Validate(entity); valErr != nil {
+		log.WithError(valErr).Error()
 		return valErr
 	}
 	err = eh.EntityService.Update(c.Request().Context(), id, &entity)
 	if err != nil {
+		log.WithError(err).Error()
 		return c.JSON(http.StatusNotFound, fmt.Sprintf("{message: %v}", err))
 	}
 	return c.String(http.StatusCreated, "Update successful")
@@ -103,6 +108,7 @@ func (eh EntityHandler) Create(c ech.Context) error {
 
 	err := c.Bind(&entity)
 	if err != nil {
+		log.WithError(err).Error()
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
 	if valErr := c.Validate(entity); valErr != nil {
@@ -110,6 +116,7 @@ func (eh EntityHandler) Create(c ech.Context) error {
 	}
 	err = eh.EntityService.Add(c.Request().Context(), &entity)
 	if err != nil {
+		log.WithError(err).Error()
 		return c.JSON(http.StatusInternalServerError, fmt.Sprintf("{message: %v}", err))
 	}
 
@@ -133,6 +140,7 @@ func (eh EntityHandler) Delete(c ech.Context) error {
 
 	err := eh.EntityService.Delete(c.Request().Context(), id)
 	if err != nil {
+		log.WithError(err).Error()
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
 	return c.NoContent(http.StatusNoContent)

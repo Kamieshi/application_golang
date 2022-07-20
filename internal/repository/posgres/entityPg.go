@@ -50,15 +50,15 @@ func (sp RepoEntityPostgres) GetForID(ctx context.Context, id string) (*models.E
 	query := "SELECT id,entity_name,price,is_active FROM entity WHERE id=$1"
 	marshalUUID, err := uuid.ParseBytes([]byte(id))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("entityPg.go/Update : %v", err)
 	}
 	var row = sp.pool.QueryRow(ctx, query, marshalUUID)
 	var entity models.Entity
 	err = row.Scan(&entity.ID, &entity.Name, &entity.Price, &entity.IsActive)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("entityPg.go/Update : %v", err)
 	}
-	return &entity, err
+	return &entity, fmt.Errorf("entityPg.go/Update : %v", err)
 }
 
 // Add Write new entity into DB
@@ -67,7 +67,7 @@ func (sp RepoEntityPostgres) Add(ctx context.Context, obj *models.Entity) error 
 	query := "INSERT INTO entity(id,entity_name,price,is_active) values ($1,$2,$3,$4)"
 	_, err := sp.pool.Exec(ctx, query, idRow, obj.Name, obj.Price, obj.IsActive)
 	if err != nil {
-		return err
+		return fmt.Errorf("entityPg.go/Add : %v", err)
 	}
 	obj.ID = idRow
 	return nil
@@ -80,22 +80,22 @@ func (sp RepoEntityPostgres) Delete(ctx context.Context, id string) error {
 	if com.Delete() || err == pgx.ErrNoRows {
 		return nil
 	}
-	return fmt.Errorf("error Delete Postgres rep : %v", err)
+	return fmt.Errorf("entityPg.go/Delete : %v", err)
 }
 
 // Update entity
 func (sp RepoEntityPostgres) Update(ctx context.Context, id string, obj *models.Entity) error {
 	marshalUUID, err := uuid.ParseBytes([]byte(id))
 	if err != nil {
-		return err
+		return fmt.Errorf("entityPg.go/Update : %v", err)
 	}
 	query := "UPDATE entity SET entity_name=$2,price=$3,is_active=$4 WHERE id=$1"
 	com, err := sp.pool.Exec(ctx, query, marshalUUID, obj.Name, obj.Price, obj.IsActive)
 	if err != nil {
-		return err
+		return fmt.Errorf("entityPg.go/Update : %v", err)
 	}
 	if !com.Update() {
-		return errors.New("no find entity for ID")
+		return fmt.Errorf("entityPg.go/Update : %v", errors.New("no find entity for ID"))
 	}
 	return nil
 }

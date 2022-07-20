@@ -13,8 +13,6 @@ import (
 	"github.com/ory/dockertest"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/grpclog"
 
 	"app/internal/config"
 )
@@ -59,6 +57,31 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	appFlyWay, err := pool.RunWithOptions(&dockertest.RunOptions{
+		Hostname:   "flyWay",
+		Name:       "flyWay",
+		Repository: "flyway/flyway",
+		Tag:        "latest",
+		Env: []string{
+			fmt.Sprintf("FLYWAY_CREATE_SCHEMAS=%s", "true"),
+			fmt.Sprintf("FLYWAY_CONNECT_RETRIES_INTERVAL=%d", 2),
+			fmt.Sprintf("FLYWAY_CONNECT_RETRIES=%d", 5),
+			fmt.Sprintf("FLYWAY_PASSWORD=%s", configuration.PostgresPassword),
+			fmt.Sprintf("FLYWAY_USER=%s", configuration.PostgresUser),
+			fmt.Sprintf("FLYWAY_SCHEMAS=%s", configuration.PostgresDB),
+			fmt.Sprintf("FLYWAY_URL=%s",
+				fmt.Sprintf("jdbc:postgresql://%s:5432/%s", appPostgres.Container.NetworkSettings.IPAddress, configuration.PostgresDB)),
+			fmt.Sprintf("FLYWAY_BASELINE_ON_MIGRATE=%s", "true"),
+		},
+		Entrypoint: nil,
+		Cmd:        []string{"migrate"},
+		Mounts:     []string{fmt.Sprintf("%s:/flyway/sql", configuration.PathToMigration)},
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	if err = pool.Retry(func() error {
 		conStr := fmt.Sprintf("postgres://postgres:%s@localhost:%s/postgres", "postgres", appPostgres.GetPort("5432/tcp"))
 		connPool, err = pgxpool.Connect(ctx, conStr)
@@ -69,24 +92,6 @@ func TestMain(m *testing.M) {
 		return connPool.Ping(ctx)
 	}); err != nil {
 		log.Fatalf("Could not connect to database: %s", err)
-	}
-
-	appFlyWay, err := pool.RunWithOptions(&dockertest.RunOptions{
-		Hostname:   "flyWay",
-		Name:       "flyWay",
-		Repository: "flyway/flyway",
-		Tag:        "latest",
-		Env:        nil,
-		Entrypoint: nil,
-		Cmd: []string{
-			fmt.Sprintf(
-				"-url=jdbc:postgresql://%s:%s/postgres -schemas=public -user=postgres -password=postgres -connectRetries=10 migrate",
-				appPostgres.Container.NetworkSettings.IPAddress, configuration.PostgresPort),
-		},
-		Mounts: []string{fmt.Sprintf("%s:/flyway/sql", configuration.PathToMigration)},
-	})
-	if err != nil {
-		log.Fatal(err)
 	}
 
 	appRedis, err := pool.RunWithOptions(&dockertest.RunOptions{
@@ -111,6 +116,8 @@ func TestMain(m *testing.M) {
 			Tag:        "",
 			Env: []string{
 				"POSTGRES_USER=postgres",
+
+				fmt.Sprintf("GRPC_PORT=%s", configuration.GrpcPort),
 				fmt.Sprintf("POSTGRES_HOST=%s", appPostgres.Container.NetworkSettings.IPAddress),
 				"POSTGRES_PORT=5432",
 				"POSTGRES_PASSWORD=postgres",
@@ -124,7 +131,7 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 
-	addrRPC = fmt.Sprintf("http://127.0.0.1:%s", appAPI.GetPort(fmt.Sprintf("%s/tcp", configuration.GrpcPort)))
+	addrRPC = fmt.Sprintf("127.0.0.1:%s", appAPI.GetPort(fmt.Sprintf("%s/tcp", configuration.GrpcPort)))
 	addrAPIEcho = fmt.Sprintf("http://127.0.0.1:%s", appAPI.GetPort(fmt.Sprintf("%s/tcp", configuration.EchoPort)))
 	ctx = context.Background()
 
@@ -146,12 +153,14 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Could not connect to API: %s", err)
 	}
 
-	grpcAddress := addrRPC
-	conn, err := grpc.Dial(grpcAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
-
-	if err != nil {
-		grpclog.Fatalf("fail to dial: %v", err)
+	opts := []grpc.DialOption{
+		grpc.WithInsecure(),
 	}
+	conn, err := grpc.Dial(addrRPC, opts...)
+	if err != nil {
+		log.Fatalf("fail to dial: %v", err)
+	}
+
 	clientEntity = NewEntityClient(conn)
 	clientImage = NewImageManagerClient(conn)
 	defer func() {

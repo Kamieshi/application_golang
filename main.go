@@ -4,6 +4,7 @@ import (
 	ctx "context"
 	"net"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -28,6 +29,10 @@ import (
 	"app/internal/service"
 )
 
+import (
+	runtime "github.com/banzaicloud/logrus-runtime-formatter"
+)
+
 // @title Golang Application Swagger
 // @version 0.1
 
@@ -39,8 +44,14 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.SetLevel(log.TraceLevel)
-	log.SetFormatter(&log.TextFormatter{})
+
+	formatter := runtime.Formatter{ChildFormatter: &log.TextFormatter{
+		FullTimestamp: true,
+	}}
+	formatter.Line = true
+	log.SetFormatter(&formatter)
+	log.SetOutput(os.Stdout)
+	log.SetLevel(log.DebugLevel)
 
 	// Create repository
 	var repoEntity repository.RepoEntity

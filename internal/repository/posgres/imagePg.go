@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -28,6 +29,7 @@ func (r RepoImagePostgres) Save(ctx context.Context, img *models.Image) error {
 	_, err := r.pool.Exec(ctx, query, img.ID, img.Filename, img.RootPath, img.EasyLink)
 	if err != nil {
 		img.ID = uuid.UUID{}
+		return fmt.Errorf("imagePg.go/Save : %v", err)
 	}
 	return err
 }
@@ -40,9 +42,12 @@ func (r RepoImagePostgres) Get(ctx context.Context, easyLink string) (*models.Im
 
 	err := row.Scan(&image.ID, &image.Filename, &image.RootPath, &image.EasyLink)
 	if err != nil {
-		return &image, err
+		return &image, fmt.Errorf("imagePg.go/Get : %v", err)
 	}
 	image.Data, err = image.Byte()
+	if err != nil {
+		return nil, fmt.Errorf("imagePg.go/Get : %v", err)
+	}
 	return &image, err
 }
 

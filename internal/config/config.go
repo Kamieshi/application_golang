@@ -22,7 +22,7 @@ type Configuration struct {
 	RedisURL         string `env:"REDIS_URL"`
 	GrpcHost         string `env:"GRPC_HOST"`
 	GrpcPort         string `env:"GRPC_PORT"`
-	GrpcProtocol     string `env:"GRPC_PROTOCOL"`
+	GrpcProtocol     string `env:"GRPC_PROTOCOL" envDefault:"tcp"`
 	EchoPort         string `env:"ECHO_PORT"`
 	PathToMigration  string `env:"PATH_TO_MIGRATIONS"`
 	MaxFileSize      int64  `env:"MAX_FILE_SIZE" envDefault:"1000"`

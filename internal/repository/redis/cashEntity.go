@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"strconv"
 	"time"
@@ -27,7 +28,7 @@ func NewCache(value []byte) (CacheObj, error) {
 	var cacheObj CacheObj
 	timeLive, err := strconv.Atoi(os.Getenv("TIME_EXPIRED_CACHE_MINUTE"))
 	if err != nil {
-		return cacheObj, err
+		return cacheObj, fmt.Errorf("cashEntity.go/NewCache : %v", err)
 	}
 	cacheObj.Data = value
 	cacheObj.DeathTime = time.Now().Add(time.Duration(timeLive) * time.Minute).Unix()
@@ -69,17 +70,16 @@ func (c CashEntityRepositoryRedis) Set(ctx context.Context, entity *models.Entit
 	key := entity.ID.String()
 	value, err := json.Marshal(entity)
 	if err != nil {
-		return err
+		return fmt.Errorf("cashEntity.go/Set : %v", err)
 	}
 
 	cacheObj, err := NewCache(value)
 	if err != nil {
-		return err
+		return fmt.Errorf("cashEntity.go/Set : %v", err)
 	}
 	err = c.client.Set(ctx, key, cacheObj, 0).Err()
 	if err != nil {
-		logrus.WithError(err).Error("Set in redis")
-		return err
+		return fmt.Errorf("cashEntity.go/Set : %v", err)
 	}
 	return nil
 }
@@ -92,13 +92,13 @@ func (c CashEntityRepositoryRedis) Get(ctx context.Context, id string) (*models.
 	val, err := c.client.Get(ctx, id).Result()
 
 	if err != rds.Nil {
-		logrus.WithError(err).Error("Get in redis")
-		return &ent, err
+
+		return &ent, fmt.Errorf("cashEntity.go/Get : %v", err)
 	}
 
 	err = json.Unmarshal([]byte(val), &cacheObj)
 	if err != nil {
-		return &ent, err
+		return &ent, fmt.Errorf("cashEntity.go/Get : %v", err)
 	}
 
 	if cacheObj.DeathTime < time.Now().Unix() {
@@ -109,7 +109,7 @@ func (c CashEntityRepositoryRedis) Get(ctx context.Context, id string) (*models.
 
 	err = json.Unmarshal(cacheObj.Data, &ent)
 	if err != nil {
-		return &ent, err
+		return &ent, fmt.Errorf("cashEntity.go/Get : %v", err)
 	}
 	logrus.Info("From Cache")
 	return &ent, nil

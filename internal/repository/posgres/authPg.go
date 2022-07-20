@@ -30,7 +30,7 @@ func (r RepoAuthPostgres) Create(ctx context.Context, session *models.Session) e
 	query := "INSERT INTO sessions(id,user_id, refresh_token, signature ,created_at ,disabled) VALUES ($1,$2,$3,$4,$5,$6)"
 	_, err := r.pool.Exec(ctx, query, session.ID, session.UserID, session.RfToken, session.UniqueSignature, session.CreatedAt, session.Disabled)
 	if err != nil {
-		return err
+		return fmt.Errorf("authPg.go/Create : %v", err)
 	}
 	return nil
 }
@@ -78,5 +78,5 @@ func (r RepoAuthPostgres) Disable(ctx context.Context, sessionID uuid.UUID) erro
 	query := "UPDATE sessions SET disabled=$1 WHERE id=$2"
 	com, err := r.pool.Exec(ctx, query, true, sessionID)
 	log.Info(com)
-	return err
+	return fmt.Errorf("authPg.go/Delete : %v", err)
 }

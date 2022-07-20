@@ -1,5 +1,5 @@
 syntax = "proto3";
-option go_package = "./protocGen";
+option go_package = "grpc";
 package applicationGolang;
 
 service Entity {

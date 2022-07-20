@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	log "github.com/sirupsen/logrus"
+
 	"app/internal/service"
 
 	"github.com/labstack/echo/v4"
@@ -35,6 +37,7 @@ func (uh UserHandler) Get(c echo.Context) error {
 	username := c.Param("username")
 	user, err := uh.Ser.Get(c.Request().Context(), username)
 	if err != nil {
+		log.WithError(err).Error()
 		return c.String(http.StatusNotFound, err.Error())
 	}
 	return c.JSON(http.StatusOK, user)
@@ -54,10 +57,12 @@ func (uh UserHandler) Create(c echo.Context) error {
 	var dat usPss
 	err := c.Bind(&dat)
 	if err != nil {
+		log.WithError(err).Error()
 		return err
 	}
 	user, err := uh.Ser.Create(c.Request().Context(), dat.Username, dat.Password)
 	if err != nil {
+		log.WithError(err).Error()
 		return c.JSON(http.StatusBadRequest, fmt.Sprintf("{message: %v}", err))
 	}
 	return c.JSON(http.StatusCreated, user)
@@ -97,6 +102,7 @@ func (uh UserHandler) Delete(c echo.Context) error {
 func (uh UserHandler) GetAll(c echo.Context) error {
 	users, err := uh.Ser.GetAll(c.Request().Context())
 	if err != nil {
+		log.WithError(err).Error()
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, users)

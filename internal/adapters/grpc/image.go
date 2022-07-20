@@ -3,6 +3,8 @@ package handlers
 import (
 	"context"
 
+	log "github.com/sirupsen/logrus"
+
 	"app/internal/service"
 )
 
@@ -16,6 +18,7 @@ type ImageServerImplement struct {
 func (i *ImageServerImplement) GetImageByEasyLink(req *GetImageByIDRequest, resp ImageManager_GetImageByEasyLinkServer) error {
 	image, err := i.ImageService.Get(context.Background(), req.EasyLink)
 	if err != nil {
+		log.WithError(err).Error()
 		return err
 	}
 	respMessage := &GetImageByIDResponse{
@@ -27,6 +30,7 @@ func (i *ImageServerImplement) GetImageByEasyLink(req *GetImageByIDRequest, resp
 	}
 	err = resp.Send(respMessage)
 	if err != nil {
+		log.WithError(err).Error()
 		return err
 	}
 	return nil

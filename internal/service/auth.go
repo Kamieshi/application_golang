@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 
 	"app/internal/models"
 	"app/internal/repository"
@@ -60,7 +59,7 @@ func NewAuthService(userRep repository.RepoUser, sessionRep repository.RepoSessi
 				if err.Error()[:16] == "token is expired" && c.Path() == "/auth/refresh" {
 					return token, nil
 				}
-				return nil, err
+				return nil, fmt.Errorf("service auth/NewAuthService : %v", err)
 			}
 			if !token.Valid {
 				return nil, errors.New("invalid token")
@@ -68,7 +67,6 @@ func NewAuthService(userRep repository.RepoUser, sessionRep repository.RepoSessi
 			return token, nil
 		},
 		Skipper: func(c ech.Context) bool {
-			logrus.WithFields(logrus.Fields{"path": c.Path()}).Info("Skipper JWT Auth")
 			switch c.Path() {
 			case "/auth/login":
 				return true
@@ -76,12 +74,11 @@ func NewAuthService(userRep repository.RepoUser, sessionRep repository.RepoSessi
 				if c.Request().Method == http.MethodPost {
 					return true
 				}
-			case "/images*":
-				return true
 			case "/swagger/*":
 				return true
+			case "/ping":
+				return true
 			}
-
 			return false
 		},
 	}
@@ -106,14 +103,13 @@ func (a *AuthService) IsAuthentication(ctx context.Context, username, password s
 	user, err := a.UserRep.Get(ctx, username)
 
 	if err != nil {
-		logrus.WithFields(logrus.Fields{"username": username}).Warn("Unsuccessful login attempt")
-		return user, err
+		return user, fmt.Errorf("service auth/IsAuthentication : %v", err)
 	}
 	inPasswordHash := createHash256Password(user, password)
 	if user.PasswordHash == inPasswordHash {
-		return user, err
+		return user, nil
 	}
-	return nil, err
+	return nil, fmt.Errorf("service auth/IsAuthentication : %v", err)
 }
 
 // CreateToken Create access token
@@ -131,7 +127,7 @@ func (a *AuthService) CreateToken(username string, admin bool, idSession uuid.UU
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, payLoad)
 	tt, err := token.SignedString([]byte(os.Getenv("SECRET_KEY")))
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("service auth/CreateToken : %v", err)
 	}
 	fmt.Println(token)
 	return tt, nil
@@ -151,7 +147,7 @@ func (a *AuthService) CreateAndWriteSession(ctx ech.Context, user models.User) (
 	}
 	err := a.AuthRep.Create(ctx.Request().Context(), &session)
 	if err != nil {
-		return models.Session{}, err
+		return models.Session{}, fmt.Errorf("service auth/CreateAndWriteSession : %v", err)
 	}
 	return session, err
 }
@@ -162,10 +158,10 @@ func (a *AuthService) RefreshAndWriteSession(ctx ech.Context, rfToken string) (A
 	payLoad := user.Claims.(*CustomClaims)
 	currentSession, err := a.AuthRep.Get(ctx.Request().Context(), payLoad.IDSession)
 	if currentSession.Disabled {
-		return "", "", errors.New("this session was disabled")
+		return "", "", fmt.Errorf("service auth/RefreshAndWriteSession : %v", errors.New("this session was disabled"))
 	}
 	if err != nil {
-		return
+		return "", "", fmt.Errorf("service auth/RefreshAndWriteSession : %v", err)
 	}
 	if rfToken == currentSession.RfToken {
 		AccessToken, _ = a.CreateToken(payLoad.Username, payLoad.Admin, payLoad.IDSession)
@@ -173,18 +169,15 @@ func (a *AuthService) RefreshAndWriteSession(ctx ech.Context, rfToken string) (A
 		currentSession.RfToken = RfToken
 		err = a.AuthRep.Update(ctx.Request().Context(), currentSession)
 		if err != nil {
-			return
+			return "", "", fmt.Errorf("service auth/RefreshAndWriteSession : %v", err)
 		}
 		return
 	}
-	return "", "", errors.New("disable session")
+	return "", "", fmt.Errorf("service auth/RefreshAndWriteSession : %v", errors.New("disable session"))
 }
 
 func (a *AuthService) createRandomOutput(sal ...string) string {
-	nBig, err := rand.Int(rand.Reader, big.NewInt(maxRand))
-	if err != nil {
-		logrus.WithError(err).Error()
-	}
+	nBig, _ := rand.Int(rand.Reader, big.NewInt(maxRand))
 	data := fmt.Sprint(time.Now().Unix(), os.Getenv("SECRET_KEY"), nBig.Int64(), sal)
 	h := sha256.New()
 	h.Write([]byte(data))
@@ -201,6 +194,9 @@ func createHashSHA256WithSalt(s string) string {
 // DisableSession Disable session (disable false -> true in repository)
 func (a *AuthService) DisableSession(ctx ech.Context, id uuid.UUID) error {
 	err := a.AuthRep.Disable(ctx.Request().Context(), id)
+	if err != nil {
+		return fmt.Errorf("service auth/DisableSession : %v", err)
+	}
 	return err
 }
 
@@ -209,5 +205,8 @@ func (a *AuthService) GetUser(ctx ech.Context) (*models.User, error) {
 	user := ctx.Get("user").(*jwt.Token)
 	claims := user.Claims.(*CustomClaims)
 	User, err := a.UserRep.Get(ctx.Request().Context(), claims.Username)
+	if err != nil {
+		return nil, fmt.Errorf("service auth/GetUser : %v", err)
+	}
 	return User, err
 }

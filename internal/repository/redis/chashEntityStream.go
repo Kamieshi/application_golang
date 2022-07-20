@@ -3,6 +3,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strconv"
 	"sync"
@@ -84,7 +85,10 @@ func (r *CashSteamEntityRep) sendCommand(ctx context.Context, command Command) e
 		Values: command,
 	}
 	res := r.client.XAdd(ctx, &arg)
-	return res.Err()
+	if res.Err() != nil {
+		return fmt.Errorf("cashEntityStream.go/sendCommand : %v", res.Err())
+	}
+	return nil
 }
 
 // Set new cache item
@@ -95,7 +99,10 @@ func (r *CashSteamEntityRep) Set(ctx context.Context, entity *models.Entity) err
 	r.LocalStorage.M.Unlock()
 	writeCommand := Command{Type: "write", EntityID: entity.ID.String()}
 	err := r.sendCommand(ctx, writeCommand)
-	return err
+	if err != nil {
+		return fmt.Errorf("cashEntityStream.go/Set : %v", err)
+	}
+	return nil
 }
 
 // Get entity from cache
@@ -148,6 +155,7 @@ func (r *CashSteamEntityRep) Listener(ctx context.Context) {
 						r.LocalStorage.M.Unlock()
 						continue
 					}
+					log.WithError(err)
 					r.LocalStorage.M.Lock()
 					delete(r.LocalStorage.storage, entity.ID.String())
 					r.LocalStorage.M.Unlock()

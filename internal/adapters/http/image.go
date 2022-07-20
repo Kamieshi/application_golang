@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	ech "github.com/labstack/echo/v4"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 
 	"app/internal/service"
 )
@@ -36,24 +36,25 @@ func (ih ImageHandler) Load(c ech.Context) error {
 
 	data, err := file.Open()
 	if err != nil {
-		logrus.WithError(err).Error()
+		log.WithError(err).Error()
 		return err
 	}
 	defer func() {
 		err = data.Close()
 		if err != nil {
-			logrus.WithError(err).Error()
+			log.WithError(err).Error()
 		}
 	}()
 
 	loadData, err := io.ReadAll(data)
 	if err != nil {
-		logrus.WithError(err).Error()
+		log.WithError(err).Error()
 		return err
 	}
 
 	img, err := ih.ImageService.Save(c.Request().Context(), file.Filename, &loadData)
 	if err != nil {
+		log.WithError(err).Error()
 		return err
 	}
 
@@ -78,7 +79,7 @@ func (ih ImageHandler) Get(c ech.Context) error {
 
 	img, err := ih.ImageService.Get(c.Request().Context(), easyLink)
 	if err != nil {
-		logrus.WithError(err).Error("Handler error")
+		log.WithError(err).Error()
 		return c.String(http.StatusNotFound, "Not found")
 	}
 
