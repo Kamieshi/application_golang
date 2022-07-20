@@ -22,7 +22,7 @@ services:
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "postgres"
       POSTGRES_HOST: "postgres"
-      POSTGRES_PORT: 5432
+      POSTGRES_PORT: "5432"
       ENTITY_COLLECTION: "entity"
       USER_COLLECTION: "user"
       APP_MONGO_DB: "app"
@@ -32,13 +32,13 @@ services:
       IMAGE_COLLECTION: "image"
       SECRET_KEY: ""
       REDIS_URL: "redis:6379"
-      TIME_LIVE_MINUTE_JWT: 1000
+      TIME_LIVE_MINUTE_JWT: "1000"
       TIME_EXPIRED_CACHE_MINUTE: 1
       ECHO_PORT: "8005"
     ports:
       - "8005:8000"
     depends_on:
-      - postgres
+      - flyway
 
   mongo:
     image: mongo
@@ -55,10 +55,17 @@ services:
 
   flyway:
     image: flyway/flyway
-    command: "-url=jdbc:postgresql://postgres:5432/postgres -schemas=public -user=postgres -password=postgres -connectRetries=10 migrate"
+    command: "migrate"
     volumes:
       - ./migrations:/flyway/sql
     environment:
+      FLYWAY_CREATE_SCHEMAS: "true"
+      FLYWAY_CONNECT_RETRIES_INTERVAL: 2
+      FLYWAY_CONNECT_RETRIES: 5
+      FLYWAY_PASSWORD: "postgres"
+      FLYWAY_USER: "postgres"
+      FLYWAY_SCHEMAS: "public"
+      FLYWAY_URL: "jdbc:postgresql://postgres:5432/postgres"
       FLYWAY_BASELINE_ON_MIGRATE: "true"
     depends_on:
       - postgres

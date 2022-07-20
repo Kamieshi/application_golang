@@ -80,8 +80,8 @@ func TestMain(m *testing.M) {
 		Entrypoint: nil,
 		Cmd: []string{
 			fmt.Sprintf(
-				"-url=jdbc:postgresql://localhost:%s/postgres -schemas=public -user=postgres -password=postgres -connectRetries=10 migrate",
-				appPostgres.GetPort("5432/tcp")),
+				"-url=jdbc:postgresql://%s:%s/postgres -schemas=public -user=postgres -password=postgres -connectRetries=10 migrate",
+				appPostgres.Container.NetworkSettings.IPAddress, configuration.PostgresPort),
 		},
 		Mounts: []string{fmt.Sprintf("%s:/flyway/sql", configuration.PathToMigration)},
 	})

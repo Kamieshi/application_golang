@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	ech "github.com/labstack/echo/v4"
+	"github.com/sirupsen/logrus"
 
 	"app/internal/models"
 	"app/internal/service"
@@ -27,6 +28,7 @@ type EntityHandler struct {
 func (eh EntityHandler) List(c ech.Context) error {
 	entities, err := eh.EntityService.GetAll(c.Request().Context())
 	if err != nil {
+		logrus.WithError(err).Error(c.Request())
 		return err
 	}
 	return c.JSON(http.StatusOK, entities)

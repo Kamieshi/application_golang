@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -39,7 +40,7 @@ func (r RepoAuthPostgres) Update(ctx context.Context, session *models.Session) e
 	query := "UPDATE sessions SET user_id=$1, refresh_token=$2, signature=$3 ,created_at=$4 ,disabled=$5 WHERE id=$6"
 	res, err := r.pool.Exec(ctx, query, session.UserID, session.RfToken, session.UniqueSignature, session.CreatedAt, session.Disabled, session.ID)
 	if err != nil {
-		return err
+		return fmt.Errorf("authPg.go/Update : %v", err)
 	}
 	if !res.Update() {
 		return errors.New("no find entity for ID")
@@ -54,7 +55,7 @@ func (r RepoAuthPostgres) Get(ctx context.Context, SessionID uuid.UUID) (*models
 	var session models.Session
 	err := row.Scan(&session.ID, &session.UserID, &session.RfToken, &session.UniqueSignature, &session.CreatedAt, &session.Disabled)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("authPg.go/Get : %v", err)
 	}
 	return &session, err
 }
@@ -64,7 +65,7 @@ func (r RepoAuthPostgres) Delete(ctx context.Context, sessionID uuid.UUID) error
 	query := "DELETE FROM sessions WHERE id=$1"
 	com, err := r.pool.Exec(ctx, query, sessionID)
 	if err != nil {
-		return err
+		return fmt.Errorf("authPg.go/Delete : %v", err)
 	}
 	if !com.Delete() {
 		return errors.New("no find session for ID")
